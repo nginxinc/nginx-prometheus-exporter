@@ -1,0 +1,6 @@
+package: github.com/nginxinc/nginx-prometheus-exporter
+import:
+- package: github.com/prometheus/client_golang
+  subpackages:
+  - prometheus
+  - prometheus/promhttp
