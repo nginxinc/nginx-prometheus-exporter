@@ -62,11 +62,12 @@ type apiError struct {
 // Stats represents NGINX Plus stats fetched from the NGINX Plus API.
 // https://nginx.org/en/docs/http/ngx_http_api_module.html
 type Stats struct {
-	Connections  Connections
-	HTTPRequests HTTPRequests
-	SSL          SSL
-	ServerZones  ServerZones
-	Upstreams    Upstreams
+	Connections     Connections
+	HTTPRequests    HTTPRequests
+	SSL             SSL
+	ServerZones     ServerZones
+	StreamUpstreams Upstreams
+	Upstreams       Upstreams
 }
 
 // Connections represents connection related stats.
@@ -600,12 +601,18 @@ func (client *NginxPlusClient) GetStats() (*Stats, error) {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
+	streamUpstreams, err := client.getStreamUpstreams()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats: %v", err)
+	}
+
 	return &Stats{
-		Connections:  *cons,
-		HTTPRequests: *requests,
-		SSL:          *ssl,
-		ServerZones:  *zones,
-		Upstreams:    *upstreams,
+		Connections:     *cons,
+		HTTPRequests:    *requests,
+		SSL:             *ssl,
+		ServerZones:     *zones,
+		StreamUpstreams: *streamUpstreams,
+		Upstreams:       *upstreams,
 	}, nil
 }
 
@@ -645,6 +652,15 @@ func (client *NginxPlusClient) getServerZones() (*ServerZones, error) {
 		return nil, fmt.Errorf("failed to get server zones: %v", err)
 	}
 	return &zones, err
+}
+
+func (client *NginxPlusClient) getStreamUpstreams() (*Upstreams, error) {
+	var upstreams Upstreams
+	err := client.get("stream/upstreams", &upstreams)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stream upstreams: %v", err)
+	}
+	return &upstreams, nil
 }
 
 func (client *NginxPlusClient) getUpstreams() (*Upstreams, error) {
