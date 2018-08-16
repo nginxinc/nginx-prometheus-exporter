@@ -48,14 +48,14 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 ```
 Usage of ./nginx-prometheus-exporter:
   -nginx.plus
-        Start the exporter for NGINX Plus. By default, the exporter is started for NGINX.
+        Start the exporter for NGINX Plus. By default, the exporter is started for NGINX. The default value can be overwritten by NGINX_PLUS environment variable.
   -nginx.scrape-uri string
         A URI for scraping NGINX or NGINX Plus metrics.
-        For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. (default "http://127.0.0.1:8080/stub_status")
+        For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
   -web.listen-address string
-        An address to listen on for web interface and telemetry. (default ":9113")
+        An address to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
-        A path under which to expose metrics. (default "/metrics")
+        A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")
 ```
 
 ### Exported Metrics 
