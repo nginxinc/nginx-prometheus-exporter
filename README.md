@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/custom%2B1062%2Fgithub.com%2Fnginxinc%2Fnginx-prometheus-exporter.svg?type=shield)](https://app.fossa.io/projects/custom%2B1062%2Fgithub.com%2Fnginxinc%2Fnginx-prometheus-exporter?ref=badge_shield)
+
 # NGINX Prometheus Exporter
 
 NGINX Prometheus exporter makes it possible to monitor NGINX or NGINX Plus using Prometheus.

@@ -1,0 +1,12 @@
+language: go
+sudo: required
+services:
+- docker
+go:
+- "1.10"
+before_install:
+- echo "PR Slug:${TRAVIS_PULL_REQUEST_SLUG}"
+- if [[ "${TRAVIS_PULL_REQUEST_SLUG}" == "nginxinc/nginx-prometheus-exporter" || "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
+  wget https://${fossalocation}/${fossafile} && tar xzf ${fossafile}
+  && ./fossa init
+  && FOSSA_API_KEY=${fossapush} ./fossa analyze -t nginx-prometheus-exporter -b ${TRAVIS_BRANCH}; fi
