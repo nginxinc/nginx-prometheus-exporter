@@ -4,6 +4,10 @@ services:
 - docker
 go:
 - "1.10"
+script:
+- echo "Nginx Prometheus Exporter - commit:${TRAVIS_COMMIT}"
+- make test
+- make container
 before_install:
 - echo "PR Slug:${TRAVIS_PULL_REQUEST_SLUG}"
 - if [[ "${TRAVIS_PULL_REQUEST_SLUG}" == "nginxinc/nginx-prometheus-exporter" || "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
