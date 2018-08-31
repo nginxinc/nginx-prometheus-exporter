@@ -33,7 +33,7 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 
 * To export NGINX metrics, run:
     ```
-    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.1.0 -nginx.scrape-uri http://<nginx>:8080/api
+    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.1.0 -nginx.scrape-uri http://<nginx>:8080/stub_status
     ```
     where `<nginx>` is the IP address/DNS name, through which NGINX is available.
 
