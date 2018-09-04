@@ -10,9 +10,9 @@ import (
 
 // NginxPlusCollector collects NGINX Plus metrics. It implements prometheus.Collector interface.
 type NginxPlusCollector struct {
-	nginxClient                                                             *client.NginxPlusClient
-	totalMetrics, serverZoneMetrics, upstreamMetrics, upstreamServerMetrics map[string]*prometheus.Desc
-	mutex                                                                   sync.Mutex
+	nginxClient                                                                                                                 *client.NginxPlusClient
+	totalMetrics, serverZoneMetrics, streamUpstreamMetrics, streamUpstreamServerMetrics, upstreamMetrics, upstreamServerMetrics map[string]*prometheus.Desc
+	mutex                                                                                                                       sync.Mutex
 }
 
 // NewNginxPlusCollector creates an NginxPlusCollector.
@@ -41,6 +41,21 @@ func NewNginxPlusCollector(nginxClient *client.NginxPlusClient, namespace string
 			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", nil),
 			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", nil),
 			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", nil),
+		},
+		streamUpstreamMetrics: map[string]*prometheus.Desc{
+			"zombies": newStreamUpstreamMetric(namespace, "zombies", "Servers removed from the group but still processing active client requests"),
+		},
+		streamUpstreamServerMetrics: map[string]*prometheus.Desc{
+			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state", nil),
+			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections", nil),
+			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", nil),
+			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received to this server", nil),
+			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Active connections", nil),
+			"unavail":                 newStreamUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client requests (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", nil),
+			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to get the full response from the server", nil),
+			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", nil),
+			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", nil),
+			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", nil),
 		},
 		upstreamMetrics: map[string]*prometheus.Desc{
 			"keepalives": newUpstreamMetric(namespace, "keepalives", "Idle keepalive connections"),
@@ -138,6 +153,36 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			prometheus.CounterValue, float64(zone.Sent), name)
 	}
 
+	for name, upstream := range stats.StreamUpstreams {
+		for _, peer := range upstream.Peers {
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["state"],
+				prometheus.GaugeValue, upstreamServerStates[peer.State], name, peer.Server)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["active"],
+				prometheus.GaugeValue, float64(peer.Active), name, peer.Server)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["sent"],
+				prometheus.CounterValue, float64(peer.Sent), name, peer.Server)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["received"],
+				prometheus.CounterValue, float64(peer.Received), name, peer.Server)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["fails"],
+				prometheus.CounterValue, float64(peer.Fails), name, peer.Server)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["unavail"],
+				prometheus.CounterValue, float64(peer.Unavail), name, peer.Server)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["response_time"],
+				prometheus.GaugeValue, float64(peer.ResponseTime), name, peer.Server)
+
+			if peer.HealthChecks != (client.HealthChecks{}) {
+				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_checks"],
+					prometheus.CounterValue, float64(peer.HealthChecks.Checks), name, peer.Server)
+				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_fails"],
+					prometheus.CounterValue, float64(peer.HealthChecks.Fails), name, peer.Server)
+				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_unhealthy"],
+					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), name, peer.Server)
+			}
+		}
+		ch <- prometheus.MustNewConstMetric(c.streamUpstreamMetrics["zombies"],
+			prometheus.GaugeValue, float64(upstream.Zombies), name)
+	}
+
 	for name, upstream := range stats.Upstreams {
 		for _, peer := range upstream.Peers {
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["state"],
@@ -196,6 +241,14 @@ var upstreamServerStates = map[string]float64{
 
 func newServerZoneMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "server_zone", metricName), docString, []string{"server_zone"}, constLabels)
+}
+
+func newStreamUpstreamMetric(namespace string, metricName string, docString string) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream", metricName), docString, []string{"upstream"}, nil)
+}
+
+func newStreamUpstreamServerMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream_server", metricName), docString, []string{"upstream", "server"}, constLabels)
 }
 
 func newUpstreamMetric(namespace string, metricName string, docString string) *prometheus.Desc {
