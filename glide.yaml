@@ -4,3 +4,7 @@ import:
   subpackages:
   - prometheus
   - prometheus/promhttp
+- package: github.com/nginxinc/nginx-plus-go-sdk
+  version: v0.2
+  subpackages:
+  - client

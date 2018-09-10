@@ -1,5 +1,5 @@
-hash: b62c6e250515f52280a59752a7075ef981a91b95b5f4c745d101b9eded3b217d
-updated: 2018-02-16T19:25:05.201189672Z
+hash: d521449fd1ccbcc6752cf851621a7738de377698fd2b946e863909082454e5ff
+updated: 2018-09-10T15:23:48.284293+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -13,6 +13,10 @@ imports:
   version: c12348ce28de40eed0136aa2b644d0ee0650e56c
   subpackages:
   - pbutil
+- name: github.com/nginxinc/nginx-plus-go-sdk
+  version: 47154e1ef11536726753d5f506babe9304d622d2
+  subpackages:
+  - client
 - name: github.com/prometheus/client_golang
   version: e69720d204a4aa3b0c65dc91208645ba0a52b9cd
   subpackages:
