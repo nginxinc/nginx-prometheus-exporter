@@ -4,19 +4,19 @@ import (
 	"log"
 	"sync"
 
-	"github.com/nginxinc/nginx-prometheus-exporter/client"
+	plusclient "github.com/nginxinc/nginx-plus-go-sdk/client"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 // NginxPlusCollector collects NGINX Plus metrics. It implements prometheus.Collector interface.
 type NginxPlusCollector struct {
-	nginxClient                                                             *client.NginxPlusClient
+	nginxClient                                                             *plusclient.NginxClient
 	totalMetrics, serverZoneMetrics, upstreamMetrics, upstreamServerMetrics map[string]*prometheus.Desc
 	mutex                                                                   sync.Mutex
 }
 
 // NewNginxPlusCollector creates an NginxPlusCollector.
-func NewNginxPlusCollector(nginxClient *client.NginxPlusClient, namespace string) *NginxPlusCollector {
+func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string) *NginxPlusCollector {
 	return &NginxPlusCollector{
 		nginxClient: nginxClient,
 		totalMetrics: map[string]*prometheus.Desc{
@@ -169,7 +169,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["response_time"],
 				prometheus.GaugeValue, float64(peer.ResponseTime), name, peer.Server)
 
-			if peer.HealthChecks != (client.HealthChecks{}) {
+			if peer.HealthChecks != (plusclient.HealthChecks{}) {
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_checks"],
 					prometheus.CounterValue, float64(peer.HealthChecks.Checks), name, peer.Server)
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_fails"],
