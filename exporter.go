@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 
+	plusclient "github.com/nginxinc/nginx-plus-go-sdk/client"
 	"github.com/nginxinc/nginx-prometheus-exporter/client"
 	"github.com/nginxinc/nginx-prometheus-exporter/collector"
 	"github.com/prometheus/client_golang/prometheus"
@@ -64,7 +65,7 @@ func main() {
 	registry := prometheus.NewRegistry()
 
 	if *nginxPlus {
-		client, err := client.NewNginxPlusClient(&http.Client{}, *scrapeURI)
+		client, err := plusclient.NewNginxClient(&http.Client{}, *scrapeURI)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
