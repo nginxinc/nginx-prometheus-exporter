@@ -45,7 +45,7 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 
 ## Usage
 
-### Command-line Arguments 
+### Command-line Arguments
 
 ```
 Usage of ./nginx-prometheus-exporter:
@@ -54,13 +54,15 @@ Usage of ./nginx-prometheus-exporter:
   -nginx.scrape-uri string
         A URI for scraping NGINX or NGINX Plus metrics.
         For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
+  -nginx.ssl-verify
+        Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.
   -web.listen-address string
         An address to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
         A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")
 ```
 
-### Exported Metrics 
+### Exported Metrics
 
 * For NGINX, all stub_status metrics are exported. Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions.
 * For NGINX Plus, the following metrics are exported:
@@ -69,7 +71,7 @@ Usage of ./nginx-prometheus-exporter:
     * [SSL](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_ssl_object).
     * [HTTP Server Zones](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_server_zone).
     * [HTTP Upsteams](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_upstream). Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"draining"` -> `2.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
-    
+
     Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions. Note: to see server zones related metrics you must configure [status zones](https://nginx.org/en/docs/http/ngx_http_status_module.html#status_zone) and to see upstream related metrics you must configure upstreams with a [shared memory zone](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#zone).
 
 ### Troubleshooting
@@ -86,10 +88,10 @@ You can build the exporter image using the provided Makefile. Before building th
 * make
 * Docker
 * git
- 
+
 To build the image, run:
 ```
-$ make container 
+$ make container
 ```
 
 Note:

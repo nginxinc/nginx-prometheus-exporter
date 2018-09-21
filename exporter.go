@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"log"
 	"net/http"
@@ -44,6 +45,7 @@ var (
 	defaultMetricsPath   = getEnv("TELEMETRY_PATH", "/metrics")
 	defaultNginxPlus     = getEnvBool("NGINX_PLUS", false)
 	defaultScrapeURI     = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
+	defaultSslVerify     = getEnvBool("SSL_VERIFY", true)
 
 	// Command-line flags
 	listenAddr = flag.String("web.listen-address", defaultListenAddress,
@@ -55,6 +57,8 @@ var (
 	scrapeURI = flag.String("nginx.scrape-uri", defaultScrapeURI,
 		`A URI for scraping NGINX or NGINX Plus metrics.
 	For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
+	sslVerify = flag.Bool("nginx.ssl-verify", defaultSslVerify,
+		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
 )
 
 func main() {
@@ -64,15 +68,19 @@ func main() {
 
 	registry := prometheus.NewRegistry()
 
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
+	}
+
 	if *nginxPlus {
-		client, err := plusclient.NewNginxClient(&http.Client{}, *scrapeURI)
+		client, err := plusclient.NewNginxClient(&http.Client{Transport: tr}, *scrapeURI)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
 
 		registry.MustRegister(collector.NewNginxPlusCollector(client, "nginxplus"))
 	} else {
-		client, err := client.NewNginxClient(&http.Client{}, *scrapeURI)
+		client, err := client.NewNginxClient(&http.Client{Transport: tr}, *scrapeURI)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}
