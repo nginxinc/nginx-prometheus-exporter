@@ -51,10 +51,10 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		streamServerZoneMetrics: map[string]*prometheus.Desc{
 			"processing":     newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", nil),
 			"connections":    newStreamServerZoneMetric(namespace, "connections", "Total connections", nil),
-			"sessions_2xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed with status code '2xx'", prometheus.Labels{"code": "2xx"}),
-			"sessions_4xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed with status code '4xx'", prometheus.Labels{"code": "4xx"}),
-			"sessions_5xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed with status code '5xx'", prometheus.Labels{"code": "5xx"}),
-			"sessions_total": newStreamServerZoneMetric(namespace, "sessions", "Total completed sessions", prometheus.Labels{"code": "total"}),
+			"sessions_2xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "2xx"}),
+			"sessions_4xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "4xx"}),
+			"sessions_5xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "5xx"}),
+			"sessions_total": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "total"}),
 			"discarded":      newStreamServerZoneMetric(namespace, "discarded", "Connections completed without creating a session", nil),
 			"received":       newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", nil),
 			"sent":           newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", nil),
@@ -86,20 +86,20 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"health_checks_unhealthy": newUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", nil),
 		},
 		streamUpstreamServerMetrics: map[string]*prometheus.Desc{
-			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state", nil),
-			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections", nil),
-			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", nil),
-			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received to this server", nil),
-			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server", nil),
-			"unavail":                 newStreamUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client connections (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", nil),
-			"connections":             newStreamUpstreamServerMetric(namespace, "connections", "Total number of client connections forwarded to this server", nil),
-			"connect_time":            newStreamUpstreamServerMetric(namespace, "connect_time", "Average time to connect to the upstream server", nil),
-			"first_byte_time":         newStreamUpstreamServerMetric(namespace, "first_byte_time", "The average time to receive the first byte of data", nil),
-			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to get the full response from the server", nil),
-			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", nil),
-			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", nil),
-			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", nil),
-			"downtime":                newStreamUpstreamServerMetric(namespace, "downtime", "Total time the server was in the 'unavail', 'checking', and 'unhealthy' states", nil),
+			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state"),
+			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections"),
+			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server"),
+			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received to this server"),
+			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server"),
+			"unavail":                 newStreamUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client connections (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold"),
+			"connections":             newStreamUpstreamServerMetric(namespace, "connections", "Total number of client connections forwarded to this server"),
+			"connect_time":            newStreamUpstreamServerMetric(namespace, "connect_time", "Average time to connect to the upstream server"),
+			"first_byte_time":         newStreamUpstreamServerMetric(namespace, "first_byte_time", "The average time to receive the first byte of data"),
+			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to get the full response from the server"),
+			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests"),
+			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks"),
+			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')"),
+			"downtime":                newStreamUpstreamServerMetric(namespace, "downtime", "Total time the server was in the 'unavail', 'checking', and 'unhealthy' states"),
 		},
 	}
 }
@@ -252,8 +252,8 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 
 	for name, upstream := range stats.StreamUpstreams {
 		for _, peer := range upstream.Peers {
-			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["state"],
-				prometheus.GaugeValue, streamUpstreamServerStates[peer.State], name, peer.Server)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["state"],
+				prometheus.GaugeValue, upstreamServerStates[peer.State], name, peer.Server)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["active"],
 				prometheus.GaugeValue, float64(peer.Active), name, peer.Server)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connections"],
@@ -297,14 +297,6 @@ var upstreamServerStates = map[string]float64{
 	"unhealthy": 6.0,
 }
 
-var streamUpstreamServerStates = map[string]float64{
-	"up":        1.0,
-	"down":      3.0,
-	"unavail":   4.0,
-	"checking":  5.0,
-	"unhealthy": 6.0,
-}
-
 func newServerZoneMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "server_zone", metricName), docString, []string{"server_zone"}, constLabels)
 }
@@ -325,6 +317,6 @@ func newUpstreamServerMetric(namespace string, metricName string, docString stri
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "upstream_server", metricName), docString, []string{"upstream", "server"}, constLabels)
 }
 
-func newStreamUpstreamServerMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream_server", metricName), docString, []string{"upstream", "server"}, constLabels)
+func newStreamUpstreamServerMetric(namespace string, metricName string, docString string) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream_server", metricName), docString, []string{"upstream", "server"}, nil)
 }
