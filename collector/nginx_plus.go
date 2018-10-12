@@ -49,15 +49,14 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", nil),
 		},
 		streamServerZoneMetrics: map[string]*prometheus.Desc{
-			"processing":     newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", nil),
-			"connections":    newStreamServerZoneMetric(namespace, "connections", "Total connections", nil),
-			"sessions_2xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "2xx"}),
-			"sessions_4xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "4xx"}),
-			"sessions_5xx":   newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "5xx"}),
-			"sessions_total": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "total"}),
-			"discarded":      newStreamServerZoneMetric(namespace, "discarded", "Connections completed without creating a session", nil),
-			"received":       newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", nil),
-			"sent":           newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", nil),
+			"processing":   newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", nil),
+			"connections":  newStreamServerZoneMetric(namespace, "connections", "Total connections", nil),
+			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "2xx"}),
+			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "4xx"}),
+			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", prometheus.Labels{"code": "5xx"}),
+			"discarded":    newStreamServerZoneMetric(namespace, "discarded", "Connections completed without creating a session", nil),
+			"received":     newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", nil),
+			"sent":         newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", nil),
 		},
 		upstreamMetrics: map[string]*prometheus.Desc{
 			"keepalives": newUpstreamMetric(namespace, "keepalives", "Idle keepalive connections"),
@@ -89,17 +88,16 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state"),
 			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections"),
 			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server"),
-			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received to this server"),
+			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received from this server"),
 			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server"),
 			"unavail":                 newStreamUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client connections (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold"),
 			"connections":             newStreamUpstreamServerMetric(namespace, "connections", "Total number of client connections forwarded to this server"),
 			"connect_time":            newStreamUpstreamServerMetric(namespace, "connect_time", "Average time to connect to the upstream server"),
-			"first_byte_time":         newStreamUpstreamServerMetric(namespace, "first_byte_time", "The average time to receive the first byte of data"),
-			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to get the full response from the server"),
+			"first_byte_time":         newStreamUpstreamServerMetric(namespace, "first_byte_time", "Average time to receive the first byte of data"),
+			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to receive the last byte of data"),
 			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests"),
 			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks"),
 			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')"),
-			"downtime":                newStreamUpstreamServerMetric(namespace, "downtime", "Total time the server was in the 'unavail', 'checking', and 'unhealthy' states"),
 		},
 	}
 }
@@ -194,8 +192,6 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			prometheus.CounterValue, float64(zone.Sessions.Sessions4xx), name)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sessions_5xx"],
 			prometheus.CounterValue, float64(zone.Sessions.Sessions5xx), name)
-		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sessions_total"],
-			prometheus.CounterValue, float64(zone.Sessions.Total), name)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["discarded"],
 			prometheus.CounterValue, float64(zone.Discarded), name)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["received"],
@@ -257,7 +253,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["active"],
 				prometheus.GaugeValue, float64(peer.Active), name, peer.Server)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connections"],
-				prometheus.GaugeValue, float64(peer.Connections), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Connections), name, peer.Server)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connect_time"],
 				prometheus.GaugeValue, float64(peer.ConnectTime), name, peer.Server)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["first_byte_time"],
@@ -280,8 +276,6 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_unhealthy"],
 					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), name, peer.Server)
 			}
-			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["downtime"],
-				prometheus.GaugeValue, float64(peer.Downtime), name, peer.Server)
 		}
 		ch <- prometheus.MustNewConstMetric(c.streamUpstreamMetrics["zombies"],
 			prometheus.GaugeValue, float64(upstream.Zombies), name)
