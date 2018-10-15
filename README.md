@@ -70,7 +70,10 @@ Usage of ./nginx-prometheus-exporter:
     * [HTTP](http://nginx.org/en/docs/http/ngx_http_api_module.html#http_).
     * [SSL](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_ssl_object).
     * [HTTP Server Zones](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_server_zone).
-    * [HTTP Upsteams](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_upstream). Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"draining"` -> `2.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
+    * [Stream Server Zones](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_server_zone).
+    * [HTTP Upstreams](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_upstream). Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"draining"` -> `2.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
+    * [Stream Upstreams](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_upstream). Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
+
 
     Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions. Note: to see server zones related metrics you must configure [status zones](https://nginx.org/en/docs/http/ngx_http_status_module.html#status_zone) and to see upstream related metrics you must configure upstreams with a [shared memory zone](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#zone).
 
