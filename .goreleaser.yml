@@ -1,0 +1,25 @@
+builds:
+  - main: exporter.go
+    binary: exporter
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm
+      - arm64
+      - 386
+
+archive:
+  format: tar.gz
+  files:
+    - LICENSE
+
+release:
+    github:
+        owner: nginxinc
+        name: nginx-prometheus-exporter
+
+sign:
+  artifacts: all
