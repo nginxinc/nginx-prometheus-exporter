@@ -8,11 +8,9 @@ NGINX Prometheus exporter makes it possible to monitor NGINX or NGINX Plus using
 
 [NGINX](http://nginx.org) exposes a handful of metrics via the [stub_status page](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html#stub_status). [NGINX Plus](https://www.nginx.com/products/nginx/) provides a richer set of metrics via the [API](https://nginx.org/en/docs/http/ngx_http_api_module.html) and the [monitoring dashboard](https://www.nginx.com/products/nginx/live-activity-monitoring/). NGINX Prometheus exporter fetches the metrics from a single NGINX or NGINX Plus, converts the metrics into appropriate Prometheus metrics types and finally exposes them via an HTTP server to be collected by [Prometheus](https://prometheus.io/).
 
-**Note**: Currently it is only supported to run NGINX Prometheus Exporter in a Docker container.
-
 ## Getting Started
 
-In this section, we show how to quickly run NGINX Prometheus Exporter in a container for NGINX or NGINX Plus.
+In this section, we show how to quickly run NGINX Prometheus Exporter for NGINX or NGINX Plus.
 
 ### A Note about NGINX Ingress Controller
 
@@ -24,10 +22,9 @@ We assume that you have already installed Prometheus and NGINX or NGINX Plus. Ad
 * Expose the built-in metrics in NGINX/NGINX Plus:
     * For NGINX, expose the [stub_status page](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html#stub_status) at `/stub_status` on port `8080`.
     * For NGINX Plus, expose the [API](https://nginx.org/en/docs/http/ngx_http_api_module.html#api) at `/api` on port `8080`.
-* Install Docker on the server where you’re planning to run the exporter.
 * Configure Prometheus to scrape metrics from the server with the exporter. Note that the default scrape port of the exporter is `9113` and the default metrics path -- `/metrics`.
 
-### Running the Exporter in a Container
+### Running the Exporter in a Docker Container
 
 To start the exporter we use the [docker run](https://docs.docker.com/engine/reference/run/) command.
 
@@ -42,6 +39,22 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
     $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.1.0 -nginx.plus -nginx.scrape-uri http://<nginx-plus>:8080/api
     ```
     where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
+
+### Running the Exporter Binary
+
+* To export NGINX metrics, run:
+    ```
+    $ nginx-prometheus-exporter -nginx.scrape-uri http://<nginx>:8080/stub_status
+    ```
+    where `<nginx>` is the IP address/DNS name, through which NGINX is available.
+
+* To export NGINX Plus metrics:
+    ```
+    $ nginx-prometheus-exporter -nginx.plus -nginx.scrape-uri http://<nginx-plus>:8080/api
+    ```
+    where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
+
+**Note**. The `nginx-prometheus-exporter` is not a daemon. To run the exporter as a system service (daemon), configure the init system of your Linux server (such as systemd or Upstart) accordingly. Alternatively, you can run the exporter in a Docker container.
 
 ## Usage
 
@@ -79,27 +92,39 @@ Usage of ./nginx-prometheus-exporter:
 
 ### Troubleshooting
 
-The exporter logs errors to the standard output. If the exporter doesn’t work as expected, check its logs using [docker logs](https://docs.docker.com/engine/reference/commandline/logs/) command.
+The exporter logs errors to the standard output. When using Docker, if the exporter doesn’t work as expected, check its logs using [docker logs](https://docs.docker.com/engine/reference/commandline/logs/) command.
 
 ## Releases
 
-For each release, we publish the corresponding Docker image at `nginx/nginx-prometheus-exporter` [DockerHub repo](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/). See the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases) for the list of all releases and the [CHANGELOG.md](CHANGELOG.md) for the changelog.
+For each release, we publish the corresponding Docker image at `nginx/nginx-prometheus-exporter` [DockerHub repo](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/) and the binaries on the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
 
-## Building the Container Image
+## Building the Exporter
 
-You can build the exporter image using the provided Makefile. Before building the image, make sure the following software is installed on your machine:
+You can build the exporter using the provided Makefile. Before building the exporter, make sure the following software is installed on your machine:
 * make
-* Docker
 * git
+* Docker for building the container image
+* Go for building the binary
 
-To build the image, run:
+### Building the Docker Image
+
+To build the Docker image with the exporter, run:
 ```
 $ make container
 ```
 
-Note:
-* golang is not required, as the exporter binary is built in a Docker container. See the [Dockerfile](Dockerfile).
-* The Makefile supports a few variables which can override its default behaviour. See [its content](Makefile).
+Note: go is not required, as the exporter binary is built in a Docker container. See the [Dockerfile](Dockerfile).
+
+### Building the Binary
+
+To build the binary, run:
+```
+$ make
+```
+
+Note: the binary is built for the OS/arch of your machine. To build binaries for other platforms, see the [Makefile](Makefile).
+
+The binary is built with the name `nginx-prometheus-exporter`.
 
 ## Support
 
