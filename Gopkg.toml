@@ -1,4 +1,8 @@
 [[constraint]]
+  name = "github.com/prometheus/client_golang"
+  version = "0.9.1"
+
+[[constraint]]
   name = "github.com/nginxinc/nginx-plus-go-sdk"
   version = "0.2.0"
 
