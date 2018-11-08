@@ -1,6 +1,0 @@
-# NGINX Plus license files
-*.crt
-*.key
-
-# Visual Studio Code settings
-.vscode
