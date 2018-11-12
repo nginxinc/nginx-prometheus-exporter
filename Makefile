@@ -1,5 +1,5 @@
-VERSION = 0.1.0
-PREFIX = nginx-prometheus-exporter
+VERSION = 0.2.0
+PREFIX = nginx/nginx-prometheus-exporter
 TAG = $(VERSION)
 GIT_COMMIT = $(shell git rev-parse --short HEAD)
 
