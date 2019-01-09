@@ -12,6 +12,7 @@ import (
 type NginxCollector struct {
 	nginxClient *client.NginxClient
 	metrics     map[string]*prometheus.Desc
+	upMetric    prometheus.Gauge
 	mutex       sync.Mutex
 }
 
@@ -28,12 +29,15 @@ func NewNginxCollector(nginxClient *client.NginxClient, namespace string) *Nginx
 			"connections_waiting":  newGlobalMetric(namespace, "connections_waiting", "Idle client connections"),
 			"http_requests_total":  newGlobalMetric(namespace, "http_requests_total", "Total http requests"),
 		},
+		upMetric: newUpMetric(namespace),
 	}
 }
 
 // Describe sends the super-set of all possible descriptors of NGINX metrics
 // to the provided channel.
 func (c *NginxCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- c.upMetric.Desc()
+
 	for _, m := range c.metrics {
 		ch <- m
 	}
@@ -46,9 +50,14 @@ func (c *NginxCollector) Collect(ch chan<- prometheus.Metric) {
 
 	stats, err := c.nginxClient.GetStubStats()
 	if err != nil {
+		c.upMetric.Set(nginxDown)
+		ch <- c.upMetric
 		log.Printf("Error getting stats: %v", err)
 		return
 	}
+
+	c.upMetric.Set(nginxUp)
+	ch <- c.upMetric
 
 	ch <- prometheus.MustNewConstMetric(c.metrics["connections_active"],
 		prometheus.GaugeValue, float64(stats.Connections.Active))
