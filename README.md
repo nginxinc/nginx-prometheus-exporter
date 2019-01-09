@@ -77,7 +77,11 @@ Usage of ./nginx-prometheus-exporter:
 
 ### Exported Metrics
 
-* For NGINX, all stub_status metrics are exported. Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions.
+* For NGINX, the following metrics are exported:
+    * All [stub_status](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html) metrics.
+    * `nginx_up` -- shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one.
+    
+    Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions.
 * For NGINX Plus, the following metrics are exported:
     * [Connections](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_connections).
     * [HTTP](http://nginx.org/en/docs/http/ngx_http_api_module.html#http_).
@@ -86,6 +90,7 @@ Usage of ./nginx-prometheus-exporter:
     * [Stream Server Zones](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_server_zone).
     * [HTTP Upstreams](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_upstream). Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"draining"` -> `2.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
     * [Stream Upstreams](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_upstream). Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
+    * `nginxplus_up` -- shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one.
 
 
     Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions. Note: to see server zones related metrics you must configure [status zones](https://nginx.org/en/docs/http/ngx_http_status_module.html#status_zone) and to see upstream related metrics you must configure upstreams with a [shared memory zone](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#zone).

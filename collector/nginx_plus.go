@@ -18,6 +18,7 @@ type NginxPlusCollector struct {
 	streamServerZoneMetrics     map[string]*prometheus.Desc
 	streamUpstreamMetrics       map[string]*prometheus.Desc
 	streamUpstreamServerMetrics map[string]*prometheus.Desc
+	upMetric                    prometheus.Gauge
 	mutex                       sync.Mutex
 }
 
@@ -99,12 +100,15 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks"),
 			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')"),
 		},
+		upMetric: newUpMetric(namespace),
 	}
 }
 
 // Describe sends the super-set of all possible descriptors of NGINX Plus metrics
 // to the provided channel.
 func (c *NginxPlusCollector) Describe(ch chan<- *prometheus.Desc) {
+	ch <- c.upMetric.Desc()
+
 	for _, m := range c.totalMetrics {
 		ch <- m
 	}
@@ -135,9 +139,14 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 
 	stats, err := c.nginxClient.GetStats()
 	if err != nil {
+		c.upMetric.Set(nginxDown)
+		ch <- c.upMetric
 		log.Printf("Error getting stats: %v", err)
 		return
 	}
+
+	c.upMetric.Set(nginxUp)
+	ch <- c.upMetric
 
 	ch <- prometheus.MustNewConstMetric(c.totalMetrics["connections_accepted"],
 		prometheus.CounterValue, float64(stats.Connections.Accepted))
