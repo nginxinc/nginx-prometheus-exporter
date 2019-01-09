@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	plusclient "github.com/nginxinc/nginx-plus-go-sdk/client"
 	"github.com/nginxinc/nginx-prometheus-exporter/client"
@@ -59,6 +60,7 @@ var (
 	For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
 	sslVerify = flag.Bool("nginx.ssl-verify", defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
+	timeout = flag.Duration("nginx.timeout", 5*time.Second, "A timeout for scraping metrics from NGINX or NGINX Plus.")
 )
 
 func main() {
@@ -68,19 +70,22 @@ func main() {
 
 	registry := prometheus.NewRegistry()
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
+	httpClient := &http.Client{
+		Timeout: *timeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
+		},
 	}
 
 	if *nginxPlus {
-		client, err := plusclient.NewNginxClient(&http.Client{Transport: tr}, *scrapeURI)
+		client, err := plusclient.NewNginxClient(httpClient, *scrapeURI)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
 
 		registry.MustRegister(collector.NewNginxPlusCollector(client, "nginxplus"))
 	} else {
-		client, err := client.NewNginxClient(&http.Client{Transport: tr}, *scrapeURI)
+		client, err := client.NewNginxClient(httpClient, *scrapeURI)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}

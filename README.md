@@ -68,7 +68,9 @@ Usage of ./nginx-prometheus-exporter:
         A URI for scraping NGINX or NGINX Plus metrics.
         For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
   -nginx.ssl-verify
-        Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.
+        Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable. (default true)
+  -nginx.timeout duration
+        A timeout for scraping metrics from NGINX or NGINX Plus. (default 5s)
   -web.listen-address string
         An address to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
