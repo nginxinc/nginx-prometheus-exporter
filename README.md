@@ -79,6 +79,8 @@ Usage of ./nginx-prometheus-exporter:
 
 ### Exported Metrics
 
+* Common metrics:
+    * `nginxexporter_build_info` -- shows the exporter build information.
 * For NGINX, the following metrics are exported:
     * All [stub_status](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html) metrics.
     * `nginx_up` -- shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one.

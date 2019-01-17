@@ -70,6 +70,20 @@ func main() {
 
 	registry := prometheus.NewRegistry()
 
+	buildInfoMetric := prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "nginxexporter_build_info",
+			Help: "Exporter build information",
+			ConstLabels: prometheus.Labels{
+				"version":   version,
+				"gitCommit": gitCommit,
+			},
+		},
+	)
+	buildInfoMetric.Set(1)
+
+	registry.MustRegister(buildInfoMetric)
+
 	httpClient := &http.Client{
 		Timeout: *timeout,
 		Transport: &http.Transport{
