@@ -24,6 +24,18 @@ func getEnv(key, defaultValue string) string {
 	return value
 }
 
+func getEnvInt(key string, defaultValue int) int {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultValue
+	}
+	b, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		log.Fatalf("Environment variable value for %s must be an int", key)
+	}
+	return int(b)
+}
+
 func getEnvBool(key string, defaultValue bool) bool {
 	value, ok := os.LookupEnv(key)
 	if !ok {
@@ -31,7 +43,7 @@ func getEnvBool(key string, defaultValue bool) bool {
 	}
 	b, err := strconv.ParseBool(value)
 	if err != nil {
-		log.Fatalf("Environment Variable value for %s must be a boolean", key)
+		log.Fatalf("Environment variable value for %s must be a boolean", key)
 	}
 	return b
 }
@@ -47,6 +59,7 @@ var (
 	defaultNginxPlus     = getEnvBool("NGINX_PLUS", false)
 	defaultScrapeURI     = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
 	defaultSslVerify     = getEnvBool("SSL_VERIFY", true)
+	defaultNginxRetries  = getEnvInt("NGINX_RETRIES", 0)
 
 	// Command-line flags
 	listenAddr = flag.String("web.listen-address", defaultListenAddress,
@@ -60,7 +73,10 @@ var (
 	For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
 	sslVerify = flag.Bool("nginx.ssl-verify", defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
-	timeout = flag.Duration("nginx.timeout", 5*time.Second, "A timeout for scraping metrics from NGINX or NGINX Plus.")
+	timeout      = flag.Duration("nginx.timeout", 5*time.Second, "A timeout for scraping metrics from NGINX or NGINX Plus.")
+	nginxRetries = flag.Int("nginx.retries", defaultNginxRetries,
+		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error.")
+	nginxRetryInterval = flag.Duration("nginx.retry-interval", 5*time.Second, "An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start.")
 )
 
 func main() {
@@ -92,19 +108,33 @@ func main() {
 	}
 
 	if *nginxPlus {
-		client, err := plusclient.NewNginxClient(httpClient, *scrapeURI)
-		if err != nil {
-			log.Fatalf("Could not create Nginx Plus Client: %v", err)
+		for {
+			client, err := plusclient.NewNginxClient(httpClient, *scrapeURI)
+			if err != nil && *nginxRetries == 0 {
+				log.Fatalf("Could not create Nginx Plus Client: %v", err)
+			} else if err != nil {
+				log.Printf("Could not create Nginx Plus Client. Retrying in %v...", *nginxRetryInterval)
+				time.Sleep(*nginxRetryInterval)
+				*nginxRetries--
+				continue
+			}
+			registry.MustRegister(collector.NewNginxPlusCollector(client, "nginxplus"))
+			break
 		}
-
-		registry.MustRegister(collector.NewNginxPlusCollector(client, "nginxplus"))
 	} else {
-		client, err := client.NewNginxClient(httpClient, *scrapeURI)
-		if err != nil {
-			log.Fatalf("Could not create Nginx Client: %v", err)
+		for {
+			client, err := client.NewNginxClient(httpClient, *scrapeURI)
+			if err != nil && *nginxRetries == 0 {
+				log.Fatalf("Could not create Nginx Client: %v", err)
+			} else if err != nil {
+				log.Printf("Could not create Nginx Client. Retrying in %v...", *nginxRetryInterval)
+				time.Sleep(*nginxRetryInterval)
+				*nginxRetries--
+				continue
+			}
+			registry.MustRegister(collector.NewNginxCollector(client, "nginx"))
+			break
 		}
-
-		registry.MustRegister(collector.NewNginxCollector(client, "nginx"))
 	}
 
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
