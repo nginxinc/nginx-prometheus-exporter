@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	plusclient "github.com/nginxinc/nginx-plus-go-sdk/client"
@@ -106,6 +108,13 @@ func main() {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
 		},
 	}
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGTERM)
+	go func() {
+		log.Printf("SIGTERM received: %v. Exiting...", <-signalChan)
+		os.Exit(0)
+	}()
 
 	if *nginxPlus {
 		for {
