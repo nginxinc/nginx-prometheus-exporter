@@ -50,6 +50,16 @@ func getEnvBool(key string, defaultValue bool) bool {
 	return b
 }
 
+func handleRetry() {
+	if *nginxPlus {
+		log.Printf("Could not create Nginx Plus Client. Retrying in %v...", *nginxRetryInterval)
+	} else {
+		log.Printf("Could not create Nginx Client. Retrying in %v...", *nginxRetryInterval)
+	}
+	time.Sleep(*nginxRetryInterval)
+	*nginxRetries--
+}
+
 var (
 	// Set during go build
 	version   string
@@ -122,9 +132,7 @@ func main() {
 			if err != nil && *nginxRetries == 0 {
 				log.Fatalf("Could not create Nginx Plus Client: %v", err)
 			} else if err != nil {
-				log.Printf("Could not create Nginx Plus Client. Retrying in %v...", *nginxRetryInterval)
-				time.Sleep(*nginxRetryInterval)
-				*nginxRetries--
+				handleRetry()
 				continue
 			}
 			registry.MustRegister(collector.NewNginxPlusCollector(client, "nginxplus"))
@@ -136,9 +144,7 @@ func main() {
 			if err != nil && *nginxRetries == 0 {
 				log.Fatalf("Could not create Nginx Client: %v", err)
 			} else if err != nil {
-				log.Printf("Could not create Nginx Client. Retrying in %v...", *nginxRetryInterval)
-				time.Sleep(*nginxRetryInterval)
-				*nginxRetries--
+				handleRetry()
 				continue
 			}
 			registry.MustRegister(collector.NewNginxCollector(client, "nginx"))
@@ -156,5 +162,6 @@ func main() {
 			</body>
 			</html>`))
 	})
+	log.Print("NGINX Prometheus Exporter Started")
 	log.Fatal(http.ListenAndServe(*listenAddr, nil))
 }
