@@ -50,13 +50,13 @@ func getEnvBool(key string, defaultValue bool) bool {
 	return b
 }
 
-func handleRetry() {
-	if *nginxPlus {
-		log.Printf("Could not create Nginx Plus Client. Retrying in %v...", *nginxRetryInterval)
+func handleRetryOrExit(retries int, retryInterval time.Duration, clientName string, err error) {
+	if retries == 0 {
+		log.Fatalf("Could not create %v: %v", clientName, err)
 	} else {
-		log.Printf("Could not create Nginx Client. Retrying in %v...", *nginxRetryInterval)
+		log.Printf("Could not create %v. Retrying in %v...", clientName, *nginxRetryInterval)
 	}
-	time.Sleep(*nginxRetryInterval)
+	time.Sleep(retryInterval)
 	*nginxRetries--
 }
 
@@ -126,30 +126,28 @@ func main() {
 		os.Exit(0)
 	}()
 
-	if *nginxPlus {
-		for {
-			client, err := plusclient.NewNginxClient(httpClient, *scrapeURI)
-			if err != nil && *nginxRetries == 0 {
-				log.Fatalf("Could not create Nginx Plus Client: %v", err)
-			} else if err != nil {
-				handleRetry()
-				continue
-			}
-			registry.MustRegister(collector.NewNginxPlusCollector(client, "nginxplus"))
-			break
+	for {
+		clientName := "Nginx Client"
+		var err error
+		var cl interface{}
+
+		if *nginxPlus {
+			clientName = "Nginx Plus Client"
+			cl, err = plusclient.NewNginxClient(httpClient, *scrapeURI)
+		} else {
+			cl, err = client.NewNginxClient(httpClient, *scrapeURI)
 		}
-	} else {
-		for {
-			client, err := client.NewNginxClient(httpClient, *scrapeURI)
-			if err != nil && *nginxRetries == 0 {
-				log.Fatalf("Could not create Nginx Client: %v", err)
-			} else if err != nil {
-				handleRetry()
-				continue
-			}
-			registry.MustRegister(collector.NewNginxCollector(client, "nginx"))
-			break
+		if err != nil {
+			handleRetryOrExit(*nginxRetries, *nginxRetryInterval, clientName, err)
+			continue
 		}
+
+		if *nginxPlus {
+			registry.MustRegister(collector.NewNginxPlusCollector(cl.(*plusclient.NginxClient), "nginxplus"))
+		} else {
+			registry.MustRegister(collector.NewNginxCollector(cl.(*client.NginxClient), "nginx"))
+		}
+		break
 	}
 
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
