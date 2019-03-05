@@ -50,14 +50,27 @@ func getEnvBool(key string, defaultValue bool) bool {
 	return b
 }
 
-func handleRetryOrExit(retries int, retryInterval time.Duration, clientName string, err error) {
-	if retries == 0 {
-		log.Fatalf("Could not create %v: %v", clientName, err)
-	} else {
-		log.Printf("Could not create %v. Retrying in %v...", clientName, *nginxRetryInterval)
+func createClientWithRetries(httpClient http.Client, scrapeURI, clientName string, nginxPlus bool, retries int, retryInterval time.Duration) (interface{}, error) {
+	var err error
+	var nginxClient interface{}
+
+	for {
+		if nginxPlus {
+			nginxClient, err = plusclient.NewNginxClient(&httpClient, scrapeURI)
+		} else {
+			nginxClient, err = client.NewNginxClient(&httpClient, scrapeURI)
+		}
+		if err != nil {
+			if retries > 0 {
+				retries--
+				time.Sleep(retryInterval)
+				log.Printf("Could not create %v. Retrying in %v...", clientName, *nginxRetryInterval)
+				continue
+			}
+			return nil, err
+		}
+		return nginxClient, nil
 	}
-	time.Sleep(retryInterval)
-	*nginxRetries--
 }
 
 var (
@@ -126,28 +139,18 @@ func main() {
 		os.Exit(0)
 	}()
 
-	for {
-		clientName := "Nginx Client"
-		var err error
-		var cl interface{}
-
-		if *nginxPlus {
-			clientName = "Nginx Plus Client"
-			cl, err = plusclient.NewNginxClient(httpClient, *scrapeURI)
-		} else {
-			cl, err = client.NewNginxClient(httpClient, *scrapeURI)
-		}
+	if *nginxPlus {
+		plusClient, err := createClientWithRetries(*httpClient, *scrapeURI, "Nginx Plus Client", *nginxPlus, *nginxRetries, *nginxRetryInterval)
 		if err != nil {
-			handleRetryOrExit(*nginxRetries, *nginxRetryInterval, clientName, err)
-			continue
+			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
-
-		if *nginxPlus {
-			registry.MustRegister(collector.NewNginxPlusCollector(cl.(*plusclient.NginxClient), "nginxplus"))
-		} else {
-			registry.MustRegister(collector.NewNginxCollector(cl.(*client.NginxClient), "nginx"))
+		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus"))
+	} else {
+		ossClient, err := createClientWithRetries(*httpClient, *scrapeURI, "Nginx Client", *nginxPlus, *nginxRetries, *nginxRetryInterval)
+		if err != nil {
+			log.Fatalf("Could not create Nginx Client: %v", err)
 		}
-		break
+		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx"))
 	}
 
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
@@ -160,6 +163,6 @@ func main() {
 			</body>
 			</html>`))
 	})
-	log.Print("NGINX Prometheus Exporter Started")
+	log.Printf("NGINX Prometheus Exporter has successfully started")
 	log.Fatal(http.ListenAndServe(*listenAddr, nil))
 }
