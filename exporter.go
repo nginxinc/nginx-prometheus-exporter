@@ -31,11 +31,11 @@ func getEnvInt(key string, defaultValue int) int {
 	if !ok {
 		return defaultValue
 	}
-	b, err := strconv.ParseInt(value, 10, 64)
+	i, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
-		log.Fatalf("Environment variable value for %s must be an int", key)
+		log.Fatalf("Environment variable value for %s must be an int: %v", key, err)
 	}
-	return int(b)
+	return int(i)
 }
 
 func getEnvBool(key string, defaultValue bool) bool {
@@ -45,9 +45,21 @@ func getEnvBool(key string, defaultValue bool) bool {
 	}
 	b, err := strconv.ParseBool(value)
 	if err != nil {
-		log.Fatalf("Environment variable value for %s must be a boolean", key)
+		log.Fatalf("Environment variable value for %s must be a boolean: %v", key, err)
 	}
 	return b
+}
+
+func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultValue
+	}
+	d, err := time.ParseDuration(value)
+	if err != nil {
+		log.Fatalf("Environment variable value for %s must be a duration: %v", key, err)
+	}
+	return d
 }
 
 func createClientWithRetries(httpClient http.Client, scrapeURI, clientName string, nginxPlus bool, retries int, retryInterval time.Duration) (interface{}, error) {
@@ -79,29 +91,41 @@ var (
 	gitCommit string
 
 	// Defaults values
-	defaultListenAddress = getEnv("LISTEN_ADDRESS", ":9113")
-	defaultMetricsPath   = getEnv("TELEMETRY_PATH", "/metrics")
-	defaultNginxPlus     = getEnvBool("NGINX_PLUS", false)
-	defaultScrapeURI     = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
-	defaultSslVerify     = getEnvBool("SSL_VERIFY", true)
-	defaultNginxRetries  = getEnvInt("NGINX_RETRIES", 0)
+	defaultListenAddress      = getEnv("LISTEN_ADDRESS", ":9113")
+	defaultMetricsPath        = getEnv("TELEMETRY_PATH", "/metrics")
+	defaultNginxPlus          = getEnvBool("NGINX_PLUS", false)
+	defaultScrapeURI          = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
+	defaultSslVerify          = getEnvBool("SSL_VERIFY", true)
+	defaultTimeout            = getEnvDuration("TIMEOUT", time.Second*5)
+	defaultNginxRetries       = getEnvInt("NGINX_RETRIES", 0)
+	defaultNginxRetryInterval = getEnvDuration("NGINX_RETRY_INTERVAL", time.Second*5)
 
 	// Command-line flags
-	listenAddr = flag.String("web.listen-address", defaultListenAddress,
+	listenAddr = flag.String("web.listen-address",
+		defaultListenAddress,
 		"An address to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable.")
-	metricsPath = flag.String("web.telemetry-path", defaultMetricsPath,
+	metricsPath = flag.String("web.telemetry-path",
+		defaultMetricsPath,
 		"A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable.")
-	nginxPlus = flag.Bool("nginx.plus", defaultNginxPlus,
+	nginxPlus = flag.Bool("nginx.plus",
+		defaultNginxPlus,
 		"Start the exporter for NGINX Plus. By default, the exporter is started for NGINX. The default value can be overwritten by NGINX_PLUS environment variable.")
-	scrapeURI = flag.String("nginx.scrape-uri", defaultScrapeURI,
+	scrapeURI = flag.String("nginx.scrape-uri",
+		defaultScrapeURI,
 		`A URI for scraping NGINX or NGINX Plus metrics.
 	For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
-	sslVerify = flag.Bool("nginx.ssl-verify", defaultSslVerify,
+	sslVerify = flag.Bool("nginx.ssl-verify",
+		defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
-	timeout      = flag.Duration("nginx.timeout", 5*time.Second, "A timeout for scraping metrics from NGINX or NGINX Plus.")
-	nginxRetries = flag.Int("nginx.retries", defaultNginxRetries,
+	timeout = flag.Duration("nginx.timeout",
+		defaultTimeout,
+		"A timeout for scraping metrics from NGINX or NGINX Plus.")
+	nginxRetries = flag.Int("nginx.retries",
+		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error.")
-	nginxRetryInterval = flag.Duration("nginx.retry-interval", 5*time.Second, "An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start.")
+	nginxRetryInterval = flag.Duration("nginx.retry-interval",
+		defaultNginxRetryInterval,
+		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start.")
 )
 
 func main() {
@@ -152,7 +176,6 @@ func main() {
 		}
 		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx"))
 	}
-
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
@@ -163,6 +186,6 @@ func main() {
 			</body>
 			</html>`))
 	})
-	log.Printf("NGINX Prometheus Exporter has successfully started")
+	log.Printf("NGINX Prometheus Exporter has successfully started. Metrics available at http://localhost%v%v", *listenAddr, *metricsPath)
 	log.Fatal(http.ListenAndServe(*listenAddr, nil))
 }

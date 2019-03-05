@@ -11,94 +11,62 @@ import (
 )
 
 func TestCreateClientWithRetries(t *testing.T) {
-	type MockedNginxClient struct {
-		apiEndpoint string
-		httpClient  *http.Client
-	}
 	type args struct {
-		httpClient    *http.Client
 		scrapeURI     string
-		clientName    string
 		nginxPlus     bool
 		retries       int
 		retryInterval time.Duration
 	}
-
-	httpClient := &http.Client{}
-
 	tests := []struct {
 		name    string
 		args    args
-		want    MockedNginxClient
 		wantErr bool
 	}{
 		{
 			"Nginx Client, valid uri",
 			args{
-				httpClient: httpClient,
-				clientName: "Nginx Client",
-				scrapeURI:  "http://demo.nginx.com/stub_status",
-				nginxPlus:  false,
-			},
-			MockedNginxClient{
-				apiEndpoint: "http://demo.nginx.com/stub_status",
-				httpClient:  httpClient,
+				scrapeURI: "http://demo.nginx.com/stub_status",
+				nginxPlus: false,
 			},
 			false,
 		},
 		{
 			"Nginx Plus Client, valid uri",
 			args{
-				httpClient: httpClient,
-				clientName: "Nginx Plus Client",
-				scrapeURI:  "http://demo.nginx.com/api",
-				nginxPlus:  true,
-			},
-			MockedNginxClient{
-				apiEndpoint: "http://demo.nginx.com/api",
-				httpClient:  httpClient,
+				scrapeURI: "http://demo.nginx.com/api",
+				nginxPlus: true,
 			},
 			false,
 		},
 		{
 			"Nginx Client, invalid uri",
 			args{
-				httpClient: httpClient,
-				clientName: "Nginx Client",
-				scrapeURI:  "http://TYPOdemo.nginx.com/stub_status",
-				nginxPlus:  false,
-			},
-			MockedNginxClient{
-				apiEndpoint: "http://TYPOdemo.nginx.com/stub_status",
-				httpClient:  httpClient,
+				scrapeURI: "http://TYPO.nginx.com/stub_status",
+				nginxPlus: false,
 			},
 			true,
 		},
 		{
-			"Nginx Client, invalid uri, retries",
+			"Nginx Plus Client, invalid uri, retries",
 			args{
-				httpClient:    httpClient,
-				clientName:    "Nginx Client",
-				scrapeURI:     "http://TYPOdemo.nginx.com/stub_status",
-				nginxPlus:     false,
+				scrapeURI:     "http://TYPO.nginx.com/api",
+				nginxPlus:     true,
 				retries:       2,
-				retryInterval: 1 * time.Second,
-			},
-			MockedNginxClient{
-				apiEndpoint: "http://TYPOdemo.nginx.com/stub_status",
-				httpClient:  httpClient,
+				retryInterval: 100 * time.Millisecond,
 			},
 			true,
 		},
 	}
+
+	httpClient := &http.Client{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := createClientWithRetries(*tt.args.httpClient, tt.args.scrapeURI, tt.args.clientName, tt.args.nginxPlus, tt.args.retries, tt.args.retryInterval)
+			got, err := createClientWithRetries(*httpClient, tt.args.scrapeURI, "clientname", tt.args.nginxPlus, tt.args.retries, tt.args.retryInterval)
 			log.Printf("Error %v, Expected %v", err, tt.wantErr)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("createClientWithRetries() error = %v, wantErr %v", err, tt.wantErr)
 			} else if err != nil && tt.wantErr {
-				return // error returned as wanted
+				return
 			}
 
 			if tt.args.nginxPlus {
