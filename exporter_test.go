@@ -23,7 +23,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"Valid func",
+			"createClientWithRetries: Valid func",
 			args{
 				getData: func() (interface{}, error) { return "soup", nil },
 			},
@@ -31,7 +31,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 			false,
 		},
 		{
-			"Inavlid func",
+			"createClientWithRetries: Invalid func",
 			args{
 				getData: func() (interface{}, error) { return httpClient.Get("http://FAKE.notarealwebsite.com") },
 			},
@@ -39,7 +39,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 			true,
 		},
 		{
-			"Invalid func with retries",
+			"createClientWithRetries: Invalid func with retries",
 			args{
 				getData:       func() (interface{}, error) { return httpClient.Get("http://FAKE.notarealwebsite.com") },
 				retries:       3,
