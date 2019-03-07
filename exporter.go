@@ -111,13 +111,13 @@ var (
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
 	timeout = flag.Duration("nginx.timeout",
 		defaultTimeout,
-		"A timeout for scraping metrics from NGINX or NGINX Plus.")
+		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
 	nginxRetries = flag.Int("nginx.retries",
 		defaultNginxRetries,
-		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error.")
+		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
 	nginxRetryInterval = flag.Duration("nginx.retry-interval",
 		defaultNginxRetryInterval,
-		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start.")
+		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
 )
 
 func main() {
