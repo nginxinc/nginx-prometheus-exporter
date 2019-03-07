@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -62,27 +63,18 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 	return d
 }
 
-func createClientWithRetries(httpClient http.Client, scrapeURI, clientName string, nginxPlus bool, retries int, retryInterval time.Duration) (interface{}, error) {
+func createClientWithRetries(getClient func() (interface{}, error), retries int, retryInterval time.Duration) (interface{}, error) {
 	var err error
-	var nginxClient interface{}
-
-	for {
-		if nginxPlus {
-			nginxClient, err = plusclient.NewNginxClient(&httpClient, scrapeURI)
-		} else {
-			nginxClient, err = client.NewNginxClient(&httpClient, scrapeURI)
+	for retryNum := retries; retryNum >= 0; retryNum-- {
+		nginxClient, err := getClient()
+		if err != nil && retryNum > 0 {
+			log.Printf("Could not create Nginx Client. Retrying in %v...", retryInterval)
+			time.Sleep(retryInterval)
+		} else if err == nil {
+			return nginxClient, nil
 		}
-		if err != nil {
-			if retries > 0 {
-				retries--
-				time.Sleep(retryInterval)
-				log.Printf("Could not create %v. Retrying in %v...", clientName, *nginxRetryInterval)
-				continue
-			}
-			return nil, err
-		}
-		return nginxClient, nil
 	}
+	return nil, fmt.Errorf("Could not create Nginx Client: %v", err)
 }
 
 var (
@@ -164,13 +156,17 @@ func main() {
 	}()
 
 	if *nginxPlus {
-		plusClient, err := createClientWithRetries(*httpClient, *scrapeURI, "Nginx Plus Client", *nginxPlus, *nginxRetries, *nginxRetryInterval)
+		plusClient, err := createClientWithRetries(func() (interface{}, error) {
+			return plusclient.NewNginxClient(httpClient, *scrapeURI)
+		}, *nginxRetries, *nginxRetryInterval)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
 		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus"))
 	} else {
-		ossClient, err := createClientWithRetries(*httpClient, *scrapeURI, "Nginx Client", *nginxPlus, *nginxRetries, *nginxRetryInterval)
+		ossClient, err := createClientWithRetries(func() (interface{}, error) {
+			return client.NewNginxClient(httpClient, *scrapeURI)
+		}, *nginxRetries, *nginxRetryInterval)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}
