@@ -38,7 +38,7 @@ func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, 
 	}
 
 	if _, err := client.GetStubStats(); err != nil {
-		return nil, fmt.Errorf("Failed to create NginxClient: %v", err)
+		return nil, err
 	}
 
 	return client, nil

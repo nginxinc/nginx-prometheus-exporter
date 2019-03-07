@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -65,8 +64,9 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 
 func createClientWithRetries(getClient func() (interface{}, error), retries int, retryInterval time.Duration) (interface{}, error) {
 	var err error
+	var nginxClient interface{}
 	for retryNum := retries; retryNum >= 0; retryNum-- {
-		nginxClient, err := getClient()
+		nginxClient, err = getClient()
 		if err != nil && retryNum > 0 {
 			log.Printf("Could not create Nginx Client. Retrying in %v...", retryInterval)
 			time.Sleep(retryInterval)
@@ -74,7 +74,7 @@ func createClientWithRetries(getClient func() (interface{}, error), retries int,
 			return nginxClient, nil
 		}
 	}
-	return nil, fmt.Errorf("Could not create Nginx Client: %v", err)
+	return nil, err
 }
 
 var (
