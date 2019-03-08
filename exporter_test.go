@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -60,8 +59,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			invocations := 0
 			getClient := func() (interface{}, error) {
-				invocations = invocations + 1
-				fmt.Printf("invocations = %v\n", invocations)
+				invocations++
 				return tt.args.client, tt.args.err
 			}
 
