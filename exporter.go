@@ -65,13 +65,15 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 func createClientWithRetries(getClient func() (interface{}, error), retries int, retryInterval time.Duration) (interface{}, error) {
 	var err error
 	var nginxClient interface{}
-	for retryNum := retries; retryNum >= 0; retryNum-- {
+
+	for i := retries; i >= 0; i-- {
 		nginxClient, err = getClient()
-		if err != nil && retryNum > 0 {
+		if err == nil {
+			return nginxClient, nil
+		}
+		if i > 0 {
 			log.Printf("Could not create Nginx Client. Retrying in %v...", retryInterval)
 			time.Sleep(retryInterval)
-		} else if err == nil {
-			return nginxClient, nil
 		}
 	}
 	return nil, err
@@ -182,6 +184,6 @@ func main() {
 			</body>
 			</html>`))
 	})
-	log.Printf("NGINX Prometheus Exporter has successfully started. Metrics available at http://localhost%v%v", *listenAddr, *metricsPath)
+	log.Printf("NGINX Prometheus Exporter has successfully started")
 	log.Fatal(http.ListenAndServe(*listenAddr, nil))
 }

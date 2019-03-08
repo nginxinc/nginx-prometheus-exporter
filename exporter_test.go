@@ -1,7 +1,8 @@
 package main
 
 import (
-	"net/http"
+	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -9,50 +10,69 @@ import (
 
 func TestCreateClientWithRetries(t *testing.T) {
 	type args struct {
-		getData       func() (interface{}, error)
+		client        interface{}
+		err           error
 		retries       int
 		retryInterval time.Duration
 	}
 
-	httpClient := &http.Client{}
-
 	tests := []struct {
-		name    string
-		args    args
-		want    interface{}
-		wantErr bool
+		name            string
+		args            args
+		expectedRetries int
+		want            interface{}
+		wantErr         bool
 	}{
 		{
-			"createClientWithRetries: Valid func",
-			args{
-				getData: func() (interface{}, error) { return "soup", nil },
+			name: "getClient returns a valid client",
+			args: args{
+				client: "client",
+				err:    nil,
 			},
-			"soup",
-			false,
+			expectedRetries: 0,
+			want:            "client",
+			wantErr:         false,
 		},
 		{
-			"createClientWithRetries: Invalid func",
-			args{
-				getData: func() (interface{}, error) { return httpClient.Get("http://FAKE.notarealwebsite.com") },
+			name: "getClient returns an error after no retries",
+			args: args{
+				client: nil,
+				err:    errors.New("error"),
 			},
-			nil,
-			true,
+			expectedRetries: 0,
+			want:            nil,
+			wantErr:         true,
 		},
 		{
-			"createClientWithRetries: Invalid func with retries",
-			args{
-				getData:       func() (interface{}, error) { return httpClient.Get("http://FAKE.notarealwebsite.com") },
+			name: "getClient returns an error after retries",
+			args: args{
+				client:        nil,
+				err:           errors.New("error"),
 				retries:       3,
-				retryInterval: time.Millisecond * 100,
+				retryInterval: time.Millisecond * 1,
 			},
-			nil,
-			true,
+			expectedRetries: 3,
+			want:            nil,
+			wantErr:         true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := createClientWithRetries(tt.args.getData, tt.args.retries, tt.args.retryInterval)
-			if (err != nil) != tt.wantErr {
+			invocations := 0
+			getClient := func() (interface{}, error) {
+				invocations = invocations + 1
+				fmt.Printf("invocations = %v\n", invocations)
+				return tt.args.client, tt.args.err
+			}
+
+			got, err := createClientWithRetries(getClient, tt.args.retries, tt.args.retryInterval)
+
+			actualRetries := invocations - 1
+
+			if actualRetries != tt.expectedRetries {
+				t.Errorf("createClientWithRetries() got %v retries, expected %v", actualRetries, tt.expectedRetries)
+				return
+			} else if (err != nil) != tt.wantErr {
 				t.Errorf("createClientWithRetries() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			} else if err != nil && tt.wantErr {
