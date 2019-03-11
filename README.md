@@ -64,13 +64,17 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 Usage of ./nginx-prometheus-exporter:
   -nginx.plus
         Start the exporter for NGINX Plus. By default, the exporter is started for NGINX. The default value can be overwritten by NGINX_PLUS environment variable.
+  -nginx.retries int
+        A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.
+  -nginx.retry-interval duration
+        An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable. (default 5s)
   -nginx.scrape-uri string
         A URI for scraping NGINX or NGINX Plus metrics.
         For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
   -nginx.ssl-verify
         Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable. (default true)
   -nginx.timeout duration
-        A timeout for scraping metrics from NGINX or NGINX Plus. (default 5s)
+        A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable. (default 5s)
   -web.listen-address string
         An address to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
@@ -84,7 +88,7 @@ Usage of ./nginx-prometheus-exporter:
 * For NGINX, the following metrics are exported:
     * All [stub_status](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html) metrics.
     * `nginx_up` -- shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one.
-    
+
     Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions.
 * For NGINX Plus, the following metrics are exported:
     * [Connections](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_connections).
