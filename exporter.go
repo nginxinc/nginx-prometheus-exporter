@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -63,7 +64,7 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 }
 
 func createClientWithRetries(getClient func() (interface{}, error), retries int, retryInterval time.Duration) (interface{}, error) {
-	var err error
+	err := fmt.Errorf(`invalid value "%v" for flag -nginx.retries`, retries)
 	var nginxClient interface{}
 
 	for i := retries; i >= 0; i-- {
