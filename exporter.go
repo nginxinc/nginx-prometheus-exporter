@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/tls"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -63,11 +62,11 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 	return d
 }
 
-func createClientWithRetries(getClient func() (interface{}, error), retries int, retryInterval time.Duration) (interface{}, error) {
-	err := fmt.Errorf(`invalid value "%v" for flag -nginx.retries`, retries)
+func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval time.Duration) (interface{}, error) {
+	var err error
 	var nginxClient interface{}
 
-	for i := retries; i >= 0; i-- {
+	for i := 0; i <= int(retries); i++ {
 		nginxClient, err = getClient()
 		if err == nil {
 			return nginxClient, nil
@@ -92,7 +91,7 @@ var (
 	defaultScrapeURI          = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
 	defaultSslVerify          = getEnvBool("SSL_VERIFY", true)
 	defaultTimeout            = getEnvDuration("TIMEOUT", time.Second*5)
-	defaultNginxRetries       = getEnvInt("NGINX_RETRIES", 0)
+	defaultNginxRetries       = uint(getEnvInt("NGINX_RETRIES", 0))
 	defaultNginxRetryInterval = getEnvDuration("NGINX_RETRY_INTERVAL", time.Second*5)
 
 	// Command-line flags
@@ -115,7 +114,7 @@ var (
 	timeout = flag.Duration("nginx.timeout",
 		defaultTimeout,
 		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
-	nginxRetries = flag.Int("nginx.retries",
+	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
 	nginxRetryInterval = flag.Duration("nginx.retry-interval",

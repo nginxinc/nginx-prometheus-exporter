@@ -11,7 +11,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 	type args struct {
 		client        interface{}
 		err           error
-		retries       int
+		retries       uint
 		retryInterval time.Duration
 	}
 
@@ -53,16 +53,6 @@ func TestCreateClientWithRetries(t *testing.T) {
 			expectedRetries: 3,
 			want:            nil,
 			wantErr:         true,
-		},
-		{
-			name: "getClient returns an error after negative retries cli arg is passed",
-			args: args{
-				client:  nil,
-				err:     errors.New("error"),
-				retries: -3,
-			},
-			want:    nil,
-			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
