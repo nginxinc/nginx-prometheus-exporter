@@ -67,13 +67,13 @@ func TestCreateClientWithRetries(t *testing.T) {
 
 			actualRetries := invocations - 1
 
-			if err != nil && tt.wantErr {
-				return
-			} else if actualRetries != tt.expectedRetries {
+			if actualRetries != tt.expectedRetries {
 				t.Errorf("createClientWithRetries() got %v retries, expected %v", actualRetries, tt.expectedRetries)
 				return
 			} else if (err != nil) != tt.wantErr {
 				t.Errorf("createClientWithRetries() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			} else if err != nil && tt.wantErr {
 				return
 			} else if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createClientWithRetries() = %v, want %v", got, tt.want)
