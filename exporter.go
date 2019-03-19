@@ -2,7 +2,9 @@ package main
 
 import (
 	"crypto/tls"
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -36,6 +38,18 @@ func getEnvInt(key string, defaultValue int) int {
 		log.Fatalf("Environment variable value for %s must be an int: %v", key, err)
 	}
 	return int(i)
+}
+
+func getEnvUint(key string, defaultValue uint) uint {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return defaultValue
+	}
+	i, err := strconv.ParseUint(value, 10, 64)
+	if err != nil {
+		log.Fatalf("Environment variable value for %s must be an uint: %v", key, err)
+	}
+	return uint(i)
 }
 
 func getEnvBool(key string, defaultValue bool) bool {
@@ -79,6 +93,18 @@ func createClientWithRetries(getClient func() (interface{}, error), retries uint
 	return nil, err
 }
 
+func validateFlags(timeout, retryInterval time.Duration) error {
+	flagValue := fmt.Sprint(timeout)
+	if flagValue[0] == '-' {
+		return errors.New("Timeout cannot be negative")
+	}
+	flagValue = fmt.Sprint(retryInterval)
+	if flagValue[0] == '-' {
+		return errors.New("NginxRetryInterval cannot be negative")
+	}
+	return nil
+}
+
 var (
 	// Set during go build
 	version   string
@@ -91,7 +117,7 @@ var (
 	defaultScrapeURI          = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
 	defaultSslVerify          = getEnvBool("SSL_VERIFY", true)
 	defaultTimeout            = getEnvDuration("TIMEOUT", time.Second*5)
-	defaultNginxRetries       = uint(getEnvInt("NGINX_RETRIES", 0))
+	defaultNginxRetries       = getEnvUint("NGINX_RETRIES", 0)
 	defaultNginxRetryInterval = getEnvDuration("NGINX_RETRY_INTERVAL", time.Second*5)
 
 	// Command-line flags
@@ -124,6 +150,10 @@ var (
 
 func main() {
 	flag.Parse()
+	err := validateFlags(*timeout, *nginxRetryInterval)
+	if err != nil {
+		log.Fatalf("Error validating flags: %v", err)
+	}
 
 	log.Printf("Starting NGINX Prometheus Exporter Version=%v GitCommit=%v", version, gitCommit)
 

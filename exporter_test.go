@@ -81,3 +81,26 @@ func TestCreateClientWithRetries(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateFlags(t *testing.T) {
+	type args struct {
+		timeout       time.Duration
+		retryInterval time.Duration
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"valid flags", args{5 * time.Second, 5 * time.Second}, false},
+		{"invalid nginxRetries flag input", args{-5 * time.Second, 5 * time.Second}, true},
+		{"invalid nginxRetryInterval flag input", args{5 * time.Second, -5 * time.Second}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := validateFlags(tt.args.timeout, tt.args.retryInterval); (err != nil) != tt.wantErr {
+				t.Errorf("validateFlags() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
