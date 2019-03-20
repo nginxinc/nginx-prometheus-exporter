@@ -176,13 +176,16 @@ func main() {
 	}
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`<html>
+		_, err := w.Write([]byte(`<html>
 			<head><title>NGINX Exporter</title></head>
 			<body>
 			<h1>NGINX Exporter</h1>
 			<p><a href='/metrics'>Metrics</a></p>
 			</body>
 			</html>`))
+		if err != nil {
+			log.Printf("Error while sending a response for the '/' path: %v", err)
+		}
 	})
 	log.Printf("NGINX Prometheus Exporter has successfully started")
 	log.Fatal(http.ListenAndServe(*listenAddr, nil))

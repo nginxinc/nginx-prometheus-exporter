@@ -8,6 +8,9 @@ BUILD_DIR = build_output
 nginx-prometheus-exporter: test
 	CGO_ENABLED=0 go build -installsuffix cgo -ldflags "-X main.version=$(VERSION) -X main.gitCommit=$(GIT_COMMIT)" -o nginx-prometheus-exporter 
 
+lint:
+	golangci-lint run
+
 test:
 	go test ./...
 
