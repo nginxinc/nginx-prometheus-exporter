@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -26,18 +25,6 @@ func getEnv(key, defaultValue string) string {
 		return defaultValue
 	}
 	return value
-}
-
-func getEnvInt(key string, defaultValue int) int {
-	value, ok := os.LookupEnv(key)
-	if !ok {
-		return defaultValue
-	}
-	i, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		log.Fatalf("Environment variable value for %s must be an int: %v", key, err)
-	}
-	return int(i)
 }
 
 func getEnvUint(key string, defaultValue uint) uint {
@@ -76,6 +63,39 @@ func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
 	return d
 }
 
+// positiveDuration is a wrapper of time.Duration to ensure only positive values are accepted
+type positiveDuration struct{ duration *time.Duration }
+
+func (pd positiveDuration) String() string {
+	return fmt.Sprint(pd.duration)
+}
+
+func (pd positiveDuration) Set(s string) error {
+	if pd.isNegative(s) {
+		return fmt.Errorf("Negative duration is not valid")
+	}
+	dur, err := time.ParseDuration(s)
+	if err != nil {
+		return err
+	}
+
+	*pd.duration = dur
+	return nil
+}
+
+func (pd positiveDuration) isNegative(s string) bool {
+	return s[0] == '-'
+}
+
+func createPositiveDurationFlag(dur time.Duration, key, helper string) error {
+	pd := positiveDuration{&dur}
+	if pd.isNegative(dur.String()) {
+		return fmt.Errorf("Negative duration is not valid")
+	}
+	flag.Var(&pd, key, helper)
+	return nil
+}
+
 func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval time.Duration) (interface{}, error) {
 	var err error
 	var nginxClient interface{}
@@ -91,18 +111,6 @@ func createClientWithRetries(getClient func() (interface{}, error), retries uint
 		}
 	}
 	return nil, err
-}
-
-func validateFlags(timeout, retryInterval time.Duration) error {
-	flagValue := fmt.Sprint(timeout)
-	if flagValue[0] == '-' {
-		return errors.New("Timeout cannot be negative")
-	}
-	flagValue = fmt.Sprint(retryInterval)
-	if flagValue[0] == '-' {
-		return errors.New("NginxRetryInterval cannot be negative")
-	}
-	return nil
 }
 
 var (
@@ -137,23 +145,30 @@ var (
 	sslVerify = flag.Bool("nginx.ssl-verify",
 		defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
-	timeout = flag.Duration("nginx.timeout",
-		defaultTimeout,
-		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
 	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
-	nginxRetryInterval = flag.Duration("nginx.retry-interval",
-		defaultNginxRetryInterval,
-		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
 )
 
 func main() {
-	flag.Parse()
-	err := validateFlags(*timeout, *nginxRetryInterval)
+	// Custom Command-line flag variables
+	timeout := defaultTimeout
+	nginxRetryInterval := defaultNginxRetryInterval
+
+	err := createPositiveDurationFlag(timeout,
+		"nginx.timeout",
+		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
 	if err != nil {
-		log.Fatalf("Error validating flags: %v", err)
+		log.Fatalf("Could not create duration flag timeout=%v: %v", timeout, err)
 	}
+	err = createPositiveDurationFlag(nginxRetryInterval,
+		"nginx.retry-interval",
+		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
+	if err != nil {
+		log.Fatalf("Could not create duration flag nginx.retry-interval=%v: %v", nginxRetryInterval, err)
+	}
+
+	flag.Parse()
 
 	log.Printf("Starting NGINX Prometheus Exporter Version=%v GitCommit=%v", version, gitCommit)
 
@@ -174,7 +189,7 @@ func main() {
 	registry.MustRegister(buildInfoMetric)
 
 	httpClient := &http.Client{
-		Timeout: *timeout,
+		Timeout: timeout,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
 		},
@@ -190,7 +205,7 @@ func main() {
 	if *nginxPlus {
 		plusClient, err := createClientWithRetries(func() (interface{}, error) {
 			return plusclient.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, *nginxRetryInterval)
+		}, *nginxRetries, nginxRetryInterval)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
@@ -198,7 +213,7 @@ func main() {
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
 			return client.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, *nginxRetryInterval)
+		}, *nginxRetries, nginxRetryInterval)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}

@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"flag"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -82,24 +84,79 @@ func TestCreateClientWithRetries(t *testing.T) {
 	}
 }
 
-func TestValidateFlags(t *testing.T) {
+func TestCreatePositiveDurationFlag(t *testing.T) {
 	type args struct {
-		timeout       time.Duration
-		retryInterval time.Duration
+		dur    time.Duration
+		key    string
+		helper string
 	}
 	tests := []struct {
 		name    string
 		args    args
+		update  string
 		wantErr bool
 	}{
-		{"valid flags", args{5 * time.Second, 5 * time.Second}, false},
-		{"invalid nginxRetries flag input", args{-5 * time.Second, 5 * time.Second}, true},
-		{"invalid nginxRetryInterval flag input", args{5 * time.Second, -5 * time.Second}, true},
+		{
+			"CreatePositiveDurationFlag creates a positiveDuration flag",
+			args{
+				5 * time.Millisecond,
+				"key",
+				"helper",
+			},
+			"10ms",
+			false,
+		},
+		{
+			"CreatePositiveDurationFlag returns an error",
+			args{
+				-5 * time.Millisecond,
+				"neg_key",
+				"helper",
+			},
+			"10s",
+			true,
+		},
+		{
+			"CreatePositiveDurationFlag returns an error after trying to update to negative duration",
+			args{
+				5 * time.Millisecond,
+				"neg_key",
+				"helper",
+			},
+			"-10s",
+			true,
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := validateFlags(tt.args.timeout, tt.args.retryInterval); (err != nil) != tt.wantErr {
-				t.Errorf("validateFlags() error = %v, wantErr %v", err, tt.wantErr)
+			err := createPositiveDurationFlag(tt.args.dur, tt.args.key, tt.args.helper)
+			if err != nil && tt.wantErr == true {
+				return
+			} else if err != nil {
+				t.Errorf("Got: %v. Expected no error, ", err)
+			}
+
+			err = flag.CommandLine.Parse(os.Args[1:])
+			if err != nil {
+				t.Error(err)
+			}
+
+			// Test if flag got added succesfully
+			testFlag := flag.Lookup(tt.args.key)
+			if testFlag == nil {
+				t.Errorf("Got: nil. Expected: %v flag to be found", tt.args.key)
+			}
+
+			// Test if flag can be updated
+			err = testFlag.Value.Set(tt.update)
+			if err != nil && tt.wantErr == true {
+				return
+			} else if err != nil {
+				t.Errorf("Got: %v. Expected no error", err)
+			}
+			if testFlag.Value.String() != tt.update {
+				t.Errorf("Got: %v. Expected flag to be update to %v.", testFlag.Value, tt.update)
 			}
 		})
 	}
