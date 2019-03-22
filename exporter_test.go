@@ -134,7 +134,7 @@ func TestCreatePositiveDurationFlag(t *testing.T) {
 			if err != nil && tt.wantErr == true {
 				return
 			} else if err != nil {
-				t.Errorf("Got: %v. Expected no error, ", err)
+				t.Errorf("Got: %v. Expected no error", err)
 			}
 
 			err = flag.CommandLine.Parse(os.Args[1:])
@@ -156,7 +156,7 @@ func TestCreatePositiveDurationFlag(t *testing.T) {
 				t.Errorf("Got: %v. Expected no error", err)
 			}
 			if testFlag.Value.String() != tt.update {
-				t.Errorf("Got: %v. Expected flag to be update to %v.", testFlag.Value, tt.update)
+				t.Errorf("Got: %v. Expected flag to be updated to %v.", testFlag.Value, tt.update)
 			}
 		})
 	}
