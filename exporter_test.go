@@ -65,7 +65,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 				return tt.args.client, tt.args.err
 			}
 
-			got, err := createClientWithRetries(getClient, tt.args.retries, tt.args.retryInterval)
+			got, err := createClientWithRetries(getClient, tt.args.retries, &tt.args.retryInterval)
 
 			actualRetries := invocations - 1
 
@@ -93,7 +93,6 @@ func TestCreatePositiveDurationFlag(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		update  string
 		wantErr bool
 	}{
 		{
@@ -103,7 +102,6 @@ func TestCreatePositiveDurationFlag(t *testing.T) {
 				"key",
 				"helper",
 			},
-			"10ms",
 			false,
 		},
 		{
@@ -113,31 +111,15 @@ func TestCreatePositiveDurationFlag(t *testing.T) {
 				"neg_key",
 				"helper",
 			},
-			"10s",
-			true,
-		},
-		{
-			"CreatePositiveDurationFlag returns an error after trying to update to negative duration",
-			args{
-				5 * time.Millisecond,
-				"neg_key",
-				"helper",
-			},
-			"-10s",
 			true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := createPositiveDurationFlag(tt.args.dur, tt.args.key, tt.args.helper)
-			if err != nil && tt.wantErr == true {
-				return
-			} else if err != nil {
-				t.Errorf("Got: %v. Expected no error", err)
-			}
+			createPositiveDurationFlag(&tt.args.dur, tt.args.key, tt.args.helper)
 
-			err = flag.CommandLine.Parse(os.Args[1:])
+			err := flag.CommandLine.Parse(os.Args[1:])
 			if err != nil {
 				t.Error(err)
 			}
@@ -147,16 +129,51 @@ func TestCreatePositiveDurationFlag(t *testing.T) {
 			if testFlag == nil {
 				t.Errorf("Got: nil. Expected: %v flag to be found", tt.args.key)
 			}
+		})
+	}
+}
 
-			// Test if flag can be updated
-			err = testFlag.Value.Set(tt.update)
-			if err != nil && tt.wantErr == true {
-				return
-			} else if err != nil {
-				t.Errorf("Got: %v. Expected no error", err)
+func TestPositiveDurationSet(t *testing.T) {
+	type fields struct {
+		Duration time.Duration
+	}
+	type args struct {
+		s string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"PositiveDurationSet updates flag.Value",
+			fields{
+				5 * time.Millisecond,
+			},
+			args{
+				"15ms",
+			},
+			false,
+		},
+		{
+			"PositiveDurationSet returns error for trying update to negative value",
+			fields{
+				5 * time.Millisecond,
+			},
+			args{
+				"-15ms",
+			},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			pd := &positiveDuration{
+				Duration: tt.fields.Duration,
 			}
-			if testFlag.Value.String() != tt.update {
-				t.Errorf("Got: %v. Expected flag to be updated to %v.", testFlag.Value, tt.update)
+			if err := pd.Set(tt.args.s); (err != nil) != tt.wantErr {
+				t.Errorf("positiveDuration.Set() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
