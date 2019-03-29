@@ -84,10 +84,10 @@ func (pd *positiveDuration) Set(s string) error {
 	return nil
 }
 
-func createPositiveDurationFlag(dur *time.Duration, key, helper string) (*positiveDuration, error) {
+func createPositiveDurationFlag(dur *time.Duration, key, helper string) *positiveDuration {
 	pd := &positiveDuration{*dur}
 	flag.Var(pd, key, helper)
-	return pd, nil
+	return pd
 }
 
 func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval *time.Duration) (interface{}, error) {
@@ -142,22 +142,18 @@ var (
 	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
+
+	// Custom command-line flags
+	timeout = createPositiveDurationFlag(&defaultTimeout.Duration,
+		"nginx.timeout",
+		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
+
+	nginxRetryInterval = createPositiveDurationFlag(&defaultNginxRetryInterval.Duration,
+		"nginx.retry-interval",
+		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
 )
 
 func main() {
-	timeout, err := createPositiveDurationFlag(&defaultTimeout.Duration,
-		"nginx.timeout",
-		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
-	if err != nil {
-		log.Fatalf("Could not create duration flag timeout=%v: %v", timeout, err)
-	}
-
-	nginxRetryInterval, err := createPositiveDurationFlag(&defaultNginxRetryInterval.Duration,
-		"nginx.retry-interval",
-		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
-	if err != nil {
-		log.Fatalf("Could not create duration flag nginx.retry-interval=%v: %v", nginxRetryInterval, err)
-	}
 
 	flag.Parse()
 
