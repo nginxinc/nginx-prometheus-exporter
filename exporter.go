@@ -51,46 +51,50 @@ func getEnvBool(key string, defaultValue bool) bool {
 	return b
 }
 
-func getEnvPositiveDuration(key string, defaultValue time.Duration) *positiveDuration {
+func getEnvPositiveDuration(key string, defaultValue time.Duration) positiveDuration {
 	value, ok := os.LookupEnv(key)
 	if !ok {
-		return &positiveDuration{defaultValue}
+		return positiveDuration{defaultValue}
 	}
 
-	if value[0] == '-' {
-		log.Fatalf("Environment variable value for %s must be positive", key)
-	}
-
-	d, err := time.ParseDuration(value)
+	posDur, err := parsePositiveDuration(value)
 	if err != nil {
-		log.Fatalf("Environment variable value for %s must be a duration: %v", key, err)
+		log.Fatalf("Environment variable value for %s must be a positive duration: %v", key, err)
 	}
-	return &positiveDuration{d}
+	return posDur
 }
 
 // positiveDuration is a wrapper of time.Duration to ensure only positive values are accepted
 type positiveDuration struct{ time.Duration }
 
 func (pd *positiveDuration) Set(s string) error {
-	if s[0] == '-' {
-		return fmt.Errorf("Negative duration is not valid")
-	}
-	dur, err := time.ParseDuration(s)
+	dur, err := parsePositiveDuration(s)
 	if err != nil {
 		return err
 	}
 
-	pd.Duration = dur
+	pd.Duration = dur.Duration
 	return nil
 }
 
-func createPositiveDurationFlag(dur *time.Duration, key, helper string) *positiveDuration {
-	pd := &positiveDuration{*dur}
+func parsePositiveDuration(s string) (positiveDuration, error) {
+	dur, err := time.ParseDuration(s)
+	if err != nil {
+		return positiveDuration{}, err
+	}
+	if dur < 0 {
+		return positiveDuration{}, fmt.Errorf("negative duration %v is not valid", dur)
+	}
+	return positiveDuration{dur}, nil
+}
+
+func createPositiveDurationFlag(dur time.Duration, key, helper string) *positiveDuration {
+	pd := &positiveDuration{dur}
 	flag.Var(pd, key, helper)
 	return pd
 }
 
-func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval *time.Duration) (interface{}, error) {
+func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval time.Duration) (interface{}, error) {
 	var err error
 	var nginxClient interface{}
 
@@ -101,7 +105,7 @@ func createClientWithRetries(getClient func() (interface{}, error), retries uint
 		}
 		if i > 0 {
 			log.Printf("Could not create Nginx Client. Retrying in %v...", retryInterval)
-			time.Sleep(*retryInterval)
+			time.Sleep(retryInterval)
 		}
 	}
 	return nil, err
@@ -144,11 +148,11 @@ var (
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
 
 	// Custom command-line flags
-	timeout = createPositiveDurationFlag(&defaultTimeout.Duration,
+	timeout = createPositiveDurationFlag(defaultTimeout.Duration,
 		"nginx.timeout",
 		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
 
-	nginxRetryInterval = createPositiveDurationFlag(&defaultNginxRetryInterval.Duration,
+	nginxRetryInterval = createPositiveDurationFlag(defaultNginxRetryInterval.Duration,
 		"nginx.retry-interval",
 		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
 )
@@ -192,7 +196,7 @@ func main() {
 	if *nginxPlus {
 		plusClient, err := createClientWithRetries(func() (interface{}, error) {
 			return plusclient.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, &nginxRetryInterval.Duration)
+		}, *nginxRetries, nginxRetryInterval.Duration)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
@@ -200,7 +204,7 @@ func main() {
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
 			return client.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, &nginxRetryInterval.Duration)
+		}, *nginxRetries, nginxRetryInterval.Duration)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}

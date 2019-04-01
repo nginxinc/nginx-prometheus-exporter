@@ -2,8 +2,6 @@ package main
 
 import (
 	"errors"
-	"flag"
-	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -65,7 +63,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 				return tt.args.client, tt.args.err
 			}
 
-			got, err := createClientWithRetries(getClient, tt.args.retries, &tt.args.retryInterval)
+			got, err := createClientWithRetries(getClient, tt.args.retries, tt.args.retryInterval)
 
 			actualRetries := invocations - 1
 
@@ -84,96 +82,50 @@ func TestCreateClientWithRetries(t *testing.T) {
 	}
 }
 
-func TestCreatePositiveDurationFlag(t *testing.T) {
-	type args struct {
-		dur    time.Duration
-		key    string
-		helper string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		{
-			"CreatePositiveDurationFlag creates a positiveDuration flag",
-			args{
-				5 * time.Millisecond,
-				"key",
-				"helper",
-			},
-			false,
-		},
-		{
-			"CreatePositiveDurationFlag returns an error",
-			args{
-				-5 * time.Millisecond,
-				"neg_key",
-				"helper",
-			},
-			true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			createPositiveDurationFlag(&tt.args.dur, tt.args.key, tt.args.helper)
-
-			err := flag.CommandLine.Parse(os.Args[1:])
-			if err != nil {
-				t.Error(err)
-			}
-
-			// Test if flag got added succesfully
-			testFlag := flag.Lookup(tt.args.key)
-			if testFlag == nil {
-				t.Errorf("Got: nil. Expected: %v flag to be found", tt.args.key)
-			}
-		})
-	}
-}
-
-func TestPositiveDurationSet(t *testing.T) {
-	type fields struct {
-		Duration time.Duration
-	}
+func TestParsePositiveDuration(t *testing.T) {
 	type args struct {
 		s string
 	}
 	tests := []struct {
 		name    string
-		fields  fields
 		args    args
+		want    positiveDuration
 		wantErr bool
 	}{
 		{
 			"PositiveDurationSet updates flag.Value",
-			fields{
-				5 * time.Millisecond,
-			},
 			args{
 				"15ms",
 			},
+			positiveDuration{15 * time.Millisecond},
 			false,
 		},
 		{
-			"PositiveDurationSet returns error for trying update to negative value",
-			fields{
-				5 * time.Millisecond,
-			},
+			"PositiveDurationSet returns error for trying to parse negative value",
 			args{
 				"-15ms",
 			},
+			positiveDuration{},
+			true,
+		},
+		{
+			"PositiveDurationSet returns error for trying to parse empty string",
+			args{
+				"",
+			},
+			positiveDuration{},
 			true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pd := &positiveDuration{
-				Duration: tt.fields.Duration,
+			got, err := parsePositiveDuration(tt.args.s)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parsePositiveDuration() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
-			if err := pd.Set(tt.args.s); (err != nil) != tt.wantErr {
-				t.Errorf("positiveDuration.Set() error = %v, wantErr %v", err, tt.wantErr)
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parsePositiveDuration() = %v, want %v", got, tt.want)
 			}
 		})
 	}
