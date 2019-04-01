@@ -83,43 +83,34 @@ func TestCreateClientWithRetries(t *testing.T) {
 }
 
 func TestParsePositiveDuration(t *testing.T) {
-	type args struct {
-		s string
-	}
 	tests := []struct {
-		name    string
-		args    args
-		want    positiveDuration
-		wantErr bool
+		name      string
+		testInput string
+		want      positiveDuration
+		wantErr   bool
 	}{
 		{
-			"PositiveDurationSet updates flag.Value",
-			args{
-				"15ms",
-			},
+			"ParsePositiveDuration returns a positiveDuration",
+			"15ms",
 			positiveDuration{15 * time.Millisecond},
 			false,
 		},
 		{
-			"PositiveDurationSet returns error for trying to parse negative value",
-			args{
-				"-15ms",
-			},
+			"ParsePositiveDuration returns error for trying to parse negative value",
+			"-15ms",
 			positiveDuration{},
 			true,
 		},
 		{
-			"PositiveDurationSet returns error for trying to parse empty string",
-			args{
-				"",
-			},
+			"ParsePositiveDuration returns error for trying to parse empty string",
+			"",
 			positiveDuration{},
 			true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parsePositiveDuration(tt.args.s)
+			got, err := parsePositiveDuration(tt.testInput)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("parsePositiveDuration() error = %v, wantErr %v", err, tt.wantErr)
 				return
