@@ -88,10 +88,9 @@ func parsePositiveDuration(s string) (positiveDuration, error) {
 	return positiveDuration{dur}, nil
 }
 
-func createPositiveDurationFlag(dur time.Duration, key, helper string) *positiveDuration {
-	pd := &positiveDuration{dur}
-	flag.Var(pd, key, helper)
-	return pd
+func createPositiveDurationFlag(name string, value positiveDuration, usage string) *positiveDuration {
+	flag.Var(&value, name, usage)
+	return &value
 }
 
 func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval time.Duration) (interface{}, error) {
@@ -148,17 +147,16 @@ var (
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
 
 	// Custom command-line flags
-	timeout = createPositiveDurationFlag(defaultTimeout.Duration,
-		"nginx.timeout",
+	timeout = createPositiveDurationFlag("nginx.timeout",
+		defaultTimeout,
 		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
 
-	nginxRetryInterval = createPositiveDurationFlag(defaultNginxRetryInterval.Duration,
-		"nginx.retry-interval",
+	nginxRetryInterval = createPositiveDurationFlag("nginx.retry-interval",
+		defaultNginxRetryInterval,
 		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
 )
 
 func main() {
-
 	flag.Parse()
 
 	log.Printf("Starting NGINX Prometheus Exporter Version=%v GitCommit=%v", version, gitCommit)
