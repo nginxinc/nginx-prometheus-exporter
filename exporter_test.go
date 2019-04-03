@@ -11,7 +11,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 	type args struct {
 		client        interface{}
 		err           error
-		retries       int
+		retries       uint
 		retryInterval time.Duration
 	}
 
@@ -77,6 +77,46 @@ func TestCreateClientWithRetries(t *testing.T) {
 				return
 			} else if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("createClientWithRetries() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParsePositiveDuration(t *testing.T) {
+	tests := []struct {
+		name      string
+		testInput string
+		want      positiveDuration
+		wantErr   bool
+	}{
+		{
+			"ParsePositiveDuration returns a positiveDuration",
+			"15ms",
+			positiveDuration{15 * time.Millisecond},
+			false,
+		},
+		{
+			"ParsePositiveDuration returns error for trying to parse negative value",
+			"-15ms",
+			positiveDuration{},
+			true,
+		},
+		{
+			"ParsePositiveDuration returns error for trying to parse empty string",
+			"",
+			positiveDuration{},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := parsePositiveDuration(tt.testInput)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parsePositiveDuration() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("parsePositiveDuration() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -26,16 +27,16 @@ func getEnv(key, defaultValue string) string {
 	return value
 }
 
-func getEnvInt(key string, defaultValue int) int {
+func getEnvUint(key string, defaultValue uint) uint {
 	value, ok := os.LookupEnv(key)
 	if !ok {
 		return defaultValue
 	}
-	i, err := strconv.ParseInt(value, 10, 64)
+	i, err := strconv.ParseUint(value, 10, 64)
 	if err != nil {
-		log.Fatalf("Environment variable value for %s must be an int: %v", key, err)
+		log.Fatalf("Environment variable value for %s must be an uint: %v", key, err)
 	}
-	return int(i)
+	return uint(i)
 }
 
 func getEnvBool(key string, defaultValue bool) bool {
@@ -50,23 +51,53 @@ func getEnvBool(key string, defaultValue bool) bool {
 	return b
 }
 
-func getEnvDuration(key string, defaultValue time.Duration) time.Duration {
+func getEnvPositiveDuration(key string, defaultValue time.Duration) positiveDuration {
 	value, ok := os.LookupEnv(key)
 	if !ok {
-		return defaultValue
+		return positiveDuration{defaultValue}
 	}
-	d, err := time.ParseDuration(value)
+
+	posDur, err := parsePositiveDuration(value)
 	if err != nil {
-		log.Fatalf("Environment variable value for %s must be a duration: %v", key, err)
+		log.Fatalf("Environment variable value for %s must be a positive duration: %v", key, err)
 	}
-	return d
+	return posDur
 }
 
-func createClientWithRetries(getClient func() (interface{}, error), retries int, retryInterval time.Duration) (interface{}, error) {
+// positiveDuration is a wrapper of time.Duration to ensure only positive values are accepted
+type positiveDuration struct{ time.Duration }
+
+func (pd *positiveDuration) Set(s string) error {
+	dur, err := parsePositiveDuration(s)
+	if err != nil {
+		return err
+	}
+
+	pd.Duration = dur.Duration
+	return nil
+}
+
+func parsePositiveDuration(s string) (positiveDuration, error) {
+	dur, err := time.ParseDuration(s)
+	if err != nil {
+		return positiveDuration{}, err
+	}
+	if dur < 0 {
+		return positiveDuration{}, fmt.Errorf("negative duration %v is not valid", dur)
+	}
+	return positiveDuration{dur}, nil
+}
+
+func createPositiveDurationFlag(name string, value positiveDuration, usage string) *positiveDuration {
+	flag.Var(&value, name, usage)
+	return &value
+}
+
+func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval time.Duration) (interface{}, error) {
 	var err error
 	var nginxClient interface{}
 
-	for i := retries; i >= 0; i-- {
+	for i := 0; i <= int(retries); i++ {
 		nginxClient, err = getClient()
 		if err == nil {
 			return nginxClient, nil
@@ -90,9 +121,9 @@ var (
 	defaultNginxPlus          = getEnvBool("NGINX_PLUS", false)
 	defaultScrapeURI          = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
 	defaultSslVerify          = getEnvBool("SSL_VERIFY", true)
-	defaultTimeout            = getEnvDuration("TIMEOUT", time.Second*5)
-	defaultNginxRetries       = getEnvInt("NGINX_RETRIES", 0)
-	defaultNginxRetryInterval = getEnvDuration("NGINX_RETRY_INTERVAL", time.Second*5)
+	defaultTimeout            = getEnvPositiveDuration("TIMEOUT", time.Second*5)
+	defaultNginxRetries       = getEnvUint("NGINX_RETRIES", 0)
+	defaultNginxRetryInterval = getEnvPositiveDuration("NGINX_RETRY_INTERVAL", time.Second*5)
 
 	// Command-line flags
 	listenAddr = flag.String("web.listen-address",
@@ -111,13 +142,16 @@ var (
 	sslVerify = flag.Bool("nginx.ssl-verify",
 		defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
-	timeout = flag.Duration("nginx.timeout",
-		defaultTimeout,
-		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
-	nginxRetries = flag.Int("nginx.retries",
+	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
-	nginxRetryInterval = flag.Duration("nginx.retry-interval",
+
+	// Custom command-line flags
+	timeout = createPositiveDurationFlag("nginx.timeout",
+		defaultTimeout,
+		"A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable.")
+
+	nginxRetryInterval = createPositiveDurationFlag("nginx.retry-interval",
 		defaultNginxRetryInterval,
 		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
 )
@@ -144,7 +178,7 @@ func main() {
 	registry.MustRegister(buildInfoMetric)
 
 	httpClient := &http.Client{
-		Timeout: *timeout,
+		Timeout: timeout.Duration,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
 		},
@@ -160,7 +194,7 @@ func main() {
 	if *nginxPlus {
 		plusClient, err := createClientWithRetries(func() (interface{}, error) {
 			return plusclient.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, *nginxRetryInterval)
+		}, *nginxRetries, nginxRetryInterval.Duration)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
@@ -168,7 +202,7 @@ func main() {
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
 			return client.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, *nginxRetryInterval)
+		}, *nginxRetries, nginxRetryInterval.Duration)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}
