@@ -102,7 +102,7 @@ func createClientWithRetries(getClient func() (interface{}, error), retries uint
 		if err == nil {
 			return nginxClient, nil
 		}
-		if i > 0 {
+		if i < int(retries) {
 			log.Printf("Could not create Nginx Client. Retrying in %v...", retryInterval)
 			time.Sleep(retryInterval)
 		}
