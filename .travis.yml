@@ -13,4 +13,4 @@ before_install:
 - if [[ "${TRAVIS_PULL_REQUEST_SLUG}" == "nginxinc/nginx-prometheus-exporter" || "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
   wget https://${fossalocation}/${fossafile} && tar xzf ${fossafile}
   && ./fossa init
-  && FOSSA_API_KEY=${fossapush} ./fossa analyze -t nginx-prometheus-exporter -b ${TRAVIS_BRANCH}; fi
+  && GO111MODULE=on FOSSA_API_KEY=${fossapush} ./fossa analyze -t nginx-prometheus-exporter -b ${TRAVIS_BRANCH}; fi
