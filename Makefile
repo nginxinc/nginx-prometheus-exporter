@@ -12,7 +12,7 @@ lint:
 	golangci-lint run
 
 test:
-	GO111MODULE=on go test ./...
+	GO111MODULE=on go test -mod=vendor ./...
 
 container:
 	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(PREFIX):$(TAG) . 
