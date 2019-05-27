@@ -4,8 +4,8 @@ github.com/beorn7/perks/quantile
 github.com/golang/protobuf/proto
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
-# github.com/nginxinc/nginx-plus-go-sdk v0.0.0-20180910131828-47154e1ef115
-github.com/nginxinc/nginx-plus-go-sdk/client
+# github.com/nginxinc/nginx-plus-go-client v0.0.0-20190529112308-8f20f677a8bf
+github.com/nginxinc/nginx-plus-go-client/client
 # github.com/prometheus/client_golang v0.9.2
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/promhttp

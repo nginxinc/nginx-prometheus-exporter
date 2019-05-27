@@ -10,9 +10,12 @@ import (
 )
 
 // APIVersion is a version of NGINX Plus API.
-const APIVersion = 2
+const APIVersion = 4
 
-const streamNotConfiguredCode = "StreamNotConfigured"
+const pathNotFoundCode = "PathNotFound"
+
+const streamContext = true
+const httpContext = false
 
 // NginxClient lets you access NGINX Plus API.
 type NginxClient struct {
@@ -41,16 +44,14 @@ type StreamUpstreamServer struct {
 }
 
 type apiErrorResponse struct {
-	Path      string
-	Method    string
 	Error     apiError
 	RequestID string `json:"request_id"`
 	Href      string
 }
 
 func (resp *apiErrorResponse) toString() string {
-	return fmt.Sprintf("path=%v; method=%v; error.status=%v; error.text=%v; error.code=%v; request_id=%v; href=%v",
-		resp.Path, resp.Method, resp.Error.Status, resp.Error.Text, resp.Error.Code, resp.RequestID, resp.Href)
+	return fmt.Sprintf("error.status=%v; error.text=%v; error.code=%v; request_id=%v; href=%v",
+		resp.Error.Status, resp.Error.Text, resp.Error.Code, resp.RequestID, resp.Href)
 }
 
 type apiError struct {
@@ -70,7 +71,7 @@ func (internalError *internalError) Error() string {
 }
 
 // Wrap is a way of including current context while preserving previous error information,
-// similar to `return fmt.Errof("error doing foo, err: %v", err)` but for our internalError type.
+// similar to `return fmt.Errorf("error doing foo, err: %v", err)` but for our internalError type.
 func (internalError *internalError) Wrap(err string) *internalError {
 	internalError.err = fmt.Sprintf("%v. %v", err, internalError.err)
 	return internalError
@@ -79,6 +80,7 @@ func (internalError *internalError) Wrap(err string) *internalError {
 // Stats represents NGINX Plus stats fetched from the NGINX Plus API.
 // https://nginx.org/en/docs/http/ngx_http_api_module.html
 type Stats struct {
+	NginxInfo         NginxInfo
 	Connections       Connections
 	HTTPRequests      HTTPRequests
 	SSL               SSL
@@ -86,6 +88,19 @@ type Stats struct {
 	Upstreams         Upstreams
 	StreamServerZones StreamServerZones
 	StreamUpstreams   StreamUpstreams
+	StreamZoneSync    StreamZoneSync
+}
+
+// NginxInfo contains general information about NGINX Plus.
+type NginxInfo struct {
+	Version         string
+	Build           string
+	Address         string
+	Generation      uint64
+	LoadTimestamp   string `json:"load_timestamp"`
+	Timestamp       string
+	ProcessID       uint64 `json:"pid"`
+	ParentProcessID uint64 `json:"ppid"`
 }
 
 // Connections represents connection related stats.
@@ -133,6 +148,27 @@ type StreamServerZone struct {
 	Discarded   uint64
 	Received    uint64
 	Sent        uint64
+}
+
+// StreamZoneSync represents the sync information per each shared memory zone and the sync information per node in a cluster
+type StreamZoneSync struct {
+	Zones  map[string]SyncZone
+	Status StreamZoneSyncStatus
+}
+
+// SyncZone represents the syncronization status of a shared memory zone
+type SyncZone struct {
+	RecordsPending uint64 `json:"records_pending"`
+	RecordsTotal   uint64 `json:"records_total"`
+}
+
+// StreamZoneSyncStatus represents the status of a shared memory zone
+type StreamZoneSyncStatus struct {
+	BytesIn     uint64 `json:"bytes_in"`
+	MsgsIn      uint64 `json:"msgs_in"`
+	MsgsOut     uint64 `json:"msgs_out"`
+	BytesOut    uint64 `json:"bytes_out"`
+	NodesOnline uint64 `json:"nodes_online"`
 }
 
 // Responses represents HTTP response related stats.
@@ -243,7 +279,6 @@ type HealthChecks struct {
 // NewNginxClient creates an NginxClient.
 func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, error) {
 	versions, err := getAPIVersions(httpClient, apiEndpoint)
-
 	if err != nil {
 		return nil, fmt.Errorf("error accessing the API: %v", err)
 	}
@@ -332,7 +367,6 @@ func (client *NginxClient) GetHTTPServers(upstream string) ([]UpstreamServer, er
 
 	var servers []UpstreamServer
 	err := client.get(path, &servers)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the HTTP servers of upstream %v: %v", upstream, err)
 	}
@@ -343,7 +377,6 @@ func (client *NginxClient) GetHTTPServers(upstream string) ([]UpstreamServer, er
 // AddHTTPServer adds the server to the upstream.
 func (client *NginxClient) AddHTTPServer(upstream string, server UpstreamServer) error {
 	id, err := client.getIDOfHTTPServer(upstream, server.Server)
-
 	if err != nil {
 		return fmt.Errorf("failed to add %v server to %v upstream: %v", server.Server, upstream, err)
 	}
@@ -371,8 +404,7 @@ func (client *NginxClient) DeleteHTTPServer(upstream string, server string) erro
 	}
 
 	path := fmt.Sprintf("http/upstreams/%v/servers/%v", upstream, id)
-	err = client.delete(path)
-
+	err = client.delete(path, http.StatusOK)
 	if err != nil {
 		return fmt.Errorf("failed to remove %v server from %v upstream: %v", server, upstream, err)
 	}
@@ -500,7 +532,7 @@ func (client *NginxClient) post(path string, input interface{}) error {
 	return nil
 }
 
-func (client *NginxClient) delete(path string) error {
+func (client *NginxClient) delete(path string, expectedStatusCode int) error {
 	path = fmt.Sprintf("%v/%v/%v/", client.apiEndpoint, APIVersion, path)
 
 	req, err := http.NewRequest(http.MethodDelete, path, nil)
@@ -514,10 +546,37 @@ func (client *NginxClient) delete(path string) error {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != expectedStatusCode {
 		return createResponseMismatchError(resp.Body).Wrap(fmt.Sprintf(
 			"failed to complete delete request: expected %v response, got %v",
-			http.StatusOK, resp.StatusCode))
+			expectedStatusCode, resp.StatusCode))
+	}
+	return nil
+}
+
+func (client *NginxClient) patch(path string, input interface{}) error {
+	path = fmt.Sprintf("%v/%v/%v/", client.apiEndpoint, APIVersion, path)
+
+	jsonInput, err := json.Marshal(input)
+	if err != nil {
+		return fmt.Errorf("failed to marshall input: %v", err)
+	}
+
+	req, err := http.NewRequest(http.MethodPatch, path, bytes.NewBuffer(jsonInput))
+	if err != nil {
+		return fmt.Errorf("failed to create a patch request: %v", err)
+	}
+
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to create patch request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return createResponseMismatchError(resp.Body).Wrap(fmt.Sprintf(
+			"failed to complete patch request: expected %v response, got %v",
+			http.StatusNoContent, resp.StatusCode))
 	}
 	return nil
 }
@@ -534,18 +593,15 @@ func (client *NginxClient) GetStreamServers(upstream string) ([]StreamUpstreamSe
 
 	var servers []StreamUpstreamServer
 	err := client.get(path, &servers)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stream servers of upstream server %v: %v", upstream, err)
 	}
-
 	return servers, nil
 }
 
 // AddStreamServer adds the stream server to the upstream.
 func (client *NginxClient) AddStreamServer(upstream string, server StreamUpstreamServer) error {
 	id, err := client.getIDOfStreamServer(upstream, server.Server)
-
 	if err != nil {
 		return fmt.Errorf("failed to add %v stream server to %v upstream: %v", server.Server, upstream, err)
 	}
@@ -555,11 +611,9 @@ func (client *NginxClient) AddStreamServer(upstream string, server StreamUpstrea
 
 	path := fmt.Sprintf("stream/upstreams/%v/servers/", upstream)
 	err = client.post(path, &server)
-
 	if err != nil {
 		return fmt.Errorf("failed to add %v stream server to %v upstream: %v", server.Server, upstream, err)
 	}
-
 	return nil
 }
 
@@ -574,12 +628,10 @@ func (client *NginxClient) DeleteStreamServer(upstream string, server string) er
 	}
 
 	path := fmt.Sprintf("stream/upstreams/%v/servers/%v", upstream, id)
-	err = client.delete(path)
-
+	err = client.delete(path, http.StatusOK)
 	if err != nil {
 		return fmt.Errorf("failed to remove %v stream server from %v upstream: %v", server, upstream, err)
 	}
-
 	return nil
 }
 
@@ -658,6 +710,11 @@ func determineStreamUpdates(updatedServers []StreamUpstreamServer, nginxServers 
 
 // GetStats gets connection, request, ssl, zone, stream zone, upstream and stream upstream related stats from the NGINX Plus API.
 func (client *NginxClient) GetStats() (*Stats, error) {
+	info, err := client.getNginxInfo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats %v", err)
+	}
+
 	cons, err := client.getConnections()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
@@ -693,7 +750,13 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
+	streamZoneSync, err := client.getStreamZoneSync()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats: %v", err)
+	}
+
 	return &Stats{
+		NginxInfo:         *info,
 		Connections:       *cons,
 		HTTPRequests:      *requests,
 		SSL:               *ssl,
@@ -701,7 +764,17 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 		StreamServerZones: *streamZones,
 		Upstreams:         *upstreams,
 		StreamUpstreams:   *streamUpstreams,
+		StreamZoneSync:    *streamZoneSync,
 	}, nil
+}
+
+func (client *NginxClient) getNginxInfo() (*NginxInfo, error) {
+	var info NginxInfo
+	err := client.get("nginx", &info)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get info: %v", err)
+	}
+	return &info, nil
 }
 
 func (client *NginxClient) getConnections() (*Connections, error) {
@@ -715,12 +788,10 @@ func (client *NginxClient) getConnections() (*Connections, error) {
 
 func (client *NginxClient) getHTTPRequests() (*HTTPRequests, error) {
 	var requests HTTPRequests
-
 	err := client.get("http/requests", &requests)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get http requests: %v", err)
 	}
-
 	return &requests, nil
 }
 
@@ -747,7 +818,7 @@ func (client *NginxClient) getStreamServerZones() (*StreamServerZones, error) {
 	err := client.get("stream/server_zones", &zones)
 	if err != nil {
 		if err, ok := err.(*internalError); ok {
-			if err.Code == streamNotConfiguredCode {
+			if err.Code == pathNotFoundCode {
 				return &zones, nil
 			}
 		}
@@ -770,11 +841,202 @@ func (client *NginxClient) getStreamUpstreams() (*StreamUpstreams, error) {
 	err := client.get("stream/upstreams", &upstreams)
 	if err != nil {
 		if err, ok := err.(*internalError); ok {
-			if err.Code == streamNotConfiguredCode {
+			if err.Code == pathNotFoundCode {
 				return &upstreams, nil
 			}
 		}
 		return nil, fmt.Errorf("failed to get stream upstreams: %v", err)
 	}
 	return &upstreams, nil
+}
+
+func (client *NginxClient) getStreamZoneSync() (*StreamZoneSync, error) {
+	var streamZoneSync StreamZoneSync
+	err := client.get("stream/zone_sync", &streamZoneSync)
+	if err != nil {
+		if err, ok := err.(*internalError); ok {
+
+			if err.Code == pathNotFoundCode {
+				return &streamZoneSync, nil
+			}
+		}
+		return nil, fmt.Errorf("failed to get stream zone sync: %v", err)
+	}
+
+	return &streamZoneSync, err
+}
+
+// KeyValPairs are the key-value pairs stored in a zone.
+type KeyValPairs map[string]string
+
+// KeyValPairsByZone are the KeyValPairs for all zones, by zone name.
+type KeyValPairsByZone map[string]KeyValPairs
+
+// GetKeyValPairs fetches key/value pairs for a given HTTP zone.
+func (client *NginxClient) GetKeyValPairs(zone string) (KeyValPairs, error) {
+	return client.getKeyValPairs(zone, httpContext)
+}
+
+// GetStreamKeyValPairs fetches key/value pairs for a given Stream zone.
+func (client *NginxClient) GetStreamKeyValPairs(zone string) (KeyValPairs, error) {
+	return client.getKeyValPairs(zone, streamContext)
+}
+
+func (client *NginxClient) getKeyValPairs(zone string, stream bool) (KeyValPairs, error) {
+	base := "http"
+	if stream {
+		base = "stream"
+	}
+	if zone == "" {
+		return nil, fmt.Errorf("zone required")
+	}
+
+	path := fmt.Sprintf("%v/keyvals/%v", base, zone)
+	var keyValPairs KeyValPairs
+	err := client.get(path, &keyValPairs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get keyvals for %v/%v zone: %v", base, zone, err)
+	}
+	return keyValPairs, nil
+}
+
+// GetAllKeyValPairs fetches all key/value pairs for all HTTP zones.
+func (client *NginxClient) GetAllKeyValPairs() (KeyValPairsByZone, error) {
+	return client.getAllKeyValPairs(httpContext)
+}
+
+// GetAllStreamKeyValPairs fetches all key/value pairs for all Stream zones.
+func (client *NginxClient) GetAllStreamKeyValPairs() (KeyValPairsByZone, error) {
+	return client.getAllKeyValPairs(streamContext)
+}
+
+func (client *NginxClient) getAllKeyValPairs(stream bool) (KeyValPairsByZone, error) {
+	base := "http"
+	if stream {
+		base = "stream"
+	}
+
+	path := fmt.Sprintf("%v/keyvals", base)
+	var keyValPairsByZone KeyValPairsByZone
+	err := client.get(path, &keyValPairsByZone)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get keyvals for all %v zones: %v", base, err)
+	}
+	return keyValPairsByZone, nil
+}
+
+// AddKeyValPair adds a new key/value pair to a given HTTP zone.
+func (client *NginxClient) AddKeyValPair(zone string, key string, val string) error {
+	return client.addKeyValPair(zone, key, val, httpContext)
+}
+
+// AddStreamKeyValPair adds a new key/value pair to a given Stream zone.
+func (client *NginxClient) AddStreamKeyValPair(zone string, key string, val string) error {
+	return client.addKeyValPair(zone, key, val, streamContext)
+}
+
+func (client *NginxClient) addKeyValPair(zone string, key string, val string, stream bool) error {
+	base := "http"
+	if stream {
+		base = "stream"
+	}
+	if zone == "" {
+		return fmt.Errorf("zone required")
+	}
+
+	path := fmt.Sprintf("%v/keyvals/%v", base, zone)
+	input := KeyValPairs{key: val}
+	err := client.post(path, &input)
+	if err != nil {
+		return fmt.Errorf("failed to add key value pair for %v/%v zone: %v", base, zone, err)
+	}
+	return nil
+}
+
+// ModifyKeyValPair modifies the value of an existing key in a given HTTP zone.
+func (client *NginxClient) ModifyKeyValPair(zone string, key string, val string) error {
+	return client.modifyKeyValPair(zone, key, val, httpContext)
+}
+
+// ModifyStreamKeyValPair modifies the value of an existing key in a given Stream zone.
+func (client *NginxClient) ModifyStreamKeyValPair(zone string, key string, val string) error {
+	return client.modifyKeyValPair(zone, key, val, streamContext)
+}
+
+func (client *NginxClient) modifyKeyValPair(zone string, key string, val string, stream bool) error {
+	base := "http"
+	if stream {
+		base = "stream"
+	}
+	if zone == "" {
+		return fmt.Errorf("zone required")
+	}
+
+	path := fmt.Sprintf("%v/keyvals/%v", base, zone)
+	input := KeyValPairs{key: val}
+	err := client.patch(path, &input)
+	if err != nil {
+		return fmt.Errorf("failed to update key value pair for %v/%v zone: %v", base, zone, err)
+	}
+	return nil
+}
+
+// DeleteKeyValuePair deletes the key/value pair for a key in a given HTTP zone.
+func (client *NginxClient) DeleteKeyValuePair(zone string, key string) error {
+	return client.deleteKeyValuePair(zone, key, httpContext)
+}
+
+// DeleteStreamKeyValuePair deletes the key/value pair for a key in a given Stream zone.
+func (client *NginxClient) DeleteStreamKeyValuePair(zone string, key string) error {
+	return client.deleteKeyValuePair(zone, key, streamContext)
+}
+
+// To delete a key/value pair you set the value to null via the API,
+// then NGINX+ will delete the key.
+func (client *NginxClient) deleteKeyValuePair(zone string, key string, stream bool) error {
+	base := "http"
+	if stream {
+		base = "stream"
+	}
+	if zone == "" {
+		return fmt.Errorf("zone required")
+	}
+
+	// map[string]string can't have a nil value so we use a different type here.
+	keyval := make(map[string]interface{})
+	keyval[key] = nil
+
+	path := fmt.Sprintf("%v/keyvals/%v", base, zone)
+	err := client.patch(path, &keyval)
+	if err != nil {
+		return fmt.Errorf("failed to remove key values pair for %v/%v zone: %v", base, zone, err)
+	}
+	return nil
+}
+
+// DeleteKeyValPairs deletes all the key-value pairs in a given HTTP zone.
+func (client *NginxClient) DeleteKeyValPairs(zone string) error {
+	return client.deleteKeyValPairs(zone, httpContext)
+}
+
+// DeleteStreamKeyValPairs deletes all the key-value pairs in a given Stream zone.
+func (client *NginxClient) DeleteStreamKeyValPairs(zone string) error {
+	return client.deleteKeyValPairs(zone, streamContext)
+}
+
+func (client *NginxClient) deleteKeyValPairs(zone string, stream bool) error {
+	base := "http"
+	if stream {
+		base = "stream"
+	}
+	if zone == "" {
+		return fmt.Errorf("zone required")
+	}
+
+	path := fmt.Sprintf("%v/keyvals/%v", base, zone)
+	err := client.delete(path, http.StatusNoContent)
+	if err != nil {
+		return fmt.Errorf("failed to remove all key value pairs for %v/%v zone: %v", base, zone, err)
+	}
+	return nil
 }
