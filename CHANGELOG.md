@@ -1,5 +1,19 @@
 # Changelog
 
+### 0.4.0
+
+FEATURES:
+* [50](https://github.com/nginxinc/nginx-prometheus-exporter/pull/50): Add zone sync metrics support.
+* [37](https://github.com/nginxinc/nginx-prometheus-exporter/pull/37): Implement a way to retry connection to NGINX if it is unreachable. Add -nginx.retries for setting the number of retries and -nginx.retry-interval for setting the interval between retries, both as cli-arguments.
+
+UPGRADE:
+* Use the 0.4.0 image from our DockerHub: `nginx/nginx-prometheus-exporter:0.4.0`
+* Download the latest binaries from [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.4.0).
+
+COMPATIBILITY:
+* NGINX 0.1.18 or newer.
+* NGINX Plus R18 or newer.
+
 ### 0.3.0
 
 FEATURES:
