@@ -303,23 +303,25 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			prometheus.GaugeValue, float64(upstream.Zombies), name)
 	}
 
-	for name, zone := range stats.StreamZoneSync.Zones {
-		ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["records_pending"],
-			prometheus.GaugeValue, float64(zone.RecordsPending), name)
-		ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["records_total"],
-			prometheus.GaugeValue, float64(zone.RecordsTotal), name)
-	}
+	if stats.StreamZoneSync != nil {
+		for name, zone := range stats.StreamZoneSync.Zones {
+			ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["records_pending"],
+				prometheus.GaugeValue, float64(zone.RecordsPending), name)
+			ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["records_total"],
+				prometheus.GaugeValue, float64(zone.RecordsTotal), name)
+		}
 
-	ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["bytes_in"],
-		prometheus.CounterValue, float64(stats.StreamZoneSync.Status.BytesIn))
-	ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["bytes_out"],
-		prometheus.CounterValue, float64(stats.StreamZoneSync.Status.BytesOut))
-	ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["msgs_in"],
-		prometheus.CounterValue, float64(stats.StreamZoneSync.Status.MsgsIn))
-	ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["msgs_out"],
-		prometheus.CounterValue, float64(stats.StreamZoneSync.Status.MsgsOut))
-	ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["nodes_online"],
-		prometheus.GaugeValue, float64(stats.StreamZoneSync.Status.NodesOnline))
+		ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["bytes_in"],
+			prometheus.CounterValue, float64(stats.StreamZoneSync.Status.BytesIn))
+		ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["bytes_out"],
+			prometheus.CounterValue, float64(stats.StreamZoneSync.Status.BytesOut))
+		ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["msgs_in"],
+			prometheus.CounterValue, float64(stats.StreamZoneSync.Status.MsgsIn))
+		ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["msgs_out"],
+			prometheus.CounterValue, float64(stats.StreamZoneSync.Status.MsgsOut))
+		ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["nodes_online"],
+			prometheus.GaugeValue, float64(stats.StreamZoneSync.Status.NodesOnline))
+	}
 }
 
 var upstreamServerStates = map[string]float64{

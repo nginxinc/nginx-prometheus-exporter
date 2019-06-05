@@ -88,7 +88,7 @@ type Stats struct {
 	Upstreams         Upstreams
 	StreamServerZones StreamServerZones
 	StreamUpstreams   StreamUpstreams
-	StreamZoneSync    StreamZoneSync
+	StreamZoneSync    *StreamZoneSync
 }
 
 // NginxInfo contains general information about NGINX Plus.
@@ -764,7 +764,7 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 		StreamServerZones: *streamZones,
 		Upstreams:         *upstreams,
 		StreamUpstreams:   *streamUpstreams,
-		StreamZoneSync:    *streamZoneSync,
+		StreamZoneSync:    streamZoneSync,
 	}, nil
 }
 
@@ -855,9 +855,8 @@ func (client *NginxClient) getStreamZoneSync() (*StreamZoneSync, error) {
 	err := client.get("stream/zone_sync", &streamZoneSync)
 	if err != nil {
 		if err, ok := err.(*internalError); ok {
-
 			if err.Code == pathNotFoundCode {
-				return &streamZoneSync, nil
+				return nil, nil
 			}
 		}
 		return nil, fmt.Errorf("failed to get stream zone sync: %v", err)
