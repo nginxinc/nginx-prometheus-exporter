@@ -1,5 +1,18 @@
 # Changelog
 
+### 0.4.1
+
+BUGFIXES:
+* [55](https://github.com/nginxinc/nginx-prometheus-exporter/pull/55): Do not export zone sync metrics if they are not reported by NGINX Plus. Previously, in such case, the metrics were exported with zero values.
+
+UPGRADE:
+* Use the 0.4.1 image from our DockerHub: `nginx/nginx-prometheus-exporter:0.4.1`
+* Download the latest binaries from [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.4.1).
+
+COMPATIBILITY:
+* NGINX 0.1.18 or newer.
+* NGINX Plus R18 or newer.
+
 ### 0.4.0
 
 FEATURES:
