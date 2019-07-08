@@ -140,6 +140,9 @@ Note: the binary is built for the OS/arch of your machine. To build binaries for
 
 The binary is built with the name `nginx-prometheus-exporter`.
 
+## Grafana Dashboard
+The official Grafana dashboard is provided with the exporter for NGINX. Check the [Grafana Dashboard](./grafana/README.md) documentation for more information.
+
 ## Support
 
 The commercial support is available for NGINX Plus customers when the NGINX Prometheus Exporter is used with NGINX Ingress Controller.
