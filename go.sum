@@ -4,8 +4,8 @@ github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/matttproud/golang_protobuf_extensions v1.0.1 h1:4hp9jkHxhMHkqkrB3Ix0jegS5sx/RkqARlsWZ6pIwiU=
 github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5Ld7szi9bcBfOoFv/3dc6xSMkL2PC0=
-github.com/nginxinc/nginx-plus-go-client v0.3.1 h1:oj3tG3v5Ei8v8RccCyGurpVE0jrBFp+EX08qIaaVkm4=
-github.com/nginxinc/nginx-plus-go-client v0.3.1/go.mod h1:DBAmdDP71tOhgFPdCMVusegzdKmLVpVL0nVcMX17pbY=
+github.com/nginxinc/nginx-plus-go-client v0.3.2-0.20190716103443-6b51388053dd h1:XZJZWn9hI6wr8dxuycWuDO22moUwX2UhLzVWfSP5euw=
+github.com/nginxinc/nginx-plus-go-client v0.3.2-0.20190716103443-6b51388053dd/go.mod h1:DBAmdDP71tOhgFPdCMVusegzdKmLVpVL0nVcMX17pbY=
 github.com/prometheus/client_golang v0.9.2 h1:awm861/B8OKDd2I/6o1dy3ra4BamzKhYOiGItCeZ740=
 github.com/prometheus/client_golang v0.9.2/go.mod h1:OsXs2jCmiKlQ1lTBmv21f2mNfw4xf/QclQDMrYNZzcM=
 github.com/prometheus/client_model v0.0.0-20180712105110-5c3871d89910 h1:idejC8f05m9MGOsuEi1ATq9shN03HrxNkD/luQvxCv8=
