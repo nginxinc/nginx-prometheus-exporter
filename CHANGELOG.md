@@ -1,5 +1,18 @@
 # Changelog
 
+### 0.4.2
+
+BUGFIXES:
+* [60](https://github.com/nginxinc/nginx-prometheus-exporter/pull/60): *Fix session metrics for stream server zones*. Session metrics with a status of `4xx` or `5xx` are now correctly reported. Previously they were always reported as `0`.
+
+UPGRADE:
+* Use the 0.4.2 image from our DockerHub: `nginx/nginx-prometheus-exporter:0.4.2`
+* Download the latest binaries from [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.4.2).
+
+COMPATIBILITY:
+* NGINX 0.1.18 or newer.
+* NGINX Plus R18 or newer.
+
 ### 0.4.1
 
 BUGFIXES:
