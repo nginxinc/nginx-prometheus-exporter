@@ -136,7 +136,7 @@
             "tableColumn": "",
             "targets": [
                 {
-                    "expr": "nginx_up{instance=\"$instance\"}",
+                    "expr": "nginx_up{instance=~\"$instance\"}",
                     "format": "time_series",
                     "instant": false,
                     "intervalFactor": 1,
