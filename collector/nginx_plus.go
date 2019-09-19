@@ -19,6 +19,8 @@ type NginxPlusCollector struct {
 	streamUpstreamMetrics       map[string]*prometheus.Desc
 	streamUpstreamServerMetrics map[string]*prometheus.Desc
 	streamZoneSyncMetrics       map[string]*prometheus.Desc
+	locationZoneMetrics         map[string]*prometheus.Desc
+	resolverMetrics             map[string]*prometheus.Desc
 	upMetric                    prometheus.Gauge
 	mutex                       sync.Mutex
 }
@@ -110,6 +112,30 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"records_pending": newStreamZoneSyncZoneMetric(namespace, "records_pending", "The number of records that need to be sent to the cluster"),
 			"records_total":   newStreamZoneSyncZoneMetric(namespace, "records_total", "The total number of records stored in the shared memory zone"),
 		},
+		locationZoneMetrics: map[string]*prometheus.Desc{
+			"requests":      newLocationZoneMetric(namespace, "requests", "Total client requests", nil),
+			"responses_1xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", prometheus.Labels{"code": "1xx"}),
+			"responses_2xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", prometheus.Labels{"code": "2xx"}),
+			"responses_3xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", prometheus.Labels{"code": "3xx"}),
+			"responses_4xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", prometheus.Labels{"code": "4xx"}),
+			"responses_5xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", prometheus.Labels{"code": "5xx"}),
+			"discarded":     newLocationZoneMetric(namespace, "discarded", "Requests completed without sending a response", nil),
+			"received":      newLocationZoneMetric(namespace, "received", "Bytes received from clients", nil),
+			"sent":          newLocationZoneMetric(namespace, "sent", "Bytes sent to clients", nil),
+		},
+		resolverMetrics: map[string]*prometheus.Desc{
+			"name":     newResolverMetric(namespace, "name", "Total requests to resolve names to addresses"),
+			"srv":      newResolverMetric(namespace, "srv", "Total requests to resolve SRV records"),
+			"addr":     newResolverMetric(namespace, "addr", "Total requests to resolve addresses to names"),
+			"noerror":  newResolverMetric(namespace, "noerror", "Total number of successful responses"),
+			"formerr":  newResolverMetric(namespace, "formerr", "Total number of FORMERR responses"),
+			"servfail": newResolverMetric(namespace, "servfail", "Total number of SERVFAIL responses"),
+			"nxdomain": newResolverMetric(namespace, "nxdomain", "Total number of NXDOMAIN responses"),
+			"notimp":   newResolverMetric(namespace, "notimp", "Total number of NOTIMP responses"),
+			"refused":  newResolverMetric(namespace, "refused", "Total number of REFUSED responses"),
+			"timedout": newResolverMetric(namespace, "timedout", "Total number of timed out requests"),
+			"unknown":  newResolverMetric(namespace, "unknown", "Total requests completed with an unknown error"),
+		},
 		upMetric: newUpMetric(namespace),
 	}
 }
@@ -141,6 +167,12 @@ func (c *NginxPlusCollector) Describe(ch chan<- *prometheus.Desc) {
 		ch <- m
 	}
 	for _, m := range c.streamZoneSyncMetrics {
+		ch <- m
+	}
+	for _, m := range c.locationZoneMetrics {
+		ch <- m
+	}
+	for _, m := range c.resolverMetrics {
 		ch <- m
 	}
 }
@@ -322,6 +354,52 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.streamZoneSyncMetrics["nodes_online"],
 			prometheus.GaugeValue, float64(stats.StreamZoneSync.Status.NodesOnline))
 	}
+
+	for name, zone := range stats.LocationZones {
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["requests"],
+			prometheus.CounterValue, float64(zone.Requests), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["responses_1xx"],
+			prometheus.CounterValue, float64(zone.Responses.Responses1xx), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["responses_2xx"],
+			prometheus.CounterValue, float64(zone.Responses.Responses2xx), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["responses_3xx"],
+			prometheus.CounterValue, float64(zone.Responses.Responses3xx), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["responses_4xx"],
+			prometheus.CounterValue, float64(zone.Responses.Responses4xx), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["responses_5xx"],
+			prometheus.CounterValue, float64(zone.Responses.Responses5xx), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["discarded"],
+			prometheus.CounterValue, float64(zone.Discarded), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["received"],
+			prometheus.CounterValue, float64(zone.Received), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["sent"],
+			prometheus.CounterValue, float64(zone.Sent), name)
+	}
+
+	for name, zone := range stats.Resolvers {
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["name"],
+			prometheus.CounterValue, float64(zone.Requests.Name), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["srv"],
+			prometheus.CounterValue, float64(zone.Requests.Srv), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["addr"],
+			prometheus.CounterValue, float64(zone.Requests.Addr), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["noerror"],
+			prometheus.CounterValue, float64(zone.Responses.Noerror), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["formerr"],
+			prometheus.CounterValue, float64(zone.Responses.Formerr), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["servfail"],
+			prometheus.CounterValue, float64(zone.Responses.Servfail), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["nxdomain"],
+			prometheus.CounterValue, float64(zone.Responses.Nxdomain), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["notimp"],
+			prometheus.CounterValue, float64(zone.Responses.Notimp), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["refused"],
+			prometheus.CounterValue, float64(zone.Responses.Refused), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["timedout"],
+			prometheus.CounterValue, float64(zone.Responses.Timedout), name)
+		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["unknown"],
+			prometheus.CounterValue, float64(zone.Responses.Unknown), name)
+	}
 }
 
 var upstreamServerStates = map[string]float64{
@@ -363,4 +441,12 @@ func newStreamZoneSyncMetric(namespace string, metricName string, docString stri
 
 func newStreamZoneSyncZoneMetric(namespace string, metricName string, docString string) *prometheus.Desc {
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_zone_sync_zone", metricName), docString, []string{"zone"}, nil)
+}
+
+func newLocationZoneMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "location_zone", metricName), docString, []string{"location_zone"}, constLabels)
+}
+
+func newResolverMetric(namespace string, metricName string, docString string) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "resolver", metricName), docString, []string{"resolver"}, nil)
 }
