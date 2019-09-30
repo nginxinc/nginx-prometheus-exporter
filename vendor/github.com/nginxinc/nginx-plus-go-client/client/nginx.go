@@ -10,7 +10,7 @@ import (
 )
 
 // APIVersion is a version of NGINX Plus API.
-const APIVersion = 4
+const APIVersion = 5
 
 const pathNotFoundCode = "PathNotFound"
 
@@ -30,9 +30,15 @@ type UpstreamServer struct {
 	ID          int    `json:"id,omitempty"`
 	Server      string `json:"server"`
 	MaxConns    int    `json:"max_conns"`
-	MaxFails    int    `json:"max_fails"`
+	MaxFails    *int   `json:"max_fails,omitempty"`
 	FailTimeout string `json:"fail_timeout,omitempty"`
 	SlowStart   string `json:"slow_start,omitempty"`
+	Route       string `json:"route"`
+	Backup      bool   `json:"backup"`
+	Down        bool   `json:"down"`
+	Drain       bool   `json:"drain,omitempty"`
+	Weight      *int   `json:"weight,omitempty"`
+	Service     string `json:"service,omitempty"`
 }
 
 // StreamUpstreamServer lets you configure Stream upstreams.
@@ -40,9 +46,13 @@ type StreamUpstreamServer struct {
 	ID          int    `json:"id,omitempty"`
 	Server      string `json:"server"`
 	MaxConns    int    `json:"max_conns"`
-	MaxFails    int    `json:"max_fails"`
+	MaxFails    *int   `json:"max_fails,omitempty"`
 	FailTimeout string `json:"fail_timeout,omitempty"`
 	SlowStart   string `json:"slow_start,omitempty"`
+	Backup      bool   `json:"backup"`
+	Down        bool   `json:"down"`
+	Weight      *int   `json:"weight,omitempty"`
+	Service     string `json:"service,omitempty"`
 }
 
 type apiErrorResponse struct {
@@ -91,6 +101,8 @@ type Stats struct {
 	StreamServerZones StreamServerZones
 	StreamUpstreams   StreamUpstreams
 	StreamZoneSync    *StreamZoneSync
+	LocationZones     LocationZones
+	Resolvers         Resolvers
 }
 
 // NginxInfo contains general information about NGINX Plus.
@@ -276,6 +288,46 @@ type HealthChecks struct {
 	Fails      uint64
 	Unhealthy  uint64
 	LastPassed bool `json:"last_passed"`
+}
+
+// LocationZones represents location_zones related stats
+type LocationZones map[string]LocationZone
+
+// Resolvers represents resolvers related stats
+type Resolvers map[string]Resolver
+
+// LocationZone represents location_zones related stats
+type LocationZone struct {
+	Requests  int64
+	Responses Responses
+	Discarded int64
+	Received  int64
+	Sent      int64
+}
+
+// Resolver represents resolvers related stats
+type Resolver struct {
+	Requests  ResolverRequests  `json:"requests"`
+	Responses ResolverResponses `json:"responses"`
+}
+
+// ResolverRequests represents resolver requests
+type ResolverRequests struct {
+	Name int64
+	Srv  int64
+	Addr int64
+}
+
+// ResolverResponses represents resolver responses
+type ResolverResponses struct {
+	Noerror  int64
+	Formerr  int64
+	Servfail int64
+	Nxdomain int64
+	Notimp   int64
+	Refused  int64
+	Timedout int64
+	Unknown  int64
 }
 
 // NewNginxClient creates an NginxClient.
@@ -757,6 +809,16 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
+	locationZones, err := client.getLocationZones()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats: %v", err)
+	}
+
+	resolvers, err := client.getResolvers()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats: %v", err)
+	}
+
 	return &Stats{
 		NginxInfo:         *info,
 		Connections:       *cons,
@@ -767,6 +829,8 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 		Upstreams:         *upstreams,
 		StreamUpstreams:   *streamUpstreams,
 		StreamZoneSync:    streamZoneSync,
+		LocationZones:     *locationZones,
+		Resolvers:         *resolvers,
 	}, nil
 }
 
@@ -865,6 +929,26 @@ func (client *NginxClient) getStreamZoneSync() (*StreamZoneSync, error) {
 	}
 
 	return &streamZoneSync, err
+}
+
+func (client *NginxClient) getLocationZones() (*LocationZones, error) {
+	var locationZones LocationZones
+	err := client.get("http/location_zones", &locationZones)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get location zones: %v", err)
+	}
+
+	return &locationZones, err
+}
+
+func (client *NginxClient) getResolvers() (*Resolvers, error) {
+	var resolvers Resolvers
+	err := client.get("resolvers", &resolvers)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get resolvers: %v", err)
+	}
+
+	return &resolvers, err
 }
 
 // KeyValPairs are the key-value pairs stored in a zone.
