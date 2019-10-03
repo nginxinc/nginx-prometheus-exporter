@@ -1,6 +1,6 @@
 module github.com/nginxinc/nginx-prometheus-exporter
 
-go 1.12
+go 1.13
 
 require (
 	github.com/nginxinc/nginx-plus-go-client v0.5.0
