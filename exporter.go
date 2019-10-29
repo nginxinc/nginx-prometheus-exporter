@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"flag"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -110,6 +113,43 @@ func createClientWithRetries(getClient func() (interface{}, error), retries uint
 	return nil, err
 }
 
+func parseUnixSocketAddress(address string) (string, string, error) {
+	addressParts := strings.Split(address, ":")
+	addressPartsLength := len(addressParts)
+
+	if addressPartsLength > 3 || addressPartsLength < 1 {
+		return "", "", fmt.Errorf("address for unix domain socket has wrong format")
+	}
+
+	unixSocketPath := addressParts[1]
+	requestPath := ""
+	if addressPartsLength == 3 {
+		requestPath = addressParts[2]
+	}
+	return unixSocketPath, requestPath, nil
+}
+
+func getListener(listenAddress string) (net.Listener, error) {
+	var listener net.Listener
+	var err error
+
+	if strings.HasPrefix(listenAddress, "unix:") {
+		path, _, pathError := parseUnixSocketAddress(listenAddress)
+		if pathError != nil {
+			return listener, fmt.Errorf("parsing unix domain socket listen address %s failed: %v", listenAddress, pathError)
+		}
+		listener, err = net.ListenUnix("unix", &net.UnixAddr{Name: path, Net: "unix"})
+	} else {
+		listener, err = net.Listen("tcp", listenAddress)
+	}
+
+	if err != nil {
+		return listener, err
+	}
+	log.Printf("Listening on %s", listenAddress)
+	return listener, nil
+}
+
 var (
 	// Set during go build
 	version   string
@@ -128,7 +168,7 @@ var (
 	// Command-line flags
 	listenAddr = flag.String("web.listen-address",
 		defaultListenAddress,
-		"An address to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable.")
+		"An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable.")
 	metricsPath = flag.String("web.telemetry-path",
 		defaultMetricsPath,
 		"A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable.")
@@ -137,8 +177,8 @@ var (
 		"Start the exporter for NGINX Plus. By default, the exporter is started for NGINX. The default value can be overwritten by NGINX_PLUS environment variable.")
 	scrapeURI = flag.String("nginx.scrape-uri",
 		defaultScrapeURI,
-		`A URI for scraping NGINX or NGINX Plus metrics.
-	For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
+		`A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
+For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
 	sslVerify = flag.Bool("nginx.ssl-verify",
 		defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
@@ -177,17 +217,37 @@ func main() {
 
 	registry.MustRegister(buildInfoMetric)
 
-	httpClient := &http.Client{
-		Timeout: timeout.Duration,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
-		},
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
+	}
+	if strings.HasPrefix(*scrapeURI, "unix:") {
+		socketPath, requestPath, err := parseUnixSocketAddress(*scrapeURI)
+		if err != nil {
+			log.Fatalf("Parsing unix domain socket scrape address %s failed: %v", *scrapeURI, err)
+		}
+
+		transport.DialContext = func(_ context.Context, _, _ string) (net.Conn, error) {
+			return net.Dial("unix", socketPath)
+		}
+		newScrapeURI := "http://unix" + requestPath
+		scrapeURI = &newScrapeURI
 	}
 
+	httpClient := &http.Client{
+		Timeout:   timeout.Duration,
+		Transport: transport,
+	}
+
+	srv := http.Server{}
+
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGTERM)
+	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
-		log.Printf("SIGTERM received: %v. Exiting...", <-signalChan)
+		log.Printf("Signal received: %v. Exiting...", <-signalChan)
+		err := srv.Close()
+		if err != nil {
+			log.Fatalf("Error occurred while closing the server: %v", err)
+		}
 		os.Exit(0)
 	}()
 
@@ -221,6 +281,12 @@ func main() {
 			log.Printf("Error while sending a response for the '/' path: %v", err)
 		}
 	})
+
+	listener, err := getListener(*listenAddr)
+	if err != nil {
+		log.Fatalf("Could not create listener: %v", err)
+	}
+
 	log.Printf("NGINX Prometheus Exporter has successfully started")
-	log.Fatal(http.ListenAndServe(*listenAddr, nil))
+	log.Fatal(srv.Serve(listener))
 }

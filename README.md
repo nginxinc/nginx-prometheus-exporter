@@ -54,6 +54,12 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
     ```
     where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
 
+* To export and scrape NGINX metrics with unix domain sockets, run:
+    ```
+    $ nginx-prometheus-exporter -nginx.scrape-uri unix:<nginx>:/stub_status -web.listen-address unix:/path/to/socket.sock
+    ```
+    where `<nginx>` is the path to unix domain socket, through which NGINX stub status is available.
+
 **Note**. The `nginx-prometheus-exporter` is not a daemon. To run the exporter as a system service (daemon), configure the init system of your Linux server (such as systemd or Upstart) accordingly. Alternatively, you can run the exporter in a Docker container.
 
 ## Usage
@@ -69,14 +75,14 @@ Usage of ./nginx-prometheus-exporter:
   -nginx.retry-interval duration
         An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable. (default 5s)
   -nginx.scrape-uri string
-        A URI for scraping NGINX or NGINX Plus metrics.
+        A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. 
         For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
   -nginx.ssl-verify
         Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable. (default true)
   -nginx.timeout duration
         A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable. (default 5s)
   -web.listen-address string
-        An address to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
+        An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
         A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")
 ```
