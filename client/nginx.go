@@ -12,6 +12,7 @@ import (
 type NginxClient struct {
 	apiEndpoint string
 	httpClient  *http.Client
+	appName	string
 }
 
 // StubStats represents NGINX stub_status metrics.
@@ -31,10 +32,11 @@ type StubConnections struct {
 }
 
 // NewNginxClient creates an NginxClient.
-func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, error) {
+func NewNginxClient(httpClient *http.Client, apiEndpoint string, appName string) (*NginxClient, error) {
 	client := &NginxClient{
 		apiEndpoint: apiEndpoint,
 		httpClient:  httpClient,
+		appName: appName,
 	}
 
 	_, err := client.GetStubStats()
@@ -43,7 +45,13 @@ func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, 
 
 // GetStubStats fetches the stub_status metrics.
 func (client *NginxClient) GetStubStats() (*StubStats, error) {
-	resp, err := client.httpClient.Get(client.apiEndpoint)
+
+	req, err := http.NewRequest("GET", client.apiEndpoint, nil)
+	if err != nil {
+			return nil, fmt.Errorf("failed to create get request %v: %v", client.apiEndpoint, err)
+	}
+	req.Header.Set("User-Agent", client.appName)
+	resp, err := client.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get %v: %v", client.apiEndpoint, err)
 	}
