@@ -1,10 +1,5 @@
 # Changelog
 
-### DEV
-
-FEATURES:
-* Set User-Agent header when calling the nginx stats endpoint.
-
 ### 0.4.2
 
 BUGFIXES:

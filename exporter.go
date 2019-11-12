@@ -234,7 +234,12 @@ func main() {
 	}
 
 	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", version)
-	userAgentRT := &userAgentRoundTripper{agent: userAgent, rt: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify}}}
+	userAgentRT := &userAgentRoundTripper{
+		agent: userAgent,
+		rt: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify}},
+	}
+
 	httpClient := &http.Client{
 		Timeout:   timeout.Duration,
 		Transport: userAgentRT,
@@ -303,6 +308,7 @@ func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, e
 	req.Header.Set("User-Agent", rt.agent)
 	return rt.rt.RoundTrip(req)
 }
+
 func cloneRequest(req *http.Request) *http.Request {
 	r := new(http.Request)
 	*r = *req // shallow clone
