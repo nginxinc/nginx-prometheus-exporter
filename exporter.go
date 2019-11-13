@@ -236,8 +236,7 @@ func main() {
 	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", version)
 	userAgentRT := &userAgentRoundTripper{
 		agent: userAgent,
-		rt: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify}},
+		rt: transport,
 	}
 
 	httpClient := &http.Client{
