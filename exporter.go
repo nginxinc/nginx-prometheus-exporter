@@ -233,9 +233,15 @@ func main() {
 		scrapeURI = &newScrapeURI
 	}
 
+	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", version)
+	userAgentRT := &userAgentRoundTripper{
+		agent: userAgent,
+		rt: transport,
+	}
+
 	httpClient := &http.Client{
 		Timeout:   timeout.Duration,
-		Transport: transport,
+		Transport: userAgentRT,
 	}
 
 	srv := http.Server{}
@@ -289,4 +295,29 @@ func main() {
 
 	log.Printf("NGINX Prometheus Exporter has successfully started")
 	log.Fatal(srv.Serve(listener))
+}
+
+type userAgentRoundTripper struct {
+	agent string
+	rt    http.RoundTripper
+}
+
+func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	req = cloneRequest(req)
+	req.Header.Set("User-Agent", rt.agent)
+	return rt.rt.RoundTrip(req)
+}
+
+func cloneRequest(req *http.Request) *http.Request {
+	r := new(http.Request)
+	*r = *req // shallow clone
+
+	// deep copy headers
+	r.Header = make(http.Header, len(req.Header))
+	for key, values := range req.Header {
+		newValues := make([]string, len(values))
+		copy(newValues, values)
+		r.Header[key] = newValues
+	}
+	return r
 }
