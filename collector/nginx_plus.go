@@ -108,7 +108,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"bytes_out":       newStreamZoneSyncMetric(namespace, "bytes_out", "Bytes sent by this node"),
 			"msgs_in":         newStreamZoneSyncMetric(namespace, "msgs_in", "Total messages received by this node"),
 			"msgs_out":        newStreamZoneSyncMetric(namespace, "msgs_out", "Total messages sent by this node"),
-			"nodes_online":    newStreamZoneSyncMetric(namespace, "nodes_online", "Number of peers this node is conected to"),
+			"nodes_online":    newStreamZoneSyncMetric(namespace, "nodes_online", "Number of peers this node is connected to"),
 			"records_pending": newStreamZoneSyncZoneMetric(namespace, "records_pending", "The number of records that need to be sent to the cluster"),
 			"records_total":   newStreamZoneSyncZoneMetric(namespace, "records_total", "The total number of records stored in the shared memory zone"),
 		},
