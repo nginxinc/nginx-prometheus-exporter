@@ -129,6 +129,25 @@ func parseUnixSocketAddress(address string) (string, string, error) {
 	return unixSocketPath, requestPath, nil
 }
 
+func parseConstLabels(labels string) (map[string]string, error) {
+	if labels == "" {
+		return nil, nil
+	}
+
+	constLabels := make(map[string]string)
+	labelList := strings.Split(labels, ",")
+
+	for _, l := range labelList {
+		dat := strings.Split(l, "=")
+		if len(dat) != 2 {
+			return nil, fmt.Errorf("const label %s has wrong format. Example valid input 'labelName=labelValue'", l)
+		}
+		constLabels[dat[0]] = dat[1]
+	}
+
+	return constLabels, nil
+}
+
 func getListener(listenAddress string) (net.Listener, error) {
 	var listener net.Listener
 	var err error
@@ -164,6 +183,7 @@ var (
 	defaultTimeout            = getEnvPositiveDuration("TIMEOUT", time.Second*5)
 	defaultNginxRetries       = getEnvUint("NGINX_RETRIES", 0)
 	defaultNginxRetryInterval = getEnvPositiveDuration("NGINX_RETRY_INTERVAL", time.Second*5)
+	defaultConstLabels        = getEnv("CONST_LABELS", "")
 
 	// Command-line flags
 	listenAddr = flag.String("web.listen-address",
@@ -185,6 +205,9 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
+	constLabels = flag.String("prometheus.const-labels",
+		defaultConstLabels,
+		"A comma separated list of constant labels that will be used in every metric. Format is label1=value1,label2=value2... The default value can be overwritten by CONST_LABELS environment variable.")
 
 	// Custom command-line flags
 	timeout = createPositiveDurationFlag("nginx.timeout",
@@ -198,6 +221,11 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 
 func main() {
 	flag.Parse()
+
+	constLabelMap, err := parseConstLabels(*constLabels)
+	if err != nil {
+		log.Fatalf("Parsing const labels failed: %v", err)
+	}
 
 	log.Printf("Starting NGINX Prometheus Exporter Version=%v GitCommit=%v", version, gitCommit)
 
@@ -236,7 +264,7 @@ func main() {
 	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", version)
 	userAgentRT := &userAgentRoundTripper{
 		agent: userAgent,
-		rt: transport,
+		rt:    transport,
 	}
 
 	httpClient := &http.Client{
@@ -264,7 +292,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
-		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus"))
+		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", constLabelMap))
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
 			return client.NewNginxClient(httpClient, *scrapeURI)
@@ -272,7 +300,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}
-		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx"))
+		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx", constLabelMap))
 	}
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
