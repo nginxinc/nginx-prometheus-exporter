@@ -75,12 +75,14 @@ Usage of ./nginx-prometheus-exporter:
   -nginx.retry-interval duration
         An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable. (default 5s)
   -nginx.scrape-uri string
-        A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. 
+        A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
         For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
   -nginx.ssl-verify
         Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable. (default true)
   -nginx.timeout duration
         A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable. (default 5s)
+  -prometheus.const-labels value
+        A comma separated list of constant labels that will be used in every metric. Format is label1=value1,label2=value2... The default value can be overwritten by CONST_LABELS environment variable.
   -web.listen-address string
         An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string

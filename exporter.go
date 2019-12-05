@@ -67,6 +67,19 @@ func getEnvPositiveDuration(key string, defaultValue time.Duration) positiveDura
 	return posDur
 }
 
+func getEnvConstLabels(key string, defaultValue map[string]string) constLabel {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return constLabel{defaultValue}
+	}
+
+	cLabel, err := parseConstLabels(value)
+	if err != nil {
+		log.Fatalf("Environment variable value for %s must be a positive duration: %v", key, err)
+	}
+	return cLabel
+}
+
 // positiveDuration is a wrapper of time.Duration to ensure only positive values are accepted
 type positiveDuration struct{ time.Duration }
 
@@ -92,6 +105,46 @@ func parsePositiveDuration(s string) (positiveDuration, error) {
 }
 
 func createPositiveDurationFlag(name string, value positiveDuration, usage string) *positiveDuration {
+	flag.Var(&value, name, usage)
+	return &value
+}
+
+type constLabel struct{ labels map[string]string }
+
+func (cl *constLabel) Set(s string) error {
+	labelList, err := parseConstLabels(s)
+	if err != nil {
+		return err
+	}
+
+	cl.labels = labelList.labels
+	return nil
+}
+
+func (cl *constLabel) String() string {
+	return fmt.Sprint(cl.labels)
+}
+
+func parseConstLabels(labels string) (constLabel, error) {
+	if labels == "" {
+		return constLabel{}, nil
+	}
+
+	constLabels := make(map[string]string)
+	labelList := strings.Split(labels, ",")
+
+	for _, l := range labelList {
+		dat := strings.Split(l, "=")
+		if len(dat) != 2 {
+			return constLabel{}, fmt.Errorf("const label %s has wrong format. Example valid input 'labelName=labelValue'", l)
+		}
+		constLabels[dat[0]] = dat[1]
+	}
+
+	return constLabel{labels: constLabels}, nil
+}
+
+func createConstLabelsFlag(name string, value constLabel, usage string) *constLabel {
 	flag.Var(&value, name, usage)
 	return &value
 }
@@ -129,25 +182,6 @@ func parseUnixSocketAddress(address string) (string, string, error) {
 	return unixSocketPath, requestPath, nil
 }
 
-func parseConstLabels(labels string) (map[string]string, error) {
-	if labels == "" {
-		return nil, nil
-	}
-
-	constLabels := make(map[string]string)
-	labelList := strings.Split(labels, ",")
-
-	for _, l := range labelList {
-		dat := strings.Split(l, "=")
-		if len(dat) != 2 {
-			return nil, fmt.Errorf("const label %s has wrong format. Example valid input 'labelName=labelValue'", l)
-		}
-		constLabels[dat[0]] = dat[1]
-	}
-
-	return constLabels, nil
-}
-
 func getListener(listenAddress string) (net.Listener, error) {
 	var listener net.Listener
 	var err error
@@ -183,7 +217,7 @@ var (
 	defaultTimeout            = getEnvPositiveDuration("TIMEOUT", time.Second*5)
 	defaultNginxRetries       = getEnvUint("NGINX_RETRIES", 0)
 	defaultNginxRetryInterval = getEnvPositiveDuration("NGINX_RETRY_INTERVAL", time.Second*5)
-	defaultConstLabels        = getEnv("CONST_LABELS", "")
+	defaultConstLabels        = getEnvConstLabels("CONST_LABELS", map[string]string{})
 
 	// Command-line flags
 	listenAddr = flag.String("web.listen-address",
@@ -205,9 +239,6 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
-	constLabels = flag.String("prometheus.const-labels",
-		defaultConstLabels,
-		"A comma separated list of constant labels that will be used in every metric. Format is label1=value1,label2=value2... The default value can be overwritten by CONST_LABELS environment variable.")
 
 	// Custom command-line flags
 	timeout = createPositiveDurationFlag("nginx.timeout",
@@ -217,15 +248,14 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 	nginxRetryInterval = createPositiveDurationFlag("nginx.retry-interval",
 		defaultNginxRetryInterval,
 		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
+
+	constLabels = createConstLabelsFlag("prometheus.const-labels",
+		defaultConstLabels,
+		"A comma separated list of constant labels that will be used in every metric. Format is label1=value1,label2=value2... The default value can be overwritten by CONST_LABELS environment variable.")
 )
 
 func main() {
 	flag.Parse()
-
-	constLabelMap, err := parseConstLabels(*constLabels)
-	if err != nil {
-		log.Fatalf("Parsing const labels failed: %v", err)
-	}
 
 	log.Printf("Starting NGINX Prometheus Exporter Version=%v GitCommit=%v", version, gitCommit)
 
@@ -235,10 +265,13 @@ func main() {
 		prometheus.GaugeOpts{
 			Name: "nginxexporter_build_info",
 			Help: "Exporter build information",
-			ConstLabels: prometheus.Labels{
-				"version":   version,
-				"gitCommit": gitCommit,
-			},
+			ConstLabels: collector.MergeLabels(
+				prometheus.Labels{
+					"version":   version,
+					"gitCommit": gitCommit,
+				},
+				constLabels.labels,
+			),
 		},
 	)
 	buildInfoMetric.Set(1)
@@ -292,7 +325,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
-		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", constLabelMap))
+		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", constLabels.labels))
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
 			return client.NewNginxClient(httpClient, *scrapeURI)
@@ -300,7 +333,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}
-		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx", constLabelMap))
+		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx", constLabels.labels))
 	}
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

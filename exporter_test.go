@@ -180,37 +180,37 @@ func TestParseConstLabels(t *testing.T) {
 	tests := []struct {
 		name    string
 		labels  string
-		want    map[string]string
+		want    constLabel
 		wantErr bool
 	}{
 		{
 			name:    "Const labels with no labels",
 			labels:  "",
-			want:    nil,
+			want:    constLabel{},
 			wantErr: false,
 		},
 		{
 			name:    "Const labels with one label with valid format",
 			labels:  "label=valid",
-			want:    map[string]string{"label": "valid"},
+			want:    constLabel{labels: map[string]string{"label": "valid"}},
 			wantErr: false,
 		},
 		{
 			name:    "Const labels with one label with invalid format",
 			labels:  "label: invalid",
-			want:    nil,
+			want:    constLabel{},
 			wantErr: true,
 		},
 		{
 			name:    "Const labels with invalid format for multiple labels",
 			labels:  "label=valid,,label2=wrongformat",
-			want:    nil,
+			want:    constLabel{},
 			wantErr: true,
 		},
 		{
 			name:    "Const labels with multiple labels, one label with invalid format",
 			labels:  "label=valid,label2:wrongformat",
-			want:    nil,
+			want:    constLabel{},
 			wantErr: true,
 		},
 	}
