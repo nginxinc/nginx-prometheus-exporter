@@ -75,7 +75,7 @@ func getEnvConstLabels(key string, defaultValue map[string]string) constLabel {
 
 	cLabel, err := parseConstLabels(value)
 	if err != nil {
-		log.Fatalf("Environment variable value for %s must be a positive duration: %v", key, err)
+		log.Fatalf("Environment variable value for %s must be a const label or a list of const labels: %v", key, err)
 	}
 	return cLabel
 }
@@ -266,11 +266,11 @@ func main() {
 			Name: "nginxexporter_build_info",
 			Help: "Exporter build information",
 			ConstLabels: collector.MergeLabels(
+				constLabels.labels,
 				prometheus.Labels{
 					"version":   version,
 					"gitCommit": gitCommit,
 				},
-				constLabels.labels,
 			),
 		},
 	)

@@ -17,7 +17,7 @@ func newUpMetric(namespace string) prometheus.Gauge {
 	})
 }
 
-// MergeLabels -
+// MergeLabels merges two maps of labels.
 func MergeLabels(a map[string]string, b map[string]string) map[string]string {
 	c := make(map[string]string)
 
