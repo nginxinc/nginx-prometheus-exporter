@@ -30,13 +30,13 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 
 * To export NGINX metrics, run:
     ```
-    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.4.2 -nginx.scrape-uri http://<nginx>:8080/stub_status
+    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.5.0 -nginx.scrape-uri http://<nginx>:8080/stub_status
     ```
     where `<nginx>` is the IP address/DNS name, through which NGINX is available.
 
 * To export NGINX Plus metrics, run:
     ```
-    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.4.2 -nginx.plus -nginx.scrape-uri http://<nginx-plus>:8080/api
+    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.5.0 -nginx.plus -nginx.scrape-uri http://<nginx-plus>:8080/api
     ```
     where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
 
@@ -75,7 +75,7 @@ Usage of ./nginx-prometheus-exporter:
   -nginx.retry-interval duration
         An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable. (default 5s)
   -nginx.scrape-uri string
-        A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. 
+        A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
         For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
   -nginx.ssl-verify
         Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable. (default true)

@@ -1,4 +1,4 @@
-VERSION = 0.4.2
+VERSION = 0.5.0
 PREFIX = nginx/nginx-prometheus-exporter
 TAG = $(VERSION)
 GIT_COMMIT = $(shell git rev-parse --short HEAD)
@@ -15,7 +15,7 @@ test:
 	GO111MODULE=on go test -mod=vendor ./...
 
 container:
-	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(PREFIX):$(TAG) . 
+	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(PREFIX):$(TAG) .
 
 push: container
 	docker push $(PREFIX):$(TAG)

@@ -1,5 +1,25 @@
 # Changelog
 
+### 0.5.0
+
+FEATURES:
+* [70](https://github.com/nginxinc/nginx-prometheus-exporter/pull/70): Set user agent on scrape requests to nginx.
+* [68](https://github.com/nginxinc/nginx-prometheus-exporter/pull/68): Add ability to scrape and listen on unix domain sockets.
+* [64](https://github.com/nginxinc/nginx-prometheus-exporter/pull/64): Add location zone and resolver metric support.
+
+BUGFIXES:
+* [73](https://github.com/nginxinc/nginx-prometheus-exporter/pull/73): Fix typo in stream_zone_sync_status_nodes_online metric description.
+* [71](https://github.com/nginxinc/nginx-prometheus-exporter/pull/71): Do not assume default datasource in Grafana panels.
+* [62](https://github.com/nginxinc/nginx-prometheus-exporter/pull/62): Set correct nginx_up query and instance variable expression.
+
+UPGRADE:
+* Use the 0.5.0 image from our DockerHub: `nginx/nginx-prometheus-exporter:0.5.0`
+* Download the latest binaries from [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.5.0).
+
+COMPATIBILITY:
+* NGINX 0.1.18 or newer.
+* NGINX Plus R19 or newer.
+
 ### 0.4.2
 
 BUGFIXES:
@@ -69,6 +89,6 @@ COMPATIBILITY:
 * NGINX 0.1.18 or newer.
 * NGINX Plus R14 or newer.
 
-## 0.1.0 
+## 0.1.0
 
 * Initial release.
