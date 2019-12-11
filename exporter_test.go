@@ -213,6 +213,12 @@ func TestParseConstLabels(t *testing.T) {
 			want:    constLabel{},
 			wantErr: true,
 		},
+		{
+			name:    "Const labels with label name containing invalid char",
+			labels:  "l bel=invalid",
+			want:    constLabel{},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

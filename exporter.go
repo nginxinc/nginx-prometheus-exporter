@@ -138,6 +138,9 @@ func parseConstLabels(labels string) (constLabel, error) {
 		if len(dat) != 2 {
 			return constLabel{}, fmt.Errorf("const label %s has wrong format. Example valid input 'labelName=labelValue'", l)
 		}
+		if !collector.IsValidLabelName(dat[0]) {
+			return constLabel{}, fmt.Errorf("const label %s has wrong format. Label name %s contains invalid characters", l, dat[0])
+		}
 		constLabels[dat[0]] = dat[1]
 	}
 
