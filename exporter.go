@@ -20,6 +20,7 @@ import (
 	"github.com/nginxinc/nginx-prometheus-exporter/collector"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/model"
 )
 
 func getEnv(key, defaultValue string) string {
@@ -138,8 +139,10 @@ func parseConstLabels(labels string) (constLabel, error) {
 		if len(dat) != 2 {
 			return constLabel{}, fmt.Errorf("const label %s has wrong format. Example valid input 'labelName=labelValue'", l)
 		}
-		if !collector.IsValidLabelName(dat[0]) {
-			return constLabel{}, fmt.Errorf("const label %s has wrong format. Label name %s contains invalid characters", l, dat[0])
+
+		labelName := model.LabelName(dat[0])
+		if !labelName.IsValid() {
+			return constLabel{}, fmt.Errorf("const label %s has wrong format. %s contains invalid characters", l, labelName)
 		}
 		constLabels[dat[0]] = dat[1]
 	}
