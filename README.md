@@ -81,6 +81,8 @@ Usage of ./nginx-prometheus-exporter:
         Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable. (default true)
   -nginx.timeout duration
         A timeout for scraping metrics from NGINX or NGINX Plus. The default value can be overwritten by TIMEOUT environment variable. (default 5s)
+  -prometheus.const-labels value
+        A comma separated list of constant labels that will be used in every metric. Format is label1=value1,label2=value2... The default value can be overwritten by CONST_LABELS environment variable.
   -web.listen-address string
         An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string

@@ -20,6 +20,7 @@ import (
 	"github.com/nginxinc/nginx-prometheus-exporter/collector"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/prometheus/common/model"
 )
 
 func getEnv(key, defaultValue string) string {
@@ -67,6 +68,19 @@ func getEnvPositiveDuration(key string, defaultValue time.Duration) positiveDura
 	return posDur
 }
 
+func getEnvConstLabels(key string, defaultValue map[string]string) constLabel {
+	value, ok := os.LookupEnv(key)
+	if !ok {
+		return constLabel{defaultValue}
+	}
+
+	cLabel, err := parseConstLabels(value)
+	if err != nil {
+		log.Fatalf("Environment variable value for %s must be a const label or a list of const labels: %v", key, err)
+	}
+	return cLabel
+}
+
 // positiveDuration is a wrapper of time.Duration to ensure only positive values are accepted
 type positiveDuration struct{ time.Duration }
 
@@ -92,6 +106,56 @@ func parsePositiveDuration(s string) (positiveDuration, error) {
 }
 
 func createPositiveDurationFlag(name string, value positiveDuration, usage string) *positiveDuration {
+	flag.Var(&value, name, usage)
+	return &value
+}
+
+type constLabel struct{ labels map[string]string }
+
+func (cl *constLabel) Set(s string) error {
+	labelList, err := parseConstLabels(s)
+	if err != nil {
+		return err
+	}
+
+	cl.labels = labelList.labels
+	return nil
+}
+
+func (cl *constLabel) String() string {
+	return fmt.Sprint(cl.labels)
+}
+
+func parseConstLabels(labels string) (constLabel, error) {
+	if labels == "" {
+		return constLabel{}, nil
+	}
+
+	constLabels := make(map[string]string)
+	labelList := strings.Split(labels, ",")
+
+	for _, l := range labelList {
+		dat := strings.Split(l, "=")
+		if len(dat) != 2 {
+			return constLabel{}, fmt.Errorf("const label %s has wrong format. Example valid input 'labelName=labelValue'", l)
+		}
+
+		labelName := model.LabelName(dat[0])
+		if !labelName.IsValid() {
+			return constLabel{}, fmt.Errorf("const label %s has wrong format. %s contains invalid characters", l, labelName)
+		}
+
+		labelValue := model.LabelValue(dat[1])
+		if !labelValue.IsValid() {
+			return constLabel{}, fmt.Errorf("const label %s has wrong format. %s contains invalid characters", l, labelValue)
+		}
+
+		constLabels[dat[0]] = dat[1]
+	}
+	return constLabel{labels: constLabels}, nil
+}
+
+func createConstLabelsFlag(name string, value constLabel, usage string) *constLabel {
 	flag.Var(&value, name, usage)
 	return &value
 }
@@ -164,6 +228,7 @@ var (
 	defaultTimeout            = getEnvPositiveDuration("TIMEOUT", time.Second*5)
 	defaultNginxRetries       = getEnvUint("NGINX_RETRIES", 0)
 	defaultNginxRetryInterval = getEnvPositiveDuration("NGINX_RETRY_INTERVAL", time.Second*5)
+	defaultConstLabels        = getEnvConstLabels("CONST_LABELS", map[string]string{})
 
 	// Command-line flags
 	listenAddr = flag.String("web.listen-address",
@@ -194,6 +259,10 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 	nginxRetryInterval = createPositiveDurationFlag("nginx.retry-interval",
 		defaultNginxRetryInterval,
 		"An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable.")
+
+	constLabels = createConstLabelsFlag("prometheus.const-labels",
+		defaultConstLabels,
+		"A comma separated list of constant labels that will be used in every metric. Format is label1=value1,label2=value2... The default value can be overwritten by CONST_LABELS environment variable.")
 )
 
 func main() {
@@ -207,10 +276,13 @@ func main() {
 		prometheus.GaugeOpts{
 			Name: "nginxexporter_build_info",
 			Help: "Exporter build information",
-			ConstLabels: prometheus.Labels{
-				"version":   version,
-				"gitCommit": gitCommit,
-			},
+			ConstLabels: collector.MergeLabels(
+				constLabels.labels,
+				prometheus.Labels{
+					"version":   version,
+					"gitCommit": gitCommit,
+				},
+			),
 		},
 	)
 	buildInfoMetric.Set(1)
@@ -236,7 +308,7 @@ func main() {
 	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", version)
 	userAgentRT := &userAgentRoundTripper{
 		agent: userAgent,
-		rt: transport,
+		rt:    transport,
 	}
 
 	httpClient := &http.Client{
@@ -264,7 +336,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
-		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus"))
+		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", constLabels.labels))
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
 			return client.NewNginxClient(httpClient, *scrapeURI)
@@ -272,7 +344,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
 		}
-		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx"))
+		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx", constLabels.labels))
 	}
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
