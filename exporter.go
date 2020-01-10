@@ -144,9 +144,14 @@ func parseConstLabels(labels string) (constLabel, error) {
 		if !labelName.IsValid() {
 			return constLabel{}, fmt.Errorf("const label %s has wrong format. %s contains invalid characters", l, labelName)
 		}
+
+		labelValue := model.LabelValue(dat[1])
+		if !labelValue.IsValid() {
+			return constLabel{}, fmt.Errorf("const label %s has wrong format. %s contains invalid characters", l, labelValue)
+		}
+
 		constLabels[dat[0]] = dat[1]
 	}
-
 	return constLabel{labels: constLabels}, nil
 }
 
