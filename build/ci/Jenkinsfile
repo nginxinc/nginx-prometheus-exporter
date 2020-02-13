@@ -1,8 +1,7 @@
 node {
   git(
     url: "${libsLocation}",
-    credentialsId: "${githubCreds}",
-    branch: "prometheus-exporter-ci"
+    credentialsId: "${githubCreds}"
   )
   load 'nginx-prometheus-exporter/Jenkinsfile'
 }
