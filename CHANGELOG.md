@@ -1,5 +1,21 @@
 # Changelog
 
+### 0.6.0
+
+FEATURES:
+* [77](https://github.com/nginxinc/nginx-prometheus-exporter/pull/77): Add constLabels support via cli arg/env variable.
+
+CHANGES:
+* Update alpine image.
+
+UPGRADE:
+* Use the 0.6.0 image from our DockerHub: `nginx/nginx-prometheus-exporter:0.6.0`
+* Download the latest binaries from [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.6.0).
+
+COMPATIBILITY:
+* NGINX 0.1.18 or newer.
+* NGINX Plus R19 or newer.
+
 ### 0.5.0
 
 FEATURES:
