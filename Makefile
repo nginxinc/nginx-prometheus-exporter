@@ -1,11 +1,17 @@
 VERSION = 0.5.0
-PREFIX = nginx/nginx-prometheus-exporter
 TAG = $(VERSION)
+PREFIX = nginx/nginx-prometheus-exporter
+
+DOCKERFILEPATH = build
+DOCKERFILE = Dockerfile
+
 GIT_COMMIT = $(shell git rev-parse --short HEAD)
 
 BUILD_DIR = build_output
 
-nginx-prometheus-exporter: test
+export DOCKER_BUILDKIT = 1
+
+nginx-prometheus-exporter:
 	GO111MODULE=on CGO_ENABLED=0 go build -mod=vendor -installsuffix cgo -ldflags "-X main.version=$(VERSION) -X main.gitCommit=$(GIT_COMMIT)" -o nginx-prometheus-exporter
 
 lint:
@@ -15,7 +21,7 @@ test:
 	GO111MODULE=on go test -mod=vendor ./...
 
 container:
-	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_COMMIT=$(GIT_COMMIT) -t $(PREFIX):$(TAG) .
+	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_COMMIT=$(GIT_COMMIT) -f $(DOCKERFILEPATH)/$(DOCKERFILE) -t $(PREFIX):$(TAG) .
 
 push: container
 	docker push $(PREFIX):$(TAG)
