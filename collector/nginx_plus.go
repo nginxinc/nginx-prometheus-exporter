@@ -143,8 +143,8 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 }
 
 // UpdateICLabels updates the labels with Ingress Controller related labels.
-func (c *NginxPlusCollector) UpdateICLabels(ICLabels map[string]string) {
-	c.ICLabels = MergeLabels(c.ICLabels, ICLabels)
+func (c *NginxPlusCollector) UpdateICLabels(variableLabels map[string]string) {
+	c.ICLabels = MergeLabels(c.ICLabels, variableLabels)
 }
 
 // Describe sends the super-set of all possible descriptors of NGINX Plus metrics
@@ -220,85 +220,91 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 		prometheus.CounterValue, float64(stats.SSL.SessionReuses))
 
 	for name, zone := range stats.ServerZones {
+		variableLabels := c.ICLabels[name]
+
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["processing"],
-			prometheus.GaugeValue, float64(zone.Processing), name)
+			prometheus.GaugeValue, float64(zone.Processing), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["requests"],
-			prometheus.CounterValue, float64(zone.Requests), name)
+			prometheus.CounterValue, float64(zone.Requests), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_1xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses1xx), name)
+			prometheus.CounterValue, float64(zone.Responses.Responses1xx), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_2xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses2xx), name)
+			prometheus.CounterValue, float64(zone.Responses.Responses2xx), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_3xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses3xx), name)
+			prometheus.CounterValue, float64(zone.Responses.Responses3xx), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_4xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses4xx), name)
+			prometheus.CounterValue, float64(zone.Responses.Responses4xx), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_5xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses5xx), name)
+			prometheus.CounterValue, float64(zone.Responses.Responses5xx), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["discarded"],
-			prometheus.CounterValue, float64(zone.Discarded), name)
+			prometheus.CounterValue, float64(zone.Discarded), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["received"],
-			prometheus.CounterValue, float64(zone.Received), name)
+			prometheus.CounterValue, float64(zone.Received), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["sent"],
-			prometheus.CounterValue, float64(zone.Sent), name)
+			prometheus.CounterValue, float64(zone.Sent), name, variableLabels)
 	}
 
 	for name, zone := range stats.StreamServerZones {
+		variableLabels := c.ICLabels[name]
+
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["processing"],
-			prometheus.GaugeValue, float64(zone.Processing), name)
+			prometheus.GaugeValue, float64(zone.Processing), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["connections"],
-			prometheus.CounterValue, float64(zone.Connections), name)
+			prometheus.CounterValue, float64(zone.Connections), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sessions_2xx"],
-			prometheus.CounterValue, float64(zone.Sessions.Sessions2xx), name)
+			prometheus.CounterValue, float64(zone.Sessions.Sessions2xx), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sessions_4xx"],
-			prometheus.CounterValue, float64(zone.Sessions.Sessions4xx), name)
+			prometheus.CounterValue, float64(zone.Sessions.Sessions4xx), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sessions_5xx"],
-			prometheus.CounterValue, float64(zone.Sessions.Sessions5xx), name)
+			prometheus.CounterValue, float64(zone.Sessions.Sessions5xx), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["discarded"],
-			prometheus.CounterValue, float64(zone.Discarded), name)
+			prometheus.CounterValue, float64(zone.Discarded), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["received"],
-			prometheus.CounterValue, float64(zone.Received), name)
+			prometheus.CounterValue, float64(zone.Received), name, variableLabels)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sent"],
-			prometheus.CounterValue, float64(zone.Sent), name)
+			prometheus.CounterValue, float64(zone.Sent), name, variableLabels)
 	}
 
 	for name, upstream := range stats.Upstreams {
 		for _, peer := range upstream.Peers {
+			variableLabels := c.ICLabels[name]
+
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["state"],
-				prometheus.GaugeValue, upstreamServerStates[peer.State], name, peer.Server)
+				prometheus.GaugeValue, upstreamServerStates[peer.State], name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["active"],
-				prometheus.GaugeValue, float64(peer.Active), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.Active), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["requests"],
-				prometheus.CounterValue, float64(peer.Requests), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Requests), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_1xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses1xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses1xx), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_2xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses2xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses2xx), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_3xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses3xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses3xx), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_4xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses4xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses4xx), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_5xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses5xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses5xx), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["sent"],
-				prometheus.CounterValue, float64(peer.Sent), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Sent), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["received"],
-				prometheus.CounterValue, float64(peer.Received), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Received), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["fails"],
-				prometheus.CounterValue, float64(peer.Fails), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Fails), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["unavail"],
-				prometheus.CounterValue, float64(peer.Unavail), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Unavail), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["header_time"],
-				prometheus.GaugeValue, float64(peer.HeaderTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.HeaderTime), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["response_time"],
-				prometheus.GaugeValue, float64(peer.ResponseTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.ResponseTime), name, peer.Server, variableLabels)
 
 			if peer.HealthChecks != (plusclient.HealthChecks{}) {
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_checks"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Checks), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Checks), name, peer.Server, variableLabels)
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_fails"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Fails), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Fails), name, peer.Server, variableLabels)
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_unhealthy"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), name, peer.Server, variableLabels)
 			}
 		}
 		ch <- prometheus.MustNewConstMetric(c.upstreamMetrics["keepalives"],
@@ -309,33 +315,35 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 
 	for name, upstream := range stats.StreamUpstreams {
 		for _, peer := range upstream.Peers {
+			variableLabels := c.ICLabels[name]
+
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["state"],
-				prometheus.GaugeValue, upstreamServerStates[peer.State], name, peer.Server)
+				prometheus.GaugeValue, upstreamServerStates[peer.State], name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["active"],
-				prometheus.GaugeValue, float64(peer.Active), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.Active), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connections"],
-				prometheus.CounterValue, float64(peer.Connections), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Connections), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connect_time"],
-				prometheus.GaugeValue, float64(peer.ConnectTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.ConnectTime), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["first_byte_time"],
-				prometheus.GaugeValue, float64(peer.FirstByteTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.FirstByteTime), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["response_time"],
-				prometheus.GaugeValue, float64(peer.ResponseTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.ResponseTime), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["sent"],
-				prometheus.CounterValue, float64(peer.Sent), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Sent), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["received"],
-				prometheus.CounterValue, float64(peer.Received), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Received), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["fails"],
-				prometheus.CounterValue, float64(peer.Fails), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Fails), name, peer.Server, variableLabels)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["unavail"],
-				prometheus.CounterValue, float64(peer.Unavail), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Unavail), name, peer.Server, variableLabels)
 			if peer.HealthChecks != (plusclient.HealthChecks{}) {
 				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_checks"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Checks), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Checks), name, peer.Server, variableLabels)
 				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_fails"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Fails), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Fails), name, peer.Server, variableLabels)
 				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_unhealthy"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), name, peer.Server, variableLabels)
 			}
 		}
 		ch <- prometheus.MustNewConstMetric(c.streamUpstreamMetrics["zombies"],
