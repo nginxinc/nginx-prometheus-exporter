@@ -18,6 +18,7 @@ type NginxClient struct {
 type StubStats struct {
 	Connections StubConnections
 	Requests    int64
+	RequestTime *int64
 }
 
 // StubConnections represents connections related metrics.
@@ -87,7 +88,7 @@ func parseStubStats(data []byte, stats *StubStats) error {
 	stats.Connections.Active = actCons
 
 	miscParts := strings.Split(strings.TrimSpace(parts[2]), " ")
-	if len(miscParts) != 3 {
+	if len(miscParts) < 3 {
 		return fmt.Errorf("invalid input for connections and requests %q", parts[2])
 	}
 
@@ -108,6 +109,14 @@ func parseStubStats(data []byte, stats *StubStats) error {
 		return fmt.Errorf("invalid input for requests %q: %v", miscParts[2], err)
 	}
 	stats.Requests = requests
+
+	if len(miscParts) > 3 {
+		rt, err := strconv.ParseInt(miscParts[3], 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid input for request_time %q: %v", miscParts[3], err)
+		}
+		stats.RequestTime = &rt
+	}
 
 	consParts := strings.Split(strings.TrimSpace(parts[3]), " ")
 	if len(consParts) != 6 {

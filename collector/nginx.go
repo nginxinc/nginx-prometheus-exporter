@@ -21,13 +21,14 @@ func NewNginxCollector(nginxClient *client.NginxClient, namespace string, constL
 	return &NginxCollector{
 		nginxClient: nginxClient,
 		metrics: map[string]*prometheus.Desc{
-			"connections_active":   newGlobalMetric(namespace, "connections_active", "Active client connections", constLabels),
-			"connections_accepted": newGlobalMetric(namespace, "connections_accepted", "Accepted client connections", constLabels),
-			"connections_handled":  newGlobalMetric(namespace, "connections_handled", "Handled client connections", constLabels),
-			"connections_reading":  newGlobalMetric(namespace, "connections_reading", "Connections where NGINX is reading the request header", constLabels),
-			"connections_writing":  newGlobalMetric(namespace, "connections_writing", "Connections where NGINX is writing the response back to the client", constLabels),
-			"connections_waiting":  newGlobalMetric(namespace, "connections_waiting", "Idle client connections", constLabels),
-			"http_requests_total":  newGlobalMetric(namespace, "http_requests_total", "Total http requests", constLabels),
+			"connections_active":      newGlobalMetric(namespace, "connections_active", "Active client connections", constLabels),
+			"connections_accepted":    newGlobalMetric(namespace, "connections_accepted", "Accepted client connections", constLabels),
+			"connections_handled":     newGlobalMetric(namespace, "connections_handled", "Handled client connections", constLabels),
+			"connections_reading":     newGlobalMetric(namespace, "connections_reading", "Connections where NGINX is reading the request header", constLabels),
+			"connections_writing":     newGlobalMetric(namespace, "connections_writing", "Connections where NGINX is writing the response back to the client", constLabels),
+			"connections_waiting":     newGlobalMetric(namespace, "connections_waiting", "Idle client connections", constLabels),
+			"http_requests_total":     newGlobalMetric(namespace, "http_requests_total", "Total http requests", constLabels),
+			"http_request_time_total": newGlobalMetric(namespace, "http_request_time_total", "Total http request time", constLabels),
 		},
 		upMetric: newUpMetric(namespace),
 	}
@@ -73,4 +74,8 @@ func (c *NginxCollector) Collect(ch chan<- prometheus.Metric) {
 		prometheus.GaugeValue, float64(stats.Connections.Waiting))
 	ch <- prometheus.MustNewConstMetric(c.metrics["http_requests_total"],
 		prometheus.CounterValue, float64(stats.Requests))
+	if stats.RequestTime != nil {
+		ch <- prometheus.MustNewConstMetric(c.metrics["http_request_time_total"],
+			prometheus.CounterValue, float64(*stats.RequestTime))
+	}
 }

@@ -2,9 +2,10 @@ package client
 
 import "testing"
 
-const validStabStats = "Active connections: 1457 \nserver accepts handled requests\n 6717066 6717066 65844359 \nReading: 1 Writing: 8 Waiting: 1448 \n"
+const validStabStats = "Active connections: 1457 \nserver accepts handled requests\n 6717066 6717066 65844359 271504\nReading: 1 Writing: 8 Waiting: 1448 \n"
 
 func TestParseStubStatsValidInput(t *testing.T) {
+	var rt int64 = 271504
 	var tests = []struct {
 		input          []byte
 		expectedResult StubStats
@@ -21,7 +22,8 @@ func TestParseStubStatsValidInput(t *testing.T) {
 					Writing:  8,
 					Waiting:  1448,
 				},
-				Requests: 65844359,
+				Requests:    65844359,
+				RequestTime: &rt,
 			},
 			expectedError: false,
 		},
