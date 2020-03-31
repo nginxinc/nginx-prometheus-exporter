@@ -74,8 +74,8 @@ func (c *NginxCollector) Collect(ch chan<- prometheus.Metric) {
 		prometheus.GaugeValue, float64(stats.Connections.Waiting))
 	ch <- prometheus.MustNewConstMetric(c.metrics["http_requests_total"],
 		prometheus.CounterValue, float64(stats.Requests))
-	if stats.RequestTime != nil {
+	if (stats.RequestTime > 0) || (stats.RequestTime == 0 && stats.Requests == 0) {
 		ch <- prometheus.MustNewConstMetric(c.metrics["http_request_time_total"],
-			prometheus.CounterValue, float64(*stats.RequestTime))
+			prometheus.CounterValue, float64(stats.RequestTime))
 	}
 }
