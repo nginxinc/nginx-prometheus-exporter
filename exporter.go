@@ -254,13 +254,13 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
 	sslCaCert = flag.String("nginx.ssl-ca-cert",
 		defaultSslCaCert,
-		"The CA certificate to use to validate the servers SSL certificate. The default value can be overwritten by SSL_CA_CERT environment variable.")
+		"Path to the PEM encoded CA certificate file used to validate the servers SSL certificate. The default value can be overwritten by SSL_CA_CERT environment variable.")
 	sslClientCert = flag.String("nginx.ssl-client-cert",
 		defaultSslClientCert,
-		"The client certificate to use when connecting to the server. The default value can be overwritten by SSL_CLIENT_CERT environment variable.")
+		"Path to the PEM encoded client certificate file to use when connecting to the server. The default value can be overwritten by SSL_CLIENT_CERT environment variable.")
 	sslClientKey = flag.String("nginx.ssl-client-key",
 		defaultSslClientKey,
-		"The client certificate key to use when connecting to the server. The default value can be overwritten by SSL_CLIENT_KEY environment variable.")
+		"Path to the PEM encoded client certificate key file to use when connecting to the server. The default value can be overwritten by SSL_CLIENT_KEY environment variable.")
 	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
@@ -310,17 +310,20 @@ func main() {
 			log.Fatalf("Loading CA cert failed: %v", err)
 		}
 		sslCaCertPool := x509.NewCertPool()
-		sslCaCertPool.AppendCertsFromPEM(caCert)
+		ok := sslCaCertPool.AppendCertsFromPEM(caCert)
+		if !ok {
+			log.Fatal("Parsing CA cert file failed.")
+		}
 		sslConfig.RootCAs = sslCaCertPool
 	}
 
-    if *sslClientCert != "" && *sslClientKey != "" {
-    	clientCert, err := tls.LoadX509KeyPair(*sslClientCert, *sslClientKey)
-    	if err != nil {
-    		log.Fatalf("Loading client certificate failed: %v", err)
-    	}
-    	sslConfig.Certificates = []tls.Certificate{clientCert}
-    }
+	if *sslClientCert != "" && *sslClientKey != "" {
+		clientCert, err := tls.LoadX509KeyPair(*sslClientCert, *sslClientKey)
+		if err != nil {
+			log.Fatalf("Loading client certificate failed: %v", err)
+		}
+		sslConfig.Certificates = []tls.Certificate{clientCert}
+	}
 
 	transport := &http.Transport{
 		TLSClientConfig: sslConfig,
