@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -225,6 +227,9 @@ var (
 	defaultNginxPlus          = getEnvBool("NGINX_PLUS", false)
 	defaultScrapeURI          = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
 	defaultSslVerify          = getEnvBool("SSL_VERIFY", true)
+	defaultSslCaCert          = getEnv("SSL_CA_CERT", "")
+	defaultSslClientCert      = getEnv("SSL_CLIENT_CERT", "")
+	defaultSslClientKey       = getEnv("SSL_CLIENT_KEY", "")
 	defaultTimeout            = getEnvPositiveDuration("TIMEOUT", time.Second*5)
 	defaultNginxRetries       = getEnvUint("NGINX_RETRIES", 0)
 	defaultNginxRetryInterval = getEnvPositiveDuration("NGINX_RETRY_INTERVAL", time.Second*5)
@@ -247,6 +252,15 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 	sslVerify = flag.Bool("nginx.ssl-verify",
 		defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
+	sslCaCert = flag.String("nginx.ssl-ca-cert",
+		defaultSslCaCert,
+		"Path to the PEM encoded CA certificate file used to validate the servers SSL certificate. The default value can be overwritten by SSL_CA_CERT environment variable.")
+	sslClientCert = flag.String("nginx.ssl-client-cert",
+		defaultSslClientCert,
+		"Path to the PEM encoded client certificate file to use when connecting to the server. The default value can be overwritten by SSL_CLIENT_CERT environment variable.")
+	sslClientKey = flag.String("nginx.ssl-client-key",
+		defaultSslClientKey,
+		"Path to the PEM encoded client certificate key file to use when connecting to the server. The default value can be overwritten by SSL_CLIENT_KEY environment variable.")
 	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
@@ -289,8 +303,30 @@ func main() {
 
 	registry.MustRegister(buildInfoMetric)
 
+	sslConfig := &tls.Config{InsecureSkipVerify: !*sslVerify}
+	if *sslCaCert != "" {
+		caCert, err := ioutil.ReadFile(*sslCaCert)
+		if err != nil {
+			log.Fatalf("Loading CA cert failed: %v", err)
+		}
+		sslCaCertPool := x509.NewCertPool()
+		ok := sslCaCertPool.AppendCertsFromPEM(caCert)
+		if !ok {
+			log.Fatal("Parsing CA cert file failed.")
+		}
+		sslConfig.RootCAs = sslCaCertPool
+	}
+
+	if *sslClientCert != "" && *sslClientKey != "" {
+		clientCert, err := tls.LoadX509KeyPair(*sslClientCert, *sslClientKey)
+		if err != nil {
+			log.Fatalf("Loading client certificate failed: %v", err)
+		}
+		sslConfig.Certificates = []tls.Certificate{clientCert}
+	}
+
 	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: !*sslVerify},
+		TLSClientConfig: sslConfig,
 	}
 	if strings.HasPrefix(*scrapeURI, "unix:") {
 		socketPath, requestPath, err := parseUnixSocketAddress(*scrapeURI)

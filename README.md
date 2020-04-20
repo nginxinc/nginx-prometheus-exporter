@@ -77,6 +77,12 @@ Usage of ./nginx-prometheus-exporter:
   -nginx.scrape-uri string
         A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
         For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
+  -nginx.ssl-ca-cert string
+        Path to the PEM encoded CA certificate file used to validate the servers SSL certificate. The default value can be overwritten by SSL_CA_CERT environment variable.
+  -nginx.ssl-client-cert string
+        Path to the PEM encoded client certificate file to use when connecting to the server. The default value can be overwritten by SSL_CLIENT_CERT environment variable.
+  -nginx.ssl-client-key string
+        Path to the PEM encoded client certificate key file to use when connecting to the server. The default value can be overwritten by SSL_CLIENT_KEY environment variable.
   -nginx.ssl-verify
         Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable. (default true)
   -nginx.timeout duration
