@@ -1,5 +1,21 @@
 # Changelog
 
+### 0.7.0
+
+FEATURES:
+* [86](https://github.com/nginxinc/nginx-prometheus-exporter/pull/86): Implemented TLS client certificate authentication.
+
+BUGFIXES:
+* [96](https://github.com/nginxinc/nginx-prometheus-exporter/pull/96): Add const labels to upMetric.
+
+UPGRADE:
+* Use the 0.7.0 image from our DockerHub: `nginx/nginx-prometheus-exporter:0.7.0`
+* Download the latest binaries from [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.7.0).
+
+COMPATIBILITY:
+* NGINX 0.1.18 or newer.
+* NGINX Plus R19 or newer.
+
 ### 0.6.0
 
 FEATURES:
