@@ -11,14 +11,17 @@ github.com/golang/protobuf/ptypes/timestamp
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/nginxinc/nginx-plus-go-client v0.6.0
+## explicit
 github.com/nginxinc/nginx-plus-go-client/client
 # github.com/prometheus/client_golang v1.3.0
+## explicit
 github.com/prometheus/client_golang/prometheus
 github.com/prometheus/client_golang/prometheus/internal
 github.com/prometheus/client_golang/prometheus/promhttp
 # github.com/prometheus/client_model v0.2.0
 github.com/prometheus/client_model/go
 # github.com/prometheus/common v0.9.1
+## explicit
 github.com/prometheus/common/expfmt
 github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
 github.com/prometheus/common/model
@@ -27,4 +30,5 @@ github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
 # golang.org/x/sys v0.0.0-20200120151820-655fe14d7479
+## explicit
 golang.org/x/sys/windows
