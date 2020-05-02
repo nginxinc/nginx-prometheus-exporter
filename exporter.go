@@ -386,7 +386,6 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		_, err := fmt.Fprintf(w, `<!DOCTYPE html>
-			<meta charset="utf-8">
 			<title>NGINX Exporter</title>
 			<h1>NGINX Exporter</h1>
 			<p><a href=%q>Metrics</a></p>`,
