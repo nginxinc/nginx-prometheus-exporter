@@ -383,14 +383,13 @@ func main() {
 		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx", constLabels.labels))
 	}
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte(`<html>
-			<head><title>NGINX Exporter</title></head>
-			<body>
+		_, err := fmt.Fprintf(w, `<!DOCTYPE html>
+			<title>NGINX Exporter</title>
 			<h1>NGINX Exporter</h1>
-			<p><a href='/metrics'>Metrics</a></p>
-			</body>
-			</html>`))
+			<p><a href=%q>Metrics</a></p>`,
+			*metricsPath)
 		if err != nil {
 			log.Printf("Error while sending a response for the '/' path: %v", err)
 		}
