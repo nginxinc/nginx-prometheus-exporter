@@ -435,7 +435,7 @@ func newServerZoneMetric(namespace string, metricName string, docString string, 
 func newStreamServerZoneMetric(namespace string, metricName string, docString string, variableLabels []string, constLabels prometheus.Labels) *prometheus.Desc {
 	var labels = []string{"server_zone"}
 	labels = append(labels, variableLabels...)
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_server_zone", metricName), docString, []string{"server_zone"}, constLabels)
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_server_zone", metricName), docString, labels, constLabels)
 }
 
 func newUpstreamMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
