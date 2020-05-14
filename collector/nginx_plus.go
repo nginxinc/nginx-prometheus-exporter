@@ -26,14 +26,20 @@ type NginxPlusCollector struct {
 	ICLabels                    ICLabels
 }
 
-// ICLabels -
+// ICLabels stores Ingress Controller related label data.
 type ICLabels struct {
-	serverZoneLabels     []string
-	upstreamServerLabels []string
+	serverZoneLabels     map[string]string
+	upstreamServerLabels map[string]string
+}
+
+// ICVariableLabels stores Ingress Controller related label names.
+type ICVariableLabels struct {
+	ServerZoneLabels     []string
+	UpstreamServerLabels []string
 }
 
 // NewNginxPlusCollector creates an NginxPlusCollector.
-func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string, variableLabels []string, constLabels map[string]string) *NginxPlusCollector {
+func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string, icVarLabels ICVariableLabels, constLabels map[string]string) *NginxPlusCollector {
 	return &NginxPlusCollector{
 		nginxClient: nginxClient,
 		totalMetrics: map[string]*prometheus.Desc{
@@ -48,26 +54,25 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"ssl_session_reuses":    newGlobalMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", constLabels),
 		},
 		serverZoneMetrics: map[string]*prometheus.Desc{
-			"processing":    newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", variableLabels, constLabels),
-			"requests":      newServerZoneMetric(namespace, "requests", "Total client requests", variableLabels["server_zone"], constLabels),
-			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabels, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
-			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabels, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
-			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", c.ICLabels.serverZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", c.ICLabels.serverZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
-			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", c.ICLabels.serverZoneLabels, constLabels),
-			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", c.ICLabels.serverZoneLabels, constLabels),
-			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", c.ICLabels.serverZoneLabels, constLabels),
+			"processing":    newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", icVarLabels.ServerZoneLabels, constLabels),
+			"requests":      newServerZoneMetric(namespace, "requests", "Total client requests", icVarLabels.ServerZoneLabels, constLabels),
+			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.ServerZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
+			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.ServerZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
+			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.ServerZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
+			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.ServerZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
+			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.ServerZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", icVarLabels.ServerZoneLabels, constLabels),
+			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", icVarLabels.ServerZoneLabels, constLabels),
+			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", icVarLabels.ServerZoneLabels, constLabels),
 		},
 		streamServerZoneMetrics: map[string]*prometheus.Desc{
-			"processing":   newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", c.ICLabels.serverZoneLabels, constLabels),
-			"connections":  newStreamServerZoneMetric(namespace, "connections", "Total connections", c.ICLabels.serverZoneLabels, constLabels),
-			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", c.ICLabels.serverZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", c.ICLabels.serverZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", c.ICLabels.serverZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
-			"discarded":    newStreamServerZoneMetric(namespace, "discarded", "Connections completed without creating a session", c.ICLabels.serverZoneLabels, constLabels),
-			"received":     newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", c.ICLabels.serverZoneLabels, constLabels),
-			"sent":         newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", c.ICLabels.serverZoneLabels, constLabels),
+			"processing":   newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", icVarLabels.ServerZoneLabels, constLabels),
+			"connections":  newStreamServerZoneMetric(namespace, "connections", "Total connections", icVarLabels.ServerZoneLabels, constLabels),
+			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", icVarLabels.ServerZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
+			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", icVarLabels.ServerZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
+			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", icVarLabels.ServerZoneLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"received":     newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", icVarLabels.ServerZoneLabels, constLabels),
+			"sent":         newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", icVarLabels.ServerZoneLabels, constLabels),
 		},
 		upstreamMetrics: map[string]*prometheus.Desc{
 			"keepalives": newUpstreamMetric(namespace, "keepalives", "Idle keepalive connections", constLabels),
@@ -77,38 +82,38 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"zombies": newStreamUpstreamMetric(namespace, "zombies", "Servers removed from the group but still processing active client connections", constLabels),
 		},
 		upstreamServerMetrics: map[string]*prometheus.Desc{
-			"state":                   newUpstreamServerMetric(namespace, "state", "Current state", c.ICLabels.upstreamServerLabels, constLabels),
-			"active":                  newUpstreamServerMetric(namespace, "active", "Active connections", c.ICLabels.upstreamServerLabels, constLabels),
-			"requests":                newUpstreamServerMetric(namespace, "requests", "Total client requests", variac.ICLabels.upstreamServerLabelsbleLabels, constLabels),
-			"responses_1xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", c.ICLabels.upstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
-			"responses_2xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", c.ICLabels.upstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"responses_3xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", c.ICLabels.upstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
-			"responses_4xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", c.ICLabels.upstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"responses_5xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", c.ICLabels.upstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
-			"sent":                    newUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", c.ICLabels.upstreamServerLabels, constLabels),
-			"received":                newUpstreamServerMetric(namespace, "received", "Bytes received to this server", c.ICLabels.upstreamServerLabels, constLabels),
-			"fails":                   newUpstreamServerMetric(namespace, "fails", "Active connections", c.ICLabels.upstreamServerLabels, constLabels),
-			"unavail":                 newUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client requests (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", c.ICLabels.upstreamServerLabels, constLabels),
-			"header_time":             newUpstreamServerMetric(namespace, "header_time", "Average time to get the response header from the server", c.ICLabels.upstreamServerLabels, constLabels),
-			"response_time":           newUpstreamServerMetric(namespace, "response_time", "Average time to get the full response from the server", c.ICLabels.upstreamServerLabels, constLabels),
-			"health_checks_checks":    newUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", c.ICLabels.upstreamServerLabels, constLabels),
-			"health_checks_fails":     newUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", c.ICLabels.upstreamServerLabels, constLabels),
-			"health_checks_unhealthy": newUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", c.ICLabels.upstreamServerLabels, constLabels),
+			"state":                   newUpstreamServerMetric(namespace, "state", "Current state", icVarLabels.UpstreamServerLabels, constLabels),
+			"active":                  newUpstreamServerMetric(namespace, "active", "Active connections", icVarLabels.UpstreamServerLabels, constLabels),
+			"requests":                newUpstreamServerMetric(namespace, "requests", "Total client requests", icVarLabels.UpstreamServerLabels, constLabels),
+			"responses_1xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.UpstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
+			"responses_2xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.UpstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
+			"responses_3xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.UpstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
+			"responses_4xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.UpstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
+			"responses_5xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", icVarLabels.UpstreamServerLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"sent":                    newUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", icVarLabels.UpstreamServerLabels, constLabels),
+			"received":                newUpstreamServerMetric(namespace, "received", "Bytes received to this server", icVarLabels.UpstreamServerLabels, constLabels),
+			"fails":                   newUpstreamServerMetric(namespace, "fails", "Active connections", icVarLabels.UpstreamServerLabels, constLabels),
+			"unavail":                 newUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client requests (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", icVarLabels.UpstreamServerLabels, constLabels),
+			"header_time":             newUpstreamServerMetric(namespace, "header_time", "Average time to get the response header from the server", icVarLabels.UpstreamServerLabels, constLabels),
+			"response_time":           newUpstreamServerMetric(namespace, "response_time", "Average time to get the full response from the server", icVarLabels.UpstreamServerLabels, constLabels),
+			"health_checks_checks":    newUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", icVarLabels.UpstreamServerLabels, constLabels),
+			"health_checks_fails":     newUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", icVarLabels.UpstreamServerLabels, constLabels),
+			"health_checks_unhealthy": newUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", icVarLabels.UpstreamServerLabels, constLabels),
 		},
 		streamUpstreamServerMetrics: map[string]*prometheus.Desc{
-			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state", c.ICLabels.upstreamServerLabels, constLabels),
-			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections", c.ICLabels.upstreamServerLabels, constLabels),
-			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", c.ICLabels.upstreamServerLabels, constLabels),
-			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received from this server", c.ICLabels.upstreamServerLabels, constLabels),
-			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server", c.ICLabels.upstreamServerLabels, constLabels),
-			"unavail":                 newStreamUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client connections (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", c.ICLabels.upstreamServerLabels, constLabels),
-			"connections":             newStreamUpstreamServerMetric(namespace, "connections", "Total number of client connections forwarded to this server", c.ICLabels.upstreamServerLabels, constLabels),
-			"connect_time":            newStreamUpstreamServerMetric(namespace, "connect_time", "Average time to connect to the upstream server", c.ICLabels.upstreamServerLabels, constLabels),
-			"first_byte_time":         newStreamUpstreamServerMetric(namespace, "first_byte_time", "Average time to receive the first byte of data", c.ICLabels.upstreamServerLabels, constLabels),
-			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to receive the last byte of data", c.ICLabels.upstreamServerLabels, constLabels),
-			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", c.ICLabels.upstreamServerLabels, constLabels),
-			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", c.ICLabels.upstreamServerLabels, constLabels),
-			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", c.ICLabels.upstreamServerLabels, constLabels),
+			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state", icVarLabels.UpstreamServerLabels, constLabels),
+			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections", icVarLabels.UpstreamServerLabels, constLabels),
+			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", icVarLabels.UpstreamServerLabels, constLabels),
+			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received from this server", icVarLabels.UpstreamServerLabels, constLabels),
+			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server", icVarLabels.UpstreamServerLabels, constLabels),
+			"unavail":                 newStreamUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client connections (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", icVarLabels.UpstreamServerLabels, constLabels),
+			"connections":             newStreamUpstreamServerMetric(namespace, "connections", "Total number of client connections forwarded to this server", icVarLabels.UpstreamServerLabels, constLabels),
+			"connect_time":            newStreamUpstreamServerMetric(namespace, "connect_time", "Average time to connect to the upstream server", icVarLabels.UpstreamServerLabels, constLabels),
+			"first_byte_time":         newStreamUpstreamServerMetric(namespace, "first_byte_time", "Average time to receive the first byte of data", icVarLabels.UpstreamServerLabels, constLabels),
+			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to receive the last byte of data", icVarLabels.UpstreamServerLabels, constLabels),
+			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", icVarLabels.UpstreamServerLabels, constLabels),
+			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", icVarLabels.UpstreamServerLabels, constLabels),
+			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", icVarLabels.UpstreamServerLabels, constLabels),
 		},
 		streamZoneSyncMetrics: map[string]*prometheus.Desc{
 			"bytes_in":        newStreamZoneSyncMetric(namespace, "bytes_in", "Bytes received by this node", constLabels),
@@ -144,13 +149,37 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"unknown":  newResolverMetric(namespace, "unknown", "Total requests completed with an unknown error", constLabels),
 		},
 		upMetric: newUpMetric(namespace, constLabels),
-		ICLabels: make(map[string]string),
+		ICLabels: ICLabels{},
 	}
 }
 
 // UpdateICLabels updates the labels with Ingress Controller related labels.
-func (c *NginxPlusCollector) UpdateICLabels(variableLabels map[string]string) {
-	c.ICLabels = MergeLabels(c.ICLabels, variableLabels)
+func (c *NginxPlusCollector) UpdateICLabels(ingLabels, vsLabels map[string]string) {
+	c.ICLabels.serverZoneLabels = MergeLabels(ingLabels, vsLabels)
+	c.ICLabels.upstreamServerLabels = MergeLabels(ingLabels, vsLabels)
+	// log.Printf("DEBUG: Final labels %v", c.ICLabels.upstreamServerLabels)
+
+	// Remove keys not present in upstream map.
+	// stats, err := c.nginxClient.GetStats()
+	// if err != nil {
+	// 	log.Panicf("Could not get stats: %v", err)
+	// }
+	// for l := range c.ICLabels.upstreamServerLabels {
+	// 	exists := false
+	// 	for name := range stats.Upstreams {
+	// 		log.Printf("DEBUG: %v, %v", l, name)
+	// 		if name == l {
+	// 			exists = true
+	// 			break
+	// 		}
+	// 	}
+	// 	if exists {
+	// 		log.Printf("DEBUG: Label %v exists", l)
+	// 	} else {
+	// 		log.Printf("DEBUG: Removing label %v", l)
+	// 		delete(c.ICLabels.upstreamServerLabels, l)
+	// 	}
+	// }
 }
 
 // Describe sends the super-set of all possible descriptors of NGINX Plus metrics
@@ -432,15 +461,16 @@ var upstreamServerStates = map[string]float64{
 	"unhealthy": 6.0,
 }
 
+// TODO: Label cardinality issue. E.g if podname is not set. Or running as standalone exporter?
 func newServerZoneMetric(namespace string, metricName string, docString string, variableLabels []string, constLabels prometheus.Labels) *prometheus.Desc {
 	var labels = []string{"server_zone"}
-	labels = append(labels, c.ICLabels.serverZoneLabels...)
+	labels = append(labels, variableLabels...)
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "server_zone", metricName), docString, labels, constLabels)
 }
 
 func newStreamServerZoneMetric(namespace string, metricName string, docString string, variableLabels []string, constLabels prometheus.Labels) *prometheus.Desc {
 	var labels = []string{"server_zone"}
-	labels = append(labels, c.ICLabels.serverZoneLabels...)
+	labels = append(labels, variableLabels...)
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_server_zone", metricName), docString, labels, constLabels)
 }
 
@@ -454,13 +484,13 @@ func newStreamUpstreamMetric(namespace string, metricName string, docString stri
 
 func newUpstreamServerMetric(namespace string, metricName string, docString string, variableLabels []string, constLabels prometheus.Labels) *prometheus.Desc {
 	var labels = []string{"upstream", "server"}
-	labels = append(labels, c.ICLabels.upstreamServerLabels...)
+	labels = append(labels, variableLabels...)
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "upstream_server", metricName), docString, labels, constLabels)
 }
 
 func newStreamUpstreamServerMetric(namespace string, metricName string, docString string, variableLabels []string, constLabels prometheus.Labels) *prometheus.Desc {
 	var labels = []string{"upstream", "server"}
-	labels = append(labels, c.ICLabels.upstreamServerLabels...)
+	labels = append(labels, variableLabels...)
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream_server", metricName), docString, labels, constLabels)
 }
 
