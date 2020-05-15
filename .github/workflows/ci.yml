@@ -52,9 +52,9 @@ jobs:
           repository: nginx/nginx-prometheus-exporter
           dockerfile: build/Dockerfile
           path: '.'
-          username: ${{ secrets.MY_DOCKER_USER }}
-          password: ${{ secrets.MY_DOCKER_PASSWORD }}
-          registry: ${{ secrets.MY_DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ secrets.DOCKER_REGISTRY }}
           tag_with_ref: false
           tags: latest, ${{ steps.get_version.outputs.GIT_TAG }}
           push: true
