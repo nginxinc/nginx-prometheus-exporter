@@ -21,7 +21,7 @@ func newUpMetric(namespace string, constLabels map[string]string) prometheus.Gau
 }
 
 // MergeLabels merges two maps of labels.
-func MergeLabels(a map[string]string, b map[string]string) map[string]string {
+func MergeLabels(a, b map[string]string) map[string]string {
 	c := make(map[string]string)
 
 	for k, v := range a {
@@ -32,4 +32,21 @@ func MergeLabels(a map[string]string, b map[string]string) map[string]string {
 	}
 
 	return c
+}
+
+// MergeLabelList merges two lists of label keys. Removing blank strings.
+// This helper was created to avoid the creation of "" label keys that cause label cardinality issues.
+func MergeLabelList(a, b []string) []string {
+	for i, lab := range a {
+		if lab == "" {
+			a = append(a[:i], a[i+1:]...)
+		}
+	}
+	for i, lab := range b {
+		if lab == "" {
+			b = append(b[:i], b[i+1:]...)
+		}
+	}
+
+	return append(a, b...)
 }

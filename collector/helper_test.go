@@ -37,3 +37,39 @@ func TestMergeLabels(t *testing.T) {
 		})
 	}
 }
+
+func TestMergeLabelList(t *testing.T) {
+	type args struct {
+		a []string
+		b []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			"base case",
+			args{
+				[]string{"test"},
+				[]string{"tester"},
+			},
+			[]string{"test", "tester"},
+		},
+		{
+			"base case",
+			args{
+				[]string{"test"},
+				[]string{""},
+			},
+			[]string{"test"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MergeLabelList(tt.args.a, tt.args.b); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MergeLabelList() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
