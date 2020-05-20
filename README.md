@@ -143,7 +143,7 @@ To build the Docker image with the exporter, run:
 $ make container
 ```
 
-Note: go is not required, as the exporter binary is built in a Docker container. See the [Dockerfile](Dockerfile).
+Note: go is not required, as the exporter binary is built in a Docker container. See the [Dockerfile](build/Dockerfile).
 
 ### Building the Binary
 
