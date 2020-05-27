@@ -290,7 +290,7 @@ func main() {
 		prometheus.GaugeOpts{
 			Name: "nginxexporter_build_info",
 			Help: "Exporter build information",
-			ConstLabels: collector.MergeLabels(
+			ConstLabels: collector.MergeLabelValues(
 				constLabels.labels,
 				prometheus.Labels{
 					"version":   version,
@@ -372,7 +372,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
-		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", collector.VariableLabels{}, constLabels.labels))
+		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", collector.VariableLabelNames{}, constLabels.labels))
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
 			return client.NewNginxClient(httpClient, *scrapeURI)
