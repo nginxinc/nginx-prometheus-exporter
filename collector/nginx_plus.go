@@ -84,6 +84,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabelNames, MergeLabelValues(constLabels, prometheus.Labels{"code": "2xx"})),
 			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabelNames, MergeLabelValues(constLabels, prometheus.Labels{"code": "4xx"})),
 			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabelNames, MergeLabelValues(constLabels, prometheus.Labels{"code": "5xx"})),
+			"discarded":    newStreamServerZoneMetric(namespace, "discarded", "Total number of connections completed without creating a session", varLabelNames, constLabels),
 			"received":     newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", varLabelNames, constLabels),
 			"sent":         newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", varLabelNames, constLabels),
 		},
