@@ -22,24 +22,37 @@ type NginxPlusCollector struct {
 	locationZoneMetrics         map[string]*prometheus.Desc
 	resolverMetrics             map[string]*prometheus.Desc
 	upMetric                    prometheus.Gauge
+	VariableLabelValues         VariableLabelValues
 	mutex                       sync.Mutex
-	ICLabels                    ICLabels
 }
 
-// ICLabels stores Ingress Controller related label data.
-type ICLabels struct {
-	serverZoneLabels     map[string]string
-	upstreamServerLabels map[string]string
-}
-
-// VariableLabels stores label names.
-type VariableLabels struct {
+// VariableLabelNames stores label names.
+type VariableLabelNames struct {
 	ServerZoneLabels     []string
 	UpstreamServerLabels []string
 }
 
+// VariableLabelValues stores label values.
+type VariableLabelValues struct {
+	serverZoneLabels     map[string]string
+	upstreamServerLabels map[string]string
+}
+
+// UpdateVariableLabels updates variable labels.
+func (c *NginxPlusCollector) UpdateVariableLabels(varLabelValues map[string]string) {
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	labels := make(map[string]string, len(varLabelValues))
+	for k, v := range varLabelValues {
+		labels[k] = v
+	}
+	c.VariableLabelValues.serverZoneLabels = labels
+	c.VariableLabelValues.upstreamServerLabels = labels
+}
+
 // NewNginxPlusCollector creates an NginxPlusCollector.
-func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string, varLabels VariableLabels, constLabels map[string]string) *NginxPlusCollector {
+func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string, varLabels VariableLabelNames, constLabels map[string]string) *NginxPlusCollector {
 	return &NginxPlusCollector{
 		nginxClient: nginxClient,
 		totalMetrics: map[string]*prometheus.Desc{
@@ -56,11 +69,11 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		serverZoneMetrics: map[string]*prometheus.Desc{
 			"processing":    newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", varLabels, constLabels),
 			"requests":      newServerZoneMetric(namespace, "requests", "Total client requests", varLabels, constLabels),
-			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
-			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
-			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "1xx"})),
+			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "2xx"})),
+			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "3xx"})),
+			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "4xx"})),
+			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "5xx"})),
 			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", varLabels, constLabels),
 			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", varLabels, constLabels),
 			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", varLabels, constLabels),
@@ -68,9 +81,9 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		streamServerZoneMetrics: map[string]*prometheus.Desc{
 			"processing":   newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", varLabels, constLabels),
 			"connections":  newStreamServerZoneMetric(namespace, "connections", "Total connections", varLabels, constLabels),
-			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "2xx"})),
+			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "4xx"})),
+			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "5xx"})),
 			"received":     newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", varLabels, constLabels),
 			"sent":         newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", varLabels, constLabels),
 		},
@@ -85,11 +98,11 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"state":                   newUpstreamServerMetric(namespace, "state", "Current state", varLabels, constLabels),
 			"active":                  newUpstreamServerMetric(namespace, "active", "Active connections", varLabels, constLabels),
 			"requests":                newUpstreamServerMetric(namespace, "requests", "Total client requests", varLabels, constLabels),
-			"responses_1xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
-			"responses_2xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"responses_3xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
-			"responses_4xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"responses_5xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"responses_1xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "1xx"})),
+			"responses_2xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "2xx"})),
+			"responses_3xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "3xx"})),
+			"responses_4xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "4xx"})),
+			"responses_5xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", varLabels, MergeLabelValues(constLabels, prometheus.Labels{"code": "5xx"})),
 			"sent":                    newUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", varLabels, constLabels),
 			"received":                newUpstreamServerMetric(namespace, "received", "Bytes received to this server", varLabels, constLabels),
 			"fails":                   newUpstreamServerMetric(namespace, "fails", "Active connections", varLabels, constLabels),
@@ -126,11 +139,11 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		},
 		locationZoneMetrics: map[string]*prometheus.Desc{
 			"requests":      newLocationZoneMetric(namespace, "requests", "Total client requests", constLabels),
-			"responses_1xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
-			"responses_2xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"responses_3xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
-			"responses_4xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"responses_5xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"responses_1xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabelValues(constLabels, prometheus.Labels{"code": "1xx"})),
+			"responses_2xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabelValues(constLabels, prometheus.Labels{"code": "2xx"})),
+			"responses_3xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabelValues(constLabels, prometheus.Labels{"code": "3xx"})),
+			"responses_4xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabelValues(constLabels, prometheus.Labels{"code": "4xx"})),
+			"responses_5xx": newLocationZoneMetric(namespace, "responses", "Total responses sent to clients", MergeLabelValues(constLabels, prometheus.Labels{"code": "5xx"})),
 			"discarded":     newLocationZoneMetric(namespace, "discarded", "Requests completed without sending a response", constLabels),
 			"received":      newLocationZoneMetric(namespace, "received", "Bytes received from clients", constLabels),
 			"sent":          newLocationZoneMetric(namespace, "sent", "Bytes sent to clients", constLabels),
@@ -149,37 +162,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"unknown":  newResolverMetric(namespace, "unknown", "Total requests completed with an unknown error", constLabels),
 		},
 		upMetric: newUpMetric(namespace, constLabels),
-		ICLabels: ICLabels{},
 	}
-}
-
-// UpdateICLabels updates the labels with Ingress Controller related labels.
-func (c *NginxPlusCollector) UpdateICLabels(ingLabels, vsLabels map[string]string) {
-	c.ICLabels.serverZoneLabels = MergeLabels(ingLabels, vsLabels)
-	c.ICLabels.upstreamServerLabels = MergeLabels(ingLabels, vsLabels)
-	// log.Printf("DEBUG: Final labels %v", c.ICLabels.upstreamServerLabels)
-
-	// Remove keys not present in upstream map.
-	// stats, err := c.nginxClient.GetStats()
-	// if err != nil {
-	// 	log.Panicf("Could not get stats: %v", err)
-	// }
-	// for l := range c.ICLabels.upstreamServerLabels {
-	// 	exists := false
-	// 	for name := range stats.Upstreams {
-	// 		log.Printf("DEBUG: %v, %v", l, name)
-	// 		if name == l {
-	// 			exists = true
-	// 			break
-	// 		}
-	// 	}
-	// 	if exists {
-	// 		log.Printf("DEBUG: Label %v exists", l)
-	// 	} else {
-	// 		log.Printf("DEBUG: Removing label %v", l)
-	// 		delete(c.ICLabels.upstreamServerLabels, l)
-	// 	}
-	// }
 }
 
 // Describe sends the super-set of all possible descriptors of NGINX Plus metrics
@@ -255,93 +238,94 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 		prometheus.CounterValue, float64(stats.SSL.SessionReuses))
 
 	for name, zone := range stats.ServerZones {
-		a := c.ICLabels.serverZoneLabels[name]
-		variableLabels := MergeLabelList([]string{name}, []string{a})
-
-		log.Printf("Name %v Lab %v", name, variableLabels)
+		serverZoneLabelValues := c.VariableLabelValues.serverZoneLabels[name]
+		varLabelValues := RemoveBlankLabelNames(name, serverZoneLabelValues)
 
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["processing"],
-			prometheus.GaugeValue, float64(zone.Processing), variableLabels...)
+			prometheus.GaugeValue, float64(zone.Processing), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["requests"],
-			prometheus.CounterValue, float64(zone.Requests), variableLabels...)
+			prometheus.CounterValue, float64(zone.Requests), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_1xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses1xx), variableLabels...)
+			prometheus.CounterValue, float64(zone.Responses.Responses1xx), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_2xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses2xx), variableLabels...)
+			prometheus.CounterValue, float64(zone.Responses.Responses2xx), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_3xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses3xx), variableLabels...)
+			prometheus.CounterValue, float64(zone.Responses.Responses3xx), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_4xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses4xx), variableLabels...)
+			prometheus.CounterValue, float64(zone.Responses.Responses4xx), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["responses_5xx"],
-			prometheus.CounterValue, float64(zone.Responses.Responses5xx), variableLabels...)
+			prometheus.CounterValue, float64(zone.Responses.Responses5xx), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["discarded"],
-			prometheus.CounterValue, float64(zone.Discarded), variableLabels...)
+			prometheus.CounterValue, float64(zone.Discarded), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["received"],
-			prometheus.CounterValue, float64(zone.Received), variableLabels...)
+			prometheus.CounterValue, float64(zone.Received), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["sent"],
-			prometheus.CounterValue, float64(zone.Sent), variableLabels...)
+			prometheus.CounterValue, float64(zone.Sent), varLabelValues...)
 	}
 
 	for name, zone := range stats.StreamServerZones {
-		a := c.ICLabels.serverZoneLabels[name]
-		variableLabels := MergeLabelList([]string{name}, []string{a})
+		serverZoneLabels := c.VariableLabelValues.serverZoneLabels[name]
+		varLabelValues := RemoveBlankLabelNames(name, serverZoneLabels)
 
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["processing"],
-			prometheus.GaugeValue, float64(zone.Processing), variableLabels...)
+			prometheus.GaugeValue, float64(zone.Processing), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["connections"],
-			prometheus.CounterValue, float64(zone.Connections), variableLabels...)
+			prometheus.CounterValue, float64(zone.Connections), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sessions_2xx"],
-			prometheus.CounterValue, float64(zone.Sessions.Sessions2xx), variableLabels...)
+			prometheus.CounterValue, float64(zone.Sessions.Sessions2xx), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sessions_4xx"],
-			prometheus.CounterValue, float64(zone.Sessions.Sessions4xx), variableLabels...)
+			prometheus.CounterValue, float64(zone.Sessions.Sessions4xx), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sessions_5xx"],
-			prometheus.CounterValue, float64(zone.Sessions.Sessions5xx), variableLabels...)
-		// ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["discarded"],
-		// 	prometheus.CounterValue, float64(zone.Discarded), variableLabels...)
+			prometheus.CounterValue, float64(zone.Sessions.Sessions5xx), varLabelValues...)
+		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["discarded"],
+			prometheus.CounterValue, float64(zone.Discarded), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["received"],
-			prometheus.CounterValue, float64(zone.Received), variableLabels...)
+			prometheus.CounterValue, float64(zone.Received), varLabelValues...)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sent"],
-			prometheus.CounterValue, float64(zone.Sent), variableLabels...)
+			prometheus.CounterValue, float64(zone.Sent), varLabelValues...)
 	}
 
 	for name, upstream := range stats.Upstreams {
 		for _, peer := range upstream.Peers {
+			upstreamServerLabels := c.VariableLabelValues.upstreamServerLabels[name]
+			varLabelValues := RemoveBlankLabelNames(name, peer.Server, upstreamServerLabels)
+
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["state"],
-				prometheus.GaugeValue, upstreamServerStates[peer.State], name, peer.Server)
+				prometheus.GaugeValue, upstreamServerStates[peer.State], varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["active"],
-				prometheus.GaugeValue, float64(peer.Active), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.Active), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["requests"],
-				prometheus.CounterValue, float64(peer.Requests), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Requests), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_1xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses1xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses1xx), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_2xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses2xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses2xx), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_3xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses3xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses3xx), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_4xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses4xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses4xx), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_5xx"],
-				prometheus.CounterValue, float64(peer.Responses.Responses5xx), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Responses.Responses5xx), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["sent"],
-				prometheus.CounterValue, float64(peer.Sent), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Sent), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["received"],
-				prometheus.CounterValue, float64(peer.Received), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Received), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["fails"],
-				prometheus.CounterValue, float64(peer.Fails), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Fails), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["unavail"],
-				prometheus.CounterValue, float64(peer.Unavail), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Unavail), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["header_time"],
-				prometheus.GaugeValue, float64(peer.HeaderTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.HeaderTime), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["response_time"],
-				prometheus.GaugeValue, float64(peer.ResponseTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.ResponseTime), varLabelValues...)
 
 			if peer.HealthChecks != (plusclient.HealthChecks{}) {
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_checks"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Checks), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Checks), varLabelValues...)
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_fails"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Fails), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Fails), varLabelValues...)
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_unhealthy"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), varLabelValues...)
 			}
 		}
 		ch <- prometheus.MustNewConstMetric(c.upstreamMetrics["keepalives"],
@@ -352,33 +336,36 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 
 	for name, upstream := range stats.StreamUpstreams {
 		for _, peer := range upstream.Peers {
+			upstreamServerLabels := c.VariableLabelValues.upstreamServerLabels[name]
+			varLabelValues := RemoveBlankLabelNames(name, peer.Server, upstreamServerLabels)
+
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["state"],
-				prometheus.GaugeValue, upstreamServerStates[peer.State], name, peer.Server)
+				prometheus.GaugeValue, upstreamServerStates[peer.State], varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["active"],
-				prometheus.GaugeValue, float64(peer.Active), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.Active), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connections"],
-				prometheus.CounterValue, float64(peer.Connections), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Connections), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connect_time"],
-				prometheus.GaugeValue, float64(peer.ConnectTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.ConnectTime), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["first_byte_time"],
-				prometheus.GaugeValue, float64(peer.FirstByteTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.FirstByteTime), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["response_time"],
-				prometheus.GaugeValue, float64(peer.ResponseTime), name, peer.Server)
+				prometheus.GaugeValue, float64(peer.ResponseTime), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["sent"],
-				prometheus.CounterValue, float64(peer.Sent), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Sent), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["received"],
-				prometheus.CounterValue, float64(peer.Received), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Received), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["fails"],
-				prometheus.CounterValue, float64(peer.Fails), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Fails), varLabelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["unavail"],
-				prometheus.CounterValue, float64(peer.Unavail), name, peer.Server)
+				prometheus.CounterValue, float64(peer.Unavail), varLabelValues...)
 			if peer.HealthChecks != (plusclient.HealthChecks{}) {
 				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_checks"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Checks), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Checks), varLabelValues...)
 				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_fails"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Fails), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Fails), varLabelValues...)
 				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_unhealthy"],
-					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), name, peer.Server)
+					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), varLabelValues...)
 			}
 		}
 		ch <- prometheus.MustNewConstMetric(c.streamUpstreamMetrics["zombies"],
@@ -461,51 +448,54 @@ var upstreamServerStates = map[string]float64{
 	"unhealthy": 6.0,
 }
 
-// TODO: Label cardinality issue. E.g if podname is not set. Or running as standalone exporter?
-func newServerZoneMetric(namespace string, metricName string, docString string, variableLabels VariableLabels, constLabels prometheus.Labels) *prometheus.Desc {
-	var labels = []string{"server_zone"}
-	labels = MergeLabelList(labels, variableLabels.ServerZoneLabels)
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "server_zone", metricName), docString, labels, constLabels)
+func newServerZoneMetric(namespace string, metricName string, docString string, variableLabels VariableLabelNames, constLabelNames prometheus.Labels) *prometheus.Desc {
+	var labelNames = []string{"server_zone"}
+	labelNames = append(labelNames, variableLabels.ServerZoneLabels...)
+	labelNames = RemoveBlankLabelNames(labelNames...)
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "server_zone", metricName), docString, labelNames, constLabelNames)
 }
 
-func newStreamServerZoneMetric(namespace string, metricName string, docString string, variableLabels VariableLabels, constLabels prometheus.Labels) *prometheus.Desc {
-	var labels = []string{"server_zone"}
-	labels = MergeLabelList(labels, variableLabels.ServerZoneLabels)
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_server_zone", metricName), docString, labels, constLabels)
+func newStreamServerZoneMetric(namespace string, metricName string, docString string, varLabelNames VariableLabelNames, constLabelNames prometheus.Labels) *prometheus.Desc {
+	var labelNames = []string{"server_zone"}
+	labelNames = append(labelNames, varLabelNames.ServerZoneLabels...)
+	labelNames = RemoveBlankLabelNames(labelNames...)
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_server_zone", metricName), docString, labelNames, constLabelNames)
 }
 
-func newUpstreamMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "upstream", metricName), docString, []string{"upstream"}, constLabels)
+func newUpstreamMetric(namespace string, metricName string, docString string, constLabelNames prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "upstream", metricName), docString, []string{"upstream"}, constLabelNames)
 }
 
-func newStreamUpstreamMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream", metricName), docString, []string{"upstream"}, constLabels)
+func newStreamUpstreamMetric(namespace string, metricName string, docString string, constLabelNames prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream", metricName), docString, []string{"upstream"}, constLabelNames)
 }
 
-func newUpstreamServerMetric(namespace string, metricName string, docString string, variableLabels VariableLabels, constLabels prometheus.Labels) *prometheus.Desc {
-	var labels = []string{"upstream", "server"}
-	labels = MergeLabelList(labels, variableLabels.UpstreamServerLabels)
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "upstream_server", metricName), docString, labels, constLabels)
+func newUpstreamServerMetric(namespace string, metricName string, docString string, varLabelNames VariableLabelNames, constLabelNames prometheus.Labels) *prometheus.Desc {
+	var labelNames = []string{"upstream", "server"}
+	labelNames = append(labelNames, varLabelNames.UpstreamServerLabels...)
+	labelNames = RemoveBlankLabelNames(labelNames...)
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "upstream_server", metricName), docString, labelNames, constLabelNames)
 }
 
-func newStreamUpstreamServerMetric(namespace string, metricName string, docString string, variableLabels VariableLabels, constLabels prometheus.Labels) *prometheus.Desc {
-	var labels = []string{"upstream", "server"}
-	labels = MergeLabelList(labels, variableLabels.UpstreamServerLabels)
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream_server", metricName), docString, labels, constLabels)
+func newStreamUpstreamServerMetric(namespace string, metricName string, docString string, varLabelNames VariableLabelNames, constLabelNames prometheus.Labels) *prometheus.Desc {
+	var labelNames = []string{"upstream", "server"}
+	labelNames = append(labelNames, varLabelNames.UpstreamServerLabels...)
+	labelNames = RemoveBlankLabelNames(labelNames...)
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_upstream_server", metricName), docString, labelNames, constLabelNames)
 }
 
-func newStreamZoneSyncMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_zone_sync_status", metricName), docString, nil, constLabels)
+func newStreamZoneSyncMetric(namespace string, metricName string, docString string, constLabelNames prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_zone_sync_status", metricName), docString, nil, constLabelNames)
 }
 
-func newStreamZoneSyncZoneMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_zone_sync_zone", metricName), docString, []string{"zone"}, constLabels)
+func newStreamZoneSyncZoneMetric(namespace string, metricName string, docString string, constLabelNames prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_zone_sync_zone", metricName), docString, []string{"zone"}, constLabelNames)
 }
 
-func newLocationZoneMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "location_zone", metricName), docString, []string{"location_zone"}, constLabels)
+func newLocationZoneMetric(namespace string, metricName string, docString string, constLabelNames prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "location_zone", metricName), docString, []string{"location_zone"}, constLabelNames)
 }
 
-func newResolverMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
-	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "resolver", metricName), docString, []string{"resolver"}, constLabels)
+func newResolverMetric(namespace string, metricName string, docString string, constLabelNames prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "resolver", metricName), docString, []string{"resolver"}, constLabelNames)
 }

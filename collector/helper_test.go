@@ -5,43 +5,77 @@ import (
 	"testing"
 )
 
-func TestMergeLabels(t *testing.T) {
+func TestMergeLabelValues(t *testing.T) {
+	type args struct {
+		a map[string]string
+		b map[string]string
+	}
 	tests := []struct {
-		name             string
-		mapA, mapB, want map[string]string
+		name string
+		args args
+		want map[string]string
 	}{
 		{
-			name: "base case",
-			mapA: map[string]string{"a": "is here"},
-			mapB: map[string]string{"b": "is here"},
-			want: map[string]string{"a": "is here", "b": "is here"},
+			"base case",
+			args{
+				map[string]string{"poda": "labela"},
+				map[string]string{"podb": "labelb"},
+			},
+			map[string]string{"poda": "labela", "podb": "labelb"},
 		},
 		{
-			name: "overwrite key case",
-			mapA: map[string]string{"a": "is here"},
-			mapB: map[string]string{"b": "is here", "a": "is now here"},
-			want: map[string]string{"a": "is now here", "b": "is here"},
+			"overwrite",
+			args{
+				map[string]string{"poda": "labela"},
+				map[string]string{"poda": "labelb"},
+			},
+			map[string]string{"poda": "labelb"},
 		},
 		{
-			name: "empty maps case",
-			mapA: nil,
-			mapB: nil,
-			want: map[string]string{},
+			"merge reversed order",
+			args{
+				map[string]string{"podb": "labelb"},
+				map[string]string{"poda": "labela"},
+			},
+			map[string]string{"poda": "labela", "podb": "labelb"},
+		},
+		{
+			"nil merge",
+			args{
+				map[string]string{"podb": "labelb"},
+				nil,
+			},
+			map[string]string{"podb": "labelb"},
+		},
+		{
+			"nil merge reversed order",
+			args{
+				nil,
+				map[string]string{"podb": "labelb"},
+			},
+			map[string]string{"podb": "labelb"},
+		},
+		{
+			"two nils",
+			args{
+				nil,
+				nil,
+			},
+			map[string]string{},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MergeLabels(tt.mapA, tt.mapB); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("mergeLabels() = %v, want %v", got, tt.want)
+			if got := MergeLabelValues(tt.args.a, tt.args.b); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MergeLabelValues() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestMergeLabelList(t *testing.T) {
+func TestRemoveBlankLabelNames(t *testing.T) {
 	type args struct {
-		a []string
-		b []string
+		labels []string
 	}
 	tests := []struct {
 		name string
@@ -49,26 +83,24 @@ func TestMergeLabelList(t *testing.T) {
 		want []string
 	}{
 		{
-			"base case",
+			"Remove blank label",
 			args{
-				[]string{"test"},
-				[]string{"tester"},
-			},
-			[]string{"test", "tester"},
-		},
-		{
-			"base case",
-			args{
-				[]string{"test"},
 				[]string{""},
 			},
-			[]string{"test"},
+			[]string{},
+		},
+		{
+			"Remove blank label from slice",
+			args{
+				[]string{"label", "", "label3"},
+			},
+			[]string{"label", "label3"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := MergeLabelList(tt.args.a, tt.args.b); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("MergeLabelList() = %v, want %v", got, tt.want)
+			if got := RemoveBlankLabelNames(tt.args.labels...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("RemoveBlankLabelNames() = %v, want %v", got, tt.want)
 			}
 		})
 	}
