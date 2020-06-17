@@ -3,7 +3,7 @@
 ### 0.8.0
 
 CHANGES:
-* [103](https://github.com/nginxinc/nginx-prometheus-exporter/pull/103): Move to non-root container. New distroless docker image and non-root user by default. Thanks to [Alex SZAKALY](https://github.com/alex1989hu).
+* [103](https://github.com/nginxinc/nginx-prometheus-exporter/pull/103): Switch to `gcr.io/distroless/static` image. Use a non-root user to run the exporter process by default. Thanks to [Alex SZAKALY](https://github.com/alex1989hu).
 * Update Go version to 1.14
 
 BUGFIXES:
