@@ -1,5 +1,23 @@
 # Changelog
 
+### 0.8.0
+
+CHANGES:
+* [103](https://github.com/nginxinc/nginx-prometheus-exporter/pull/103): Switch to `gcr.io/distroless/static` image. Use a non-root user to run the exporter process by default. Thanks to [Alex SZAKALY](https://github.com/alex1989hu).
+* Update Go version to 1.14
+
+BUGFIXES:
+* [99](https://github.com/nginxinc/nginx-prometheus-exporter/pull/99): Fix link to metrics path. Thanks to [Yoan Blanc](https://github.com/greut).
+* [101](https://github.com/nginxinc/nginx-prometheus-exporter/pull/101): docs: fix dockerfile link. Thanks to [Eric Carboni](https://github.com/eric-hc).
+
+UPGRADE:
+* Use the 0.8.0 image from our DockerHub: `nginx/nginx-prometheus-exporter:0.8.0`
+* Download the latest binaries from [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.8.0).
+
+COMPATIBILITY:
+* NGINX 0.1.18 or newer.
+* NGINX Plus R19 or newer.
+
 ### 0.7.0
 
 FEATURES:
