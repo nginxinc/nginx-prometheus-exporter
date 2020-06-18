@@ -54,7 +54,6 @@ jobs:
           path: '.'
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          registry: ${{ secrets.DOCKER_REGISTRY }}
           tag_with_ref: false
-          tags: ${{ steps.get_version.outputs.GIT_TAG }},latest
+          tags: latest,${{ steps.get_version.outputs.GIT_TAG }}
           push: true
