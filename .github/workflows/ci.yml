@@ -56,5 +56,5 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
           registry: ${{ secrets.DOCKER_REGISTRY }}
           tag_with_ref: false
-          tags: latest, ${{ steps.get_version.outputs.GIT_TAG }}
+          tags: ${{ steps.get_version.outputs.GIT_TAG }},latest
           push: true
