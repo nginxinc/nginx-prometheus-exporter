@@ -489,6 +489,25 @@
     "templating": {
         "list": [
             {
+                "current": {
+                  "selected": false,
+                  "tags": [],
+                  "text": "default",
+                  "value": "default"
+                },
+                "hide": 0,
+                "includeAll": false,
+                "label": "datasource",
+                "multi": false,
+                "name": "DS_PROMETHEUS",
+                "options": [],
+                "query": "prometheus",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "type": "datasource"
+            },
+            {
                 "allValue": null,
                 "current": {},
                 "datasource": "${DS_PROMETHEUS}",
