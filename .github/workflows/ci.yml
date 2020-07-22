@@ -18,7 +18,7 @@ jobs:
 
   build:
     name: Build Image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -37,9 +37,9 @@ jobs:
 
   release:
     name: Release Image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     needs: build
-    if: github.event_name == 'create' && contains(github.ref, 'refs/tags/')
+    if: github.repository == 'nginxinc/nginx-prometheus-exporter' && github.event_name == 'create' && contains(github.ref, 'refs/tags/')
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -57,3 +57,20 @@ jobs:
           tag_with_ref: false
           tags: latest,${{ steps.get_version.outputs.GIT_TAG }}
           push: true
+
+  job-failure:
+    name: Report Failures
+    runs-on: ubuntu-18.04
+    if: failure()
+    steps:
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@master
+        env:
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
+          SLACK_COLOR: '#3278BD'
+          SLACK_ICON_EMOJI: ':github:'
+          SLACK_TITLE: Pipeline Failure
+          SLACK_MESSAGE: 'The pipeline has failed, please check the logs.'
+          SLACK_FOOTER: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+          SLACK_USERNAME: GitHub-Actions
+          SLACK_WEBHOOK: ${{ secrets.SLACK_HOOK }}
