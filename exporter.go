@@ -372,7 +372,8 @@ func main() {
 		if err != nil {
 			log.Fatalf("Could not create Nginx Plus Client: %v", err)
 		}
-		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", constLabels.labels))
+		variableLabelNames := collector.NewVariableLabelNames(nil, nil)
+		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", variableLabelNames, constLabels.labels))
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
 			return client.NewNginxClient(httpClient, *scrapeURI)
