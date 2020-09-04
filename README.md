@@ -93,6 +93,8 @@ Usage of ./nginx-prometheus-exporter:
         An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
         A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")
+  -version
+        Display the NGINX exporter version. (default false)
 ```
 
 ### Exported Metrics
