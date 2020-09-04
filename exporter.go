@@ -264,6 +264,9 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 	nginxRetries = flag.Uint("nginx.retries",
 		defaultNginxRetries,
 		"A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error. The default value can be overwritten by NGINX_RETRIES environment variable.")
+	displayVersion = flag.Bool("version",
+		false,
+		"Display the NGINX exporter version.")
 
 	// Custom command-line flags
 	timeout = createPositiveDurationFlag("nginx.timeout",
@@ -281,6 +284,11 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 
 func main() {
 	flag.Parse()
+
+	if *displayVersion {
+		fmt.Printf("NGINX Prometheus Exporter Version=%v GitCommit=%v\n", version, gitCommit)
+		os.Exit(0)
+	}
 
 	log.Printf("Starting NGINX Prometheus Exporter Version=%v GitCommit=%v", version, gitCommit)
 
