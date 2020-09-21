@@ -3,18 +3,36 @@ name: Continuous Integration
 on:
   push:
     branches:
-      - '**'
+      - 'master'
   pull_request:
     branches:
       - master
+    types:
+      - opened
+      - reopened
+      - synchronize
   create:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 env:
   DOCKER_BUILDKIT: 1
+  GOLANG_VERSION: 1.15
 
 jobs:
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Setup Golang Environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: '${{ env.GOLANG_VERSION }}'
+      - name: Run Tests
+        run: make test
 
   build:
     name: Build Image
@@ -22,55 +40,115 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-      - name: Unit Tests
-        run: make test
       - name: Build Prometheus-Exporter
         run: make nginx-prometheus-exporter
-      - name: Build Image
-        uses: docker/build-push-action@v1
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@v1
         with:
-          repository: nginx/nginx-prometheus-exporter
-          dockerfile: build/Dockerfile
-          path: '.'
-          tag_with_sha: true
+          driver-opts: network=host
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Build Image
+        uses: docker/build-push-action@v2
+        with:
+          file: build/Dockerfile
+          context: '.'
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          tags: nginx/nginx-prometheus-exporter:${{ github.sha }}
           push: false
 
-  release:
+  release-docker:
     name: Release Image
     runs-on: ubuntu-18.04
-    needs: build
-    if: github.repository == 'nginxinc/nginx-prometheus-exporter' && github.event_name == 'create' && contains(github.ref, 'refs/tags/')
+    needs: [build, unit-tests]
+    if: 
+      github.repository == 'nginxinc/nginx-prometheus-exporter' &&
+      github.event_name == 'create' && 
+      contains(github.ref, 'refs/tags/')
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
       - name: Retrieve Tag
         id: get_version
         run: echo ::set-output name=GIT_TAG::$(echo ${GITHUB_REF/refs\/tags\//} | tr -d v)
-      - name: Push to Dockerhub
-        uses: docker/build-push-action@v1
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@v1
         with:
-          repository: nginx/nginx-prometheus-exporter
-          dockerfile: build/Dockerfile
-          path: '.'
+          driver-opts: network=host
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: DockerHub Login
+        uses: docker/login-action@v1 
+        with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          tag_with_ref: false
-          tags: latest,${{ steps.get_version.outputs.GIT_TAG }}
+      - name: Push to Dockerhub
+        uses: docker/build-push-action@v2
+        with:
+          file: build/Dockerfile
+          context: '.'
+          tags: |
+            nginx/nginx-prometheus-exporter:latest
+            nginx/nginx-prometheus-exporter:${{ steps.get_version.outputs.GIT_TAG }}
           push: true
 
-  job-failure:
-    name: Report Failures
+  notify:
+    name: Notify
     runs-on: ubuntu-18.04
-    if: failure()
+    needs: release-docker
+    if: always() && github.ref == 'refs/heads/master'
     steps:
-      - name: Slack Notification
-        uses: rtCamp/action-slack-notify@master
+      - name: Workflow Status
+        id: check
+        uses: martialonline/workflow-status@v1
+      - name: Calculate SHA
+        id: commit
+        run: echo "::set-output name=sha::$(echo ${GITHUB_SHA} | cut -c1-7)"
+      - name: Send Notification
+        uses: 8398a7/action-slack@v3
+        if: contains(steps.check.outputs.status, 'failed')
+        with:
+          status: custom
+          custom_payload: |
+            {
+              username: 'Github',
+              icon_emoji: ':octocat:',
+              mention: 'channel',
+              attachments: [{
+                color: '${{ steps.check.outputs.status }}' == 'success' ? 'good' : '${{ steps.check.outputs.status }}' == 'failed' ? 'danger' : 'warning',
+                fields: [{
+                  title: 'Failed Commit',
+                  value: '${{ steps.commit.outputs.sha }}',
+                  short: true
+                },
+                {
+                  title: 'Author',
+                  value: '${{ github.actor }}',
+                  short: true
+                },
+                {
+                  title: 'Commit Message',
+                  value: `${{ github.event.head_commit.message }}`,
+                  short: false
+                },
+                {
+                  title: 'Pipeline URL',
+                  value: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}',
+                  short: false
+                }]
+              }]
+            }
         env:
-          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
-          SLACK_COLOR: '#3278BD'
-          SLACK_ICON_EMOJI: ':github:'
-          SLACK_TITLE: Pipeline Failure
-          SLACK_MESSAGE: 'The pipeline has failed, please check the logs.'
-          SLACK_FOOTER: 'https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-          SLACK_USERNAME: GitHub-Actions
-          SLACK_WEBHOOK: ${{ secrets.SLACK_HOOK }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
