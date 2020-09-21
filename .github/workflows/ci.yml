@@ -63,7 +63,7 @@ jobs:
           tags: nginx/nginx-prometheus-exporter:${{ github.sha }}
           push: false
 
-  release:
+  release-docker:
     name: Release Image
     runs-on: ubuntu-18.04
     needs: [build, unit-tests]
@@ -106,7 +106,7 @@ jobs:
   notify:
     name: Notify
     runs-on: ubuntu-18.04
-    needs: release-helm
+    needs: release-docker
     if: always() && github.ref == 'refs/heads/master'
     steps:
       - name: Workflow Status
