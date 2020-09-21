@@ -32,7 +32,7 @@ jobs:
         with:
           go-version: '${{ env.GOLANG_VERSION }}'
       - name: Run Tests
-        run: go test ./...
+        run: make test
 
   build:
     name: Build Image
