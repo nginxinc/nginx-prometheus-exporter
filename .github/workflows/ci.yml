@@ -3,7 +3,7 @@ name: Continuous Integration
 on:
   push:
     branches:
-      - 'master'
+      - master
   pull_request:
     branches:
       - master
@@ -130,7 +130,7 @@ jobs:
               icon_emoji: ':octocat:',
               mention: 'channel',
               attachments: [{
-                title: '${{ steps.commit.outputs.repo }} ${{ github.workflow }} pipeline has failed',
+                title: '[${{ steps.commit.outputs.repo }}] ${{ github.workflow }} pipeline has failed',
                 color: '${{ steps.check.outputs.status }}' == 'failure' ? 'danger' : 'warning',
                 fields: [{
                   title: 'Commit Hash',
