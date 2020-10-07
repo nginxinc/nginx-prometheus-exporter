@@ -34,18 +34,18 @@ $(BUILD_DIR)/nginx-prometheus-exporter-linux-i386:
 
 release: $(BUILD_DIR)/nginx-prometheus-exporter-linux-amd64 $(BUILD_DIR)/nginx-prometheus-exporter-linux-i386
 	mv $(BUILD_DIR)/nginx-prometheus-exporter-linux-amd64 $(BUILD_DIR)/nginx-prometheus-exporter && \
-	tar czf $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG)-linux-amd64.tar.gz -C $(BUILD_DIR) nginx-prometheus-exporter && \
+	tar czf $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG).linux-amd64.tar.gz -C $(BUILD_DIR) nginx-prometheus-exporter && \
 	rm $(BUILD_DIR)/nginx-prometheus-exporter
 
 	mv $(BUILD_DIR)/nginx-prometheus-exporter-linux-i386 $(BUILD_DIR)/nginx-prometheus-exporter && \
-	tar czf $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG)-linux-i386.tar.gz -C $(BUILD_DIR) nginx-prometheus-exporter && \
+	tar czf $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG).linux-i386.tar.gz -C $(BUILD_DIR) nginx-prometheus-exporter && \
 	rm $(BUILD_DIR)/nginx-prometheus-exporter
 
-	shasum -a 256 $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG)-linux-amd64.tar.gz $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG)-linux-i386.tar.gz|sed "s|$(BUILD_DIR)/||" > $(BUILD_DIR)/sha256sums.txt
+	shasum -a 256 $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG).linux-amd64.tar.gz $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG).linux-i386.tar.gz|sed "s|$(BUILD_DIR)/||" > $(BUILD_DIR)/sha256sums.txt
 
 clean:
-	-rm $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG)-linux-amd64.tar.gz
-	-rm $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG)-linux-i386.tar.gz
+	-rm $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG).linux-amd64.tar.gz
+	-rm $(BUILD_DIR)/nginx-prometheus-exporter-$(TAG).linux-i386.tar.gz
 	-rm $(BUILD_DIR)/sha256sums.txt
 	-rmdir $(BUILD_DIR)
 	-rm nginx-prometheus-exporter
