@@ -9,13 +9,18 @@ GIT_COMMIT = $(shell git rev-parse --short HEAD)
 
 BUILD_DIR = build_output
 
+GOLANGCI_CONTAINER=golangci/golangci-lint:v1.29-alpine
+
 export DOCKER_BUILDKIT = 1
 
 nginx-prometheus-exporter:
 	GO111MODULE=on CGO_ENABLED=0 go build -mod=vendor -installsuffix cgo -ldflags "-X main.version=$(VERSION) -X main.gitCommit=$(GIT_COMMIT)" -o nginx-prometheus-exporter
 
 lint:
-	golangci-lint run
+	docker run --rm \
+	-v $(shell pwd):/go/src/github.com/nginxinc/nginx-prometheus-exporter \
+	-w /go/src/github.com/nginxinc/nginx-prometheus-exporter \
+	$(GOLANGCI_CONTAINER) golangci-lint run
 
 test:
 	GO111MODULE=on go test -mod=vendor ./...
