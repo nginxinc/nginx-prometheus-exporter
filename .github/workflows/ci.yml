@@ -4,9 +4,15 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
   pull_request:
     branches:
       - master
+    paths-ignore:
+      - '**.md'
+      - 'LICENSE'
     types:
       - opened
       - reopened
