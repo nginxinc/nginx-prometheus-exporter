@@ -92,7 +92,13 @@ Usage of ./nginx-prometheus-exporter:
   -web.listen-address string
         An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
-        A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")
+        A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")  
+  -web.secured-metrics
+        Expose metrics using https. The default value can be overwritten by SECURED_METRICS variable.  (default false)
+  -web.ssl-server-cert string
+        Path to the PEM encoded certificate for the nginx-exporter metrics server(when web.secured-metrics=true). The default value can be overwritten by SSL_SERVER_CERT variable.
+  -web.ssl-server-key string
+        Path to the PEM encoded key for the nginx-exporter metrics server (when web.secured-metrics=true). The default value can be overwritten by SSL_SERVER_KEY variable.
   -version
         Display the NGINX exporter version. (default false)
 ```
