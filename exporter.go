@@ -223,6 +223,9 @@ var (
 
 	// Defaults values
 	defaultListenAddress      = getEnv("LISTEN_ADDRESS", ":9113")
+	defaultSecuredMetrics     = getEnvBool("SECURED_METRICS", false)
+	defaultSslServerCert      = getEnv("SSL_SERVER_CERT", "")
+	defaultSslServerKey       = getEnv("SSL_SERVER_KEY", "")
 	defaultMetricsPath        = getEnv("TELEMETRY_PATH", "/metrics")
 	defaultNginxPlus          = getEnvBool("NGINX_PLUS", false)
 	defaultScrapeURI          = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
@@ -239,6 +242,15 @@ var (
 	listenAddr = flag.String("web.listen-address",
 		defaultListenAddress,
 		"An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable.")
+	securedMetrics = flag.Bool("web.secured-metrics",
+		defaultSecuredMetrics,
+		"Expose metrics using https. The default value can be overwritten by SECURED_METRICS variable.")
+	sslServerCert = flag.String("web.ssl-server-cert",
+		defaultSslServerCert,
+		"Path to the PEM encoded certificate for the nginx-exporter metrics server(when web.secured-metrics=true). The default value can be overwritten by SSL_SERVER_CERT variable.")
+	sslServerKey = flag.String("web.ssl-server-key",
+		defaultSslServerKey,
+		"Path to the PEM encoded key for the nginx-exporter metrics server (when web.secured-metrics=true). The default value can be overwritten by SSL_SERVER_KEY variable.")
 	metricsPath = flag.String("web.telemetry-path",
 		defaultMetricsPath,
 		"A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable.")
@@ -409,8 +421,22 @@ func main() {
 		log.Fatalf("Could not create listener: %v", err)
 	}
 
-	log.Printf("NGINX Prometheus Exporter has successfully started")
-	log.Fatal(srv.Serve(listener))
+	if *securedMetrics {
+		_, err = os.Stat(*sslServerCert)
+		if err != nil {
+			log.Fatalf("Cert file is not set, not readable or non-existent. Make sure you set -web.ssl-server-cert when starting your exporter with -web.secured-metrics=true: %v", err)
+		}
+		_, err = os.Stat(*sslServerKey)
+		if err != nil {
+			log.Fatalf("Key file is not set, not readable or non-existent. Make sure you set -web.ssl-server-key when starting your exporter with -web.secured-metrics=true: %v", err)
+		}
+		log.Printf("NGINX Prometheus Exporter has successfully started using https")
+		log.Fatal(srv.ServeTLS(listener, *sslServerCert, *sslServerKey))
+	} else {
+		log.Printf("NGINX Prometheus Exporter has successfully started")
+		log.Fatal(srv.Serve(listener))
+	}
+
 }
 
 type userAgentRoundTripper struct {
