@@ -13,12 +13,12 @@ import (
 type LabelUpdater interface {
 	UpdateUpstreamServerPeerLabels(upstreamServerPeerLabels map[string][]string)
 	DeleteUpstreamServerPeerLabels(peers []string)
-	UpdateStreamUpstreamServerPeerLabels(streamUpstreamServerPeerLabels map[string][]string)
-	DeleteStreamUpstreamServerPeerLabels(peers []string)
-	UpdateStreamUpstreamServerLabels(upstreamServerPeerLabels map[string][]string)
-	DeleteStreamUpstreamServerLabels(peers []string)
 	UpdateUpstreamServerLabels(upstreamServerLabelValues map[string][]string)
 	DeleteUpstreamServerLabels(upstreamNames []string)
+	UpdateStreamUpstreamServerPeerLabels(streamUpstreamServerPeerLabels map[string][]string)
+	DeleteStreamUpstreamServerPeerLabels(peers []string)
+	UpdateStreamUpstreamServerLabels(streamUpstreamServerPeerLabels map[string][]string)
+	DeleteStreamUpstreamServerLabels(peers []string)
 	UpdateServerZoneLabels(serverZoneLabelValues map[string][]string)
 	DeleteServerZoneLabels(zoneNames []string)
 }
@@ -28,7 +28,6 @@ type NginxPlusCollector struct {
 	nginxClient                    *plusclient.NginxClient
 	totalMetrics                   map[string]*prometheus.Desc
 	serverZoneMetrics              map[string]*prometheus.Desc
-	streamZoneMetrics              map[string]*prometheus.Desc
 	upstreamMetrics                map[string]*prometheus.Desc
 	upstreamServerMetrics          map[string]*prometheus.Desc
 	streamServerZoneMetrics        map[string]*prometheus.Desc
@@ -422,7 +421,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 		varLabelValues := c.getServerZoneLabelValues(name)
 
 		if c.variableLabelNames.ServerZoneVariableLabelNames != nil && len(varLabelValues) != len(c.variableLabelNames.ServerZoneVariableLabelNames) {
-			log.Printf("wrong number of labels for tcp zone %v. For labels %v, got values: %v. Empty labels will be used instead",
+			log.Printf("wrong number of labels for stream server zone %v. For labels %v, got values: %v. Empty labels will be used instead",
 				name, c.variableLabelNames.ServerZoneVariableLabelNames, varLabelValues)
 			for range c.variableLabelNames.ServerZoneVariableLabelNames {
 				labelValues = append(labelValues, "")
@@ -525,7 +524,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			varLabelValues := c.getStreamUpstreamServerLabelValues(name)
 
 			if c.variableLabelNames.UpstreamServerVariableLabelNames != nil && len(varLabelValues) != len(c.variableLabelNames.UpstreamServerVariableLabelNames) {
-				log.Printf("wrong number of labels for tcp %v. For labels %v, got values: %v. Empty labels will be used instead",
+				log.Printf("wrong number of labels for stream server %v. For labels %v, got values: %v. Empty labels will be used instead",
 					name, c.variableLabelNames.UpstreamServerVariableLabelNames, varLabelValues)
 				for range c.variableLabelNames.UpstreamServerVariableLabelNames {
 					labelValues = append(labelValues, "")
@@ -537,7 +536,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			upstreamServer := fmt.Sprintf("%v/%v", name, peer.Server)
 			varPeerLabelValues := c.getStreamUpstreamServerPeerLabelValues(upstreamServer)
 			if c.variableLabelNames.UpstreamServerPeerVariableLabelNames != nil && len(varPeerLabelValues) != len(c.variableLabelNames.UpstreamServerPeerVariableLabelNames) {
-				log.Printf("wrong number of labels for upstream peer %v. For labels %v, got values: %v. Empty labels will be used instead",
+				log.Printf("wrong number of labels for stream upstream peer %v. For labels %v, got values: %v. Empty labels will be used instead",
 					peer.Server, c.variableLabelNames.UpstreamServerPeerVariableLabelNames, varPeerLabelValues)
 				for range c.variableLabelNames.UpstreamServerPeerVariableLabelNames {
 					labelValues = append(labelValues, "")
