@@ -42,6 +42,7 @@ type NginxPlusCollector struct {
 	upstreamServerLabels           map[string][]string
 	streamUpstreamServerLabels     map[string][]string
 	serverZoneLabels               map[string][]string
+	streamServerZoneLabels         map[string][]string
 	upstreamServerPeerLabels       map[string][]string
 	streamUpstreamServerPeerLabels map[string][]string
 	variableLabelsMutex            sync.RWMutex
@@ -137,6 +138,24 @@ func (c *NginxPlusCollector) DeleteServerZoneLabels(zoneNames []string) {
 	c.variableLabelsMutex.Unlock()
 }
 
+// UpdateStreamServerZoneLabels updates the Stream Server Zone Labels
+func (c *NginxPlusCollector) UpdateStreamServerZoneLabels(streamServerZoneLabelValues map[string][]string) {
+	c.variableLabelsMutex.Lock()
+	for k, v := range streamServerZoneLabelValues {
+		c.streamServerZoneLabels[k] = v
+	}
+	c.variableLabelsMutex.Unlock()
+}
+
+// DeleteStreamServerZoneLabels deletes the Stream Server Zone Labels
+func (c *NginxPlusCollector) DeleteStreamServerZoneLabels(zoneNames []string) {
+	c.variableLabelsMutex.Lock()
+	for _, k := range zoneNames {
+		delete(c.streamServerZoneLabels, k)
+	}
+	c.variableLabelsMutex.Unlock()
+}
+
 func (c *NginxPlusCollector) getUpstreamServerLabelValues(upstreamName string) []string {
 	c.variableLabelsMutex.RLock()
 	defer c.variableLabelsMutex.RUnlock()
@@ -155,6 +174,12 @@ func (c *NginxPlusCollector) getServerZoneLabelValues(zoneName string) []string 
 	return c.serverZoneLabels[zoneName]
 }
 
+func (c *NginxPlusCollector) getStreamServerZoneLabelValues(zoneName string) []string {
+	c.variableLabelsMutex.RLock()
+	defer c.variableLabelsMutex.RUnlock()
+	return c.streamServerZoneLabels[zoneName]
+}
+
 func (c *NginxPlusCollector) getUpstreamServerPeerLabelValues(peer string) []string {
 	c.variableLabelsMutex.RLock()
 	defer c.variableLabelsMutex.RUnlock()
@@ -169,26 +194,29 @@ func (c *NginxPlusCollector) getStreamUpstreamServerPeerLabelValues(peer string)
 
 // VariableLabelNames holds all the variable label names for the different metrics
 type VariableLabelNames struct {
-	UpstreamServerVariableLabelNames     []string
-	ServerZoneVariableLabelNames         []string
-	UpstreamServerPeerVariableLabelNames []string
-	StreamUpstreamVariableLabelNames     []string
+	UpstreamServerVariableLabelNames           []string
+	ServerZoneVariableLabelNames               []string
+	StreamServerZoneVariableLabelNames         []string
+	UpstreamServerPeerVariableLabelNames       []string
+	StreamUpstreamServerPeerVariableLabelNames []string
+	StreamUpstreamServerVariableLabelNames     []string
 }
 
 // NewVariableLabels creates a new struct for VariableNames for the collector
 func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZoneVariableLabelNames []string,
 	upstreamServerPeerVariableLabelNames []string) VariableLabelNames {
 	return VariableLabelNames{
-		UpstreamServerVariableLabelNames:     upstreamServerVariableLabelNames,
-		ServerZoneVariableLabelNames:         serverZoneVariableLabelNames,
-		UpstreamServerPeerVariableLabelNames: upstreamServerPeerVariableLabelNames,
-		StreamUpstreamVariableLabelNames:     upstreamServerVariableLabelNames,
+		UpstreamServerVariableLabelNames:       upstreamServerVariableLabelNames,
+		ServerZoneVariableLabelNames:           serverZoneVariableLabelNames,
+		UpstreamServerPeerVariableLabelNames:   upstreamServerPeerVariableLabelNames,
+		StreamUpstreamServerVariableLabelNames: upstreamServerVariableLabelNames,
 	}
 }
 
 // NewNginxPlusCollector creates an NginxPlusCollector.
 func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string, variableLabelNames VariableLabelNames, constLabels map[string]string) *NginxPlusCollector {
 	upstreamServerVariableLabelNames := append(variableLabelNames.UpstreamServerVariableLabelNames, variableLabelNames.UpstreamServerPeerVariableLabelNames...)
+	streamUpstreamServerVariableLabelNames := append(variableLabelNames.StreamUpstreamServerVariableLabelNames, variableLabelNames.StreamUpstreamServerPeerVariableLabelNames...)
 	return &NginxPlusCollector{
 		variableLabelNames:             variableLabelNames,
 		upstreamServerLabels:           make(map[string][]string),
@@ -209,16 +237,16 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"ssl_session_reuses":    newGlobalMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", constLabels),
 		},
 		serverZoneMetrics: map[string]*prometheus.Desc{
-			"processing":    newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"requests":      newServerZoneMetric(namespace, "requests", "Total client requests", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
-			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
-			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
-			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"processing":    newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"requests":      newServerZoneMetric(namespace, "requests", "Total client requests", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
+			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
+			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
+			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
+			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
 		},
 		streamServerZoneMetrics: map[string]*prometheus.Desc{
 			"processing":   newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
@@ -257,19 +285,19 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"health_checks_unhealthy": newUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", upstreamServerVariableLabelNames, constLabels),
 		},
 		streamUpstreamServerMetrics: map[string]*prometheus.Desc{
-			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state", upstreamServerVariableLabelNames, constLabels),
-			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections", upstreamServerVariableLabelNames, constLabels),
-			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", upstreamServerVariableLabelNames, constLabels),
-			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received from this server", upstreamServerVariableLabelNames, constLabels),
-			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server", upstreamServerVariableLabelNames, constLabels),
-			"unavail":                 newStreamUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client connections (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", upstreamServerVariableLabelNames, constLabels),
-			"connections":             newStreamUpstreamServerMetric(namespace, "connections", "Total number of client connections forwarded to this server", upstreamServerVariableLabelNames, constLabels),
-			"connect_time":            newStreamUpstreamServerMetric(namespace, "connect_time", "Average time to connect to the upstream server", upstreamServerVariableLabelNames, constLabels),
-			"first_byte_time":         newStreamUpstreamServerMetric(namespace, "first_byte_time", "Average time to receive the first byte of data", upstreamServerVariableLabelNames, constLabels),
-			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to receive the last byte of data", upstreamServerVariableLabelNames, constLabels),
-			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", upstreamServerVariableLabelNames, constLabels),
-			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", upstreamServerVariableLabelNames, constLabels),
-			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", upstreamServerVariableLabelNames, constLabels),
+			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state", streamUpstreamServerVariableLabelNames, constLabels),
+			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections", streamUpstreamServerVariableLabelNames, constLabels),
+			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", streamUpstreamServerVariableLabelNames, constLabels),
+			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received from this server", streamUpstreamServerVariableLabelNames, constLabels),
+			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server", streamUpstreamServerVariableLabelNames, constLabels),
+			"unavail":                 newStreamUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client connections (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", streamUpstreamServerVariableLabelNames, constLabels),
+			"connections":             newStreamUpstreamServerMetric(namespace, "connections", "Total number of client connections forwarded to this server", streamUpstreamServerVariableLabelNames, constLabels),
+			"connect_time":            newStreamUpstreamServerMetric(namespace, "connect_time", "Average time to connect to the upstream server", streamUpstreamServerVariableLabelNames, constLabels),
+			"first_byte_time":         newStreamUpstreamServerMetric(namespace, "first_byte_time", "Average time to receive the first byte of data", streamUpstreamServerVariableLabelNames, constLabels),
+			"response_time":           newStreamUpstreamServerMetric(namespace, "response_time", "Average time to receive the last byte of data", streamUpstreamServerVariableLabelNames, constLabels),
+			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", streamUpstreamServerVariableLabelNames, constLabels),
+			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", streamUpstreamServerVariableLabelNames, constLabels),
+			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", streamUpstreamServerVariableLabelNames, constLabels),
 		},
 		streamZoneSyncMetrics: map[string]*prometheus.Desc{
 			"bytes_in":        newStreamZoneSyncMetric(namespace, "bytes_in", "Bytes received by this node", constLabels),
@@ -382,7 +410,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 
 	for name, zone := range stats.ServerZones {
 		labelValues := []string{name}
-		varLabelValues := c.getServerZoneLabelValues(name)
+		varLabelValues := c.getStreamServerZoneLabelValues(name)
 
 		if c.variableLabelNames.ServerZoneVariableLabelNames != nil && len(varLabelValues) != len(c.variableLabelNames.ServerZoneVariableLabelNames) {
 			log.Printf("wrong number of labels for http zone %v. For labels %v, got values: %v. Empty labels will be used instead",
@@ -418,12 +446,12 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 
 	for name, zone := range stats.StreamServerZones {
 		labelValues := []string{name}
-		varLabelValues := c.getServerZoneLabelValues(name)
+		varLabelValues := c.getStreamServerZoneLabelValues(name)
 
-		if c.variableLabelNames.ServerZoneVariableLabelNames != nil && len(varLabelValues) != len(c.variableLabelNames.ServerZoneVariableLabelNames) {
+		if c.variableLabelNames.StreamServerZoneVariableLabelNames != nil && len(varLabelValues) != len(c.variableLabelNames.StreamServerZoneVariableLabelNames) {
 			log.Printf("wrong number of labels for stream server zone %v. For labels %v, got values: %v. Empty labels will be used instead",
-				name, c.variableLabelNames.ServerZoneVariableLabelNames, varLabelValues)
-			for range c.variableLabelNames.ServerZoneVariableLabelNames {
+				name, c.variableLabelNames.StreamServerZoneVariableLabelNames, varLabelValues)
+			for range c.variableLabelNames.StreamServerZoneVariableLabelNames {
 				labelValues = append(labelValues, "")
 			}
 		} else {
@@ -523,10 +551,10 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			labelValues := []string{name, peer.Server}
 			varLabelValues := c.getStreamUpstreamServerLabelValues(name)
 
-			if c.variableLabelNames.UpstreamServerVariableLabelNames != nil && len(varLabelValues) != len(c.variableLabelNames.UpstreamServerVariableLabelNames) {
+			if c.variableLabelNames.StreamUpstreamServerVariableLabelNames != nil && len(varLabelValues) != len(c.variableLabelNames.StreamUpstreamServerVariableLabelNames) {
 				log.Printf("wrong number of labels for stream server %v. For labels %v, got values: %v. Empty labels will be used instead",
-					name, c.variableLabelNames.UpstreamServerVariableLabelNames, varLabelValues)
-				for range c.variableLabelNames.UpstreamServerVariableLabelNames {
+					name, c.variableLabelNames.StreamUpstreamServerVariableLabelNames, varLabelValues)
+				for range c.variableLabelNames.StreamUpstreamServerVariableLabelNames {
 					labelValues = append(labelValues, "")
 				}
 			} else {
@@ -535,10 +563,10 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 
 			upstreamServer := fmt.Sprintf("%v/%v", name, peer.Server)
 			varPeerLabelValues := c.getStreamUpstreamServerPeerLabelValues(upstreamServer)
-			if c.variableLabelNames.UpstreamServerPeerVariableLabelNames != nil && len(varPeerLabelValues) != len(c.variableLabelNames.UpstreamServerPeerVariableLabelNames) {
+			if c.variableLabelNames.StreamUpstreamServerPeerVariableLabelNames != nil && len(varPeerLabelValues) != len(c.variableLabelNames.StreamUpstreamServerPeerVariableLabelNames) {
 				log.Printf("wrong number of labels for stream upstream peer %v. For labels %v, got values: %v. Empty labels will be used instead",
-					peer.Server, c.variableLabelNames.UpstreamServerPeerVariableLabelNames, varPeerLabelValues)
-				for range c.variableLabelNames.UpstreamServerPeerVariableLabelNames {
+					peer.Server, c.variableLabelNames.StreamUpstreamServerPeerVariableLabelNames, varPeerLabelValues)
+				for range c.variableLabelNames.StreamUpstreamServerPeerVariableLabelNames {
 					labelValues = append(labelValues, "")
 				}
 			} else {
