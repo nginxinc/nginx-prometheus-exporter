@@ -204,12 +204,12 @@ type VariableLabelNames struct {
 
 // NewVariableLabels creates a new struct for VariableNames for the collector
 func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZoneVariableLabelNames []string,
-	upstreamServerPeerVariableLabelNames []string) VariableLabelNames {
+	upstreamServerPeerVariableLabelNames []string, streamUpstreamServerVariableLabelNames []string) VariableLabelNames {
 	return VariableLabelNames{
 		UpstreamServerVariableLabelNames:       upstreamServerVariableLabelNames,
 		ServerZoneVariableLabelNames:           serverZoneVariableLabelNames,
 		UpstreamServerPeerVariableLabelNames:   upstreamServerPeerVariableLabelNames,
-		StreamUpstreamServerVariableLabelNames: upstreamServerVariableLabelNames,
+		StreamUpstreamServerVariableLabelNames: streamUpstreamServerVariableLabelNames,
 	}
 }
 
