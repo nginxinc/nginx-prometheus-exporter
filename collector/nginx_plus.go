@@ -21,6 +21,8 @@ type LabelUpdater interface {
 	DeleteStreamUpstreamServerLabels(peers []string)
 	UpdateServerZoneLabels(serverZoneLabelValues map[string][]string)
 	DeleteServerZoneLabels(zoneNames []string)
+	UpdateStreamServerZoneLabels(streamServerZoneLabelValues map[string][]string)
+	DeleteStreamServerZoneLabels(zoneNames []string)
 }
 
 // NginxPlusCollector collects NGINX Plus metrics. It implements prometheus.Collector interface.
