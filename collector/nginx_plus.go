@@ -198,20 +198,22 @@ func (c *NginxPlusCollector) getStreamUpstreamServerPeerLabelValues(peer string)
 type VariableLabelNames struct {
 	UpstreamServerVariableLabelNames           []string
 	ServerZoneVariableLabelNames               []string
-	StreamServerZoneVariableLabelNames         []string
 	UpstreamServerPeerVariableLabelNames       []string
 	StreamUpstreamServerPeerVariableLabelNames []string
+	StreamServerZoneVariableLabelNames         []string
 	StreamUpstreamServerVariableLabelNames     []string
 }
 
 // NewVariableLabels creates a new struct for VariableNames for the collector
-func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZoneVariableLabelNames []string,
-	upstreamServerPeerVariableLabelNames []string, streamUpstreamServerVariableLabelNames []string) VariableLabelNames {
+func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZoneVariableLabelNames []string, upstreamServerPeerVariableLabelNames []string,
+	streamUpstreamServerVariableLabelNames []string, streamServerZoneLabels []string, streamUpstreamServerPeerVariableLabelNames []string) VariableLabelNames {
 	return VariableLabelNames{
-		UpstreamServerVariableLabelNames:       upstreamServerVariableLabelNames,
-		ServerZoneVariableLabelNames:           serverZoneVariableLabelNames,
-		UpstreamServerPeerVariableLabelNames:   upstreamServerPeerVariableLabelNames,
-		StreamUpstreamServerVariableLabelNames: streamUpstreamServerVariableLabelNames,
+		UpstreamServerVariableLabelNames:           upstreamServerVariableLabelNames,
+		ServerZoneVariableLabelNames:               serverZoneVariableLabelNames,
+		UpstreamServerPeerVariableLabelNames:       upstreamServerPeerVariableLabelNames,
+		StreamUpstreamServerVariableLabelNames:     streamUpstreamServerVariableLabelNames,
+		StreamServerZoneVariableLabelNames:         streamServerZoneLabels,
+		StreamUpstreamServerPeerVariableLabelNames: streamUpstreamServerPeerVariableLabelNames,
 	}
 }
 
@@ -223,6 +225,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		variableLabelNames:             variableLabelNames,
 		upstreamServerLabels:           make(map[string][]string),
 		serverZoneLabels:               make(map[string][]string),
+		streamServerZoneLabels:         make(map[string][]string),
 		upstreamServerPeerLabels:       make(map[string][]string),
 		streamUpstreamServerPeerLabels: make(map[string][]string),
 		streamUpstreamServerLabels:     make(map[string][]string),
@@ -239,26 +242,26 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"ssl_session_reuses":    newGlobalMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", constLabels),
 		},
 		serverZoneMetrics: map[string]*prometheus.Desc{
-			"processing":    newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
-			"requests":      newServerZoneMetric(namespace, "requests", "Total client requests", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
-			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
-			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
-			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
-			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
-			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
-			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"processing":    newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"requests":      newServerZoneMetric(namespace, "requests", "Total client requests", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
+			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
+			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
+			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
+			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
 		},
 		streamServerZoneMetrics: map[string]*prometheus.Desc{
-			"processing":   newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"connections":  newStreamServerZoneMetric(namespace, "connections", "Total connections", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
-			"discarded":    newStreamServerZoneMetric(namespace, "discarded", "Connections completed without creating a session", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"received":     newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"sent":         newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"processing":   newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"connections":  newStreamServerZoneMetric(namespace, "connections", "Total connections", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
+			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
+			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"discarded":    newStreamServerZoneMetric(namespace, "discarded", "Connections completed without creating a session", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"received":     newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"sent":         newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
 		},
 		upstreamMetrics: map[string]*prometheus.Desc{
 			"keepalives": newUpstreamMetric(namespace, "keepalives", "Idle keepalive connections", constLabels),
