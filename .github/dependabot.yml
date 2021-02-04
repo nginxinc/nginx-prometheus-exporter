@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: daily
+    reviewers:
+      - "nginxinc/kic"
+      - "ciarams87"
+      - "sundaram1995"
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: daily
+    reviewers:
+      - "nginxinc/kic"
+  - package-ecosystem: "docker"
+    directory: "/build"
+    schedule:
+      interval: daily
+    reviewers:
+      - "nginxinc/kic"
