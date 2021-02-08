@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,7 +13,7 @@ import (
 )
 
 const (
-	// APIVersion is a version of NGINX Plus API.
+	// APIVersion is the default version of NGINX Plus API supported by the client.
 	APIVersion = 5
 
 	pathNotFoundCode  = "PathNotFound"
@@ -21,8 +22,10 @@ const (
 	defaultServerPort = "80"
 )
 
-// Default values for servers in Upstreams.
 var (
+	supportedAPIVersions = versions{4, 5}
+
+	// Default values for servers in Upstreams.
 	defaultMaxConns    = 0
 	defaultMaxFails    = 1
 	defaultFailTimeout = "10s"
@@ -32,8 +35,12 @@ var (
 	defaultWeight      = 1
 )
 
+// ErrUnsupportedVer means that client's API version is not supported by NGINX plus API
+var ErrUnsupportedVer = errors.New("API version of the client is not supported by running NGINX Plus")
+
 // NginxClient lets you access NGINX Plus API.
 type NginxClient struct {
+	version     int
 	apiEndpoint string
 	httpClient  *http.Client
 }
@@ -108,7 +115,9 @@ func (internalError *internalError) Wrap(err string) *internalError {
 // https://nginx.org/en/docs/http/ngx_http_api_module.html
 type Stats struct {
 	NginxInfo         NginxInfo
+	Processes         Processes
 	Connections       Connections
+	Slabs             Slabs
 	HTTPRequests      HTTPRequests
 	SSL               SSL
 	ServerZones       ServerZones
@@ -138,6 +147,32 @@ type Connections struct {
 	Dropped  uint64
 	Active   uint64
 	Idle     uint64
+}
+
+// Slabs is map of slab stats by zone name.
+type Slabs map[string]Slab
+
+// Slab represents slab related stats.
+type Slab struct {
+	Pages Pages
+	Slots Slots
+}
+
+// Pages represents the slab memory usage stats.
+type Pages struct {
+	Used uint64
+	Free uint64
+}
+
+// Slots is a map of slots by slot size
+type Slots map[string]Slot
+
+// Slot represents slot related stats.
+type Slot struct {
+	Used  uint64
+	Free  uint64
+	Reqs  uint64
+	Fails uint64
 }
 
 // HTTPRequests represents HTTP request related stats.
@@ -345,29 +380,49 @@ type ResolverResponses struct {
 	Unknown  int64
 }
 
-// NewNginxClient creates an NginxClient.
+// Processes represents processes related stats
+type Processes struct {
+	Respawned int64
+}
+
+// NewNginxClient creates an NginxClient with the latest supported version.
 func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, error) {
+	return NewNginxClientWithVersion(httpClient, apiEndpoint, APIVersion)
+}
+
+//NewNginxClientWithVersion creates an NginxClient with the given version of NGINX Plus API.
+func NewNginxClientWithVersion(httpClient *http.Client, apiEndpoint string, version int) (*NginxClient, error) {
+	if !versionSupported(version) {
+		return nil, fmt.Errorf("API version %v is not supported by the client", version)
+	}
 	versions, err := getAPIVersions(httpClient, apiEndpoint)
 	if err != nil {
 		return nil, fmt.Errorf("error accessing the API: %v", err)
 	}
-
 	found := false
 	for _, v := range *versions {
-		if v == APIVersion {
+		if v == version {
 			found = true
 			break
 		}
 	}
-
 	if !found {
-		return nil, fmt.Errorf("API version %v of the client is not supported by API versions of NGINX Plus: %v", APIVersion, *versions)
+		return nil, ErrUnsupportedVer
 	}
-
 	return &NginxClient{
 		apiEndpoint: apiEndpoint,
 		httpClient:  httpClient,
+		version:     version,
 	}, nil
+}
+
+func versionSupported(n int) bool {
+	for _, version := range supportedAPIVersions {
+		if n == version {
+			return true
+		}
+	}
+	return false
 }
 
 func getAPIVersions(httpClient *http.Client, endpoint string) (*versions, error) {
@@ -619,7 +674,7 @@ func (client *NginxClient) getIDOfHTTPServer(upstream string, name string) (int,
 }
 
 func (client *NginxClient) get(path string, data interface{}) error {
-	url := fmt.Sprintf("%v/%v/%v", client.apiEndpoint, APIVersion, path)
+	url := fmt.Sprintf("%v/%v/%v", client.apiEndpoint, client.version, path)
 	resp, err := client.httpClient.Get(url)
 	if err != nil {
 		return fmt.Errorf("failed to get %v: %v", path, err)
@@ -644,7 +699,7 @@ func (client *NginxClient) get(path string, data interface{}) error {
 }
 
 func (client *NginxClient) post(path string, input interface{}) error {
-	url := fmt.Sprintf("%v/%v/%v", client.apiEndpoint, APIVersion, path)
+	url := fmt.Sprintf("%v/%v/%v", client.apiEndpoint, client.version, path)
 
 	jsonInput, err := json.Marshal(input)
 	if err != nil {
@@ -666,7 +721,7 @@ func (client *NginxClient) post(path string, input interface{}) error {
 }
 
 func (client *NginxClient) delete(path string, expectedStatusCode int) error {
-	path = fmt.Sprintf("%v/%v/%v/", client.apiEndpoint, APIVersion, path)
+	path = fmt.Sprintf("%v/%v/%v/", client.apiEndpoint, client.version, path)
 
 	req, err := http.NewRequest(http.MethodDelete, path, nil)
 	if err != nil {
@@ -688,7 +743,7 @@ func (client *NginxClient) delete(path string, expectedStatusCode int) error {
 }
 
 func (client *NginxClient) patch(path string, input interface{}, expectedStatusCode int) error {
-	path = fmt.Sprintf("%v/%v/%v/", client.apiEndpoint, APIVersion, path)
+	path = fmt.Sprintf("%v/%v/%v/", client.apiEndpoint, client.version, path)
 
 	jsonInput, err := json.Marshal(input)
 	if err != nil {
@@ -903,65 +958,77 @@ func determineStreamUpdates(updatedServers []StreamUpstreamServer, nginxServers 
 	return
 }
 
-// GetStats gets connection, request, ssl, zone, stream zone, upstream and stream upstream related stats from the NGINX Plus API.
+// GetStats gets process, slab, connection, request, ssl, zone, stream zone, upstream and stream upstream related stats from the NGINX Plus API.
 func (client *NginxClient) GetStats() (*Stats, error) {
-	info, err := client.getNginxInfo()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get stats %v", err)
-	}
-
-	cons, err := client.getConnections()
+	info, err := client.GetNginxInfo()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
-	requests, err := client.getHTTPRequests()
+	processes, err := client.GetProcesses()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats: %v", err)
+	}
+
+	slabs, err := client.GetSlabs()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats: %v", err)
+	}
+
+	cons, err := client.GetConnections()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get stats: %v", err)
+	}
+
+	requests, err := client.GetHTTPRequests()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get stats: %v", err)
 	}
 
-	ssl, err := client.getSSL()
+	ssl, err := client.GetSSL()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
-	zones, err := client.getServerZones()
+	zones, err := client.GetServerZones()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
-	upstreams, err := client.getUpstreams()
+	upstreams, err := client.GetUpstreams()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
-	streamZones, err := client.getStreamServerZones()
+	streamZones, err := client.GetStreamServerZones()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
-	streamUpstreams, err := client.getStreamUpstreams()
+	streamUpstreams, err := client.GetStreamUpstreams()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
-	streamZoneSync, err := client.getStreamZoneSync()
+	streamZoneSync, err := client.GetStreamZoneSync()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
-	locationZones, err := client.getLocationZones()
+	locationZones, err := client.GetLocationZones()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
-	resolvers, err := client.getResolvers()
+	resolvers, err := client.GetResolvers()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get stats: %v", err)
 	}
 
 	return &Stats{
 		NginxInfo:         *info,
+		Processes:         *processes,
+		Slabs:             *slabs,
 		Connections:       *cons,
 		HTTPRequests:      *requests,
 		SSL:               *ssl,
@@ -975,7 +1042,8 @@ func (client *NginxClient) GetStats() (*Stats, error) {
 	}, nil
 }
 
-func (client *NginxClient) getNginxInfo() (*NginxInfo, error) {
+// GetNginxInfo returns Nginx stats.
+func (client *NginxClient) GetNginxInfo() (*NginxInfo, error) {
 	var info NginxInfo
 	err := client.get("nginx", &info)
 	if err != nil {
@@ -984,7 +1052,18 @@ func (client *NginxClient) getNginxInfo() (*NginxInfo, error) {
 	return &info, nil
 }
 
-func (client *NginxClient) getConnections() (*Connections, error) {
+// GetSlabs returns Slabs stats.
+func (client *NginxClient) GetSlabs() (*Slabs, error) {
+	var slabs Slabs
+	err := client.get("slabs", &slabs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get slabs: %v", err)
+	}
+	return &slabs, nil
+}
+
+// GetConnections returns Connections stats.
+func (client *NginxClient) GetConnections() (*Connections, error) {
 	var cons Connections
 	err := client.get("connections", &cons)
 	if err != nil {
@@ -993,7 +1072,8 @@ func (client *NginxClient) getConnections() (*Connections, error) {
 	return &cons, nil
 }
 
-func (client *NginxClient) getHTTPRequests() (*HTTPRequests, error) {
+// GetHTTPRequests returns http/requests stats.
+func (client *NginxClient) GetHTTPRequests() (*HTTPRequests, error) {
 	var requests HTTPRequests
 	err := client.get("http/requests", &requests)
 	if err != nil {
@@ -1002,7 +1082,8 @@ func (client *NginxClient) getHTTPRequests() (*HTTPRequests, error) {
 	return &requests, nil
 }
 
-func (client *NginxClient) getSSL() (*SSL, error) {
+// GetSSL returns SSL stats.
+func (client *NginxClient) GetSSL() (*SSL, error) {
 	var ssl SSL
 	err := client.get("ssl", &ssl)
 	if err != nil {
@@ -1011,7 +1092,8 @@ func (client *NginxClient) getSSL() (*SSL, error) {
 	return &ssl, nil
 }
 
-func (client *NginxClient) getServerZones() (*ServerZones, error) {
+// GetServerZones returns http/server_zones stats.
+func (client *NginxClient) GetServerZones() (*ServerZones, error) {
 	var zones ServerZones
 	err := client.get("http/server_zones", &zones)
 	if err != nil {
@@ -1020,7 +1102,8 @@ func (client *NginxClient) getServerZones() (*ServerZones, error) {
 	return &zones, err
 }
 
-func (client *NginxClient) getStreamServerZones() (*StreamServerZones, error) {
+// GetStreamServerZones returns stream/server_zones stats.
+func (client *NginxClient) GetStreamServerZones() (*StreamServerZones, error) {
 	var zones StreamServerZones
 	err := client.get("stream/server_zones", &zones)
 	if err != nil {
@@ -1034,7 +1117,8 @@ func (client *NginxClient) getStreamServerZones() (*StreamServerZones, error) {
 	return &zones, err
 }
 
-func (client *NginxClient) getUpstreams() (*Upstreams, error) {
+// GetUpstreams returns http/upstreams stats.
+func (client *NginxClient) GetUpstreams() (*Upstreams, error) {
 	var upstreams Upstreams
 	err := client.get("http/upstreams", &upstreams)
 	if err != nil {
@@ -1043,7 +1127,8 @@ func (client *NginxClient) getUpstreams() (*Upstreams, error) {
 	return &upstreams, nil
 }
 
-func (client *NginxClient) getStreamUpstreams() (*StreamUpstreams, error) {
+// GetStreamUpstreams returns stream/upstreams stats.
+func (client *NginxClient) GetStreamUpstreams() (*StreamUpstreams, error) {
 	var upstreams StreamUpstreams
 	err := client.get("stream/upstreams", &upstreams)
 	if err != nil {
@@ -1057,7 +1142,8 @@ func (client *NginxClient) getStreamUpstreams() (*StreamUpstreams, error) {
 	return &upstreams, nil
 }
 
-func (client *NginxClient) getStreamZoneSync() (*StreamZoneSync, error) {
+// GetStreamZoneSync returns stream/zone_sync stats.
+func (client *NginxClient) GetStreamZoneSync() (*StreamZoneSync, error) {
 	var streamZoneSync StreamZoneSync
 	err := client.get("stream/zone_sync", &streamZoneSync)
 	if err != nil {
@@ -1072,8 +1158,12 @@ func (client *NginxClient) getStreamZoneSync() (*StreamZoneSync, error) {
 	return &streamZoneSync, err
 }
 
-func (client *NginxClient) getLocationZones() (*LocationZones, error) {
+// GetLocationZones returns http/location_zones stats.
+func (client *NginxClient) GetLocationZones() (*LocationZones, error) {
 	var locationZones LocationZones
+	if client.version < 5 {
+		return &locationZones, nil
+	}
 	err := client.get("http/location_zones", &locationZones)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get location zones: %v", err)
@@ -1082,14 +1172,29 @@ func (client *NginxClient) getLocationZones() (*LocationZones, error) {
 	return &locationZones, err
 }
 
-func (client *NginxClient) getResolvers() (*Resolvers, error) {
+// GetResolvers returns Resolvers stats.
+func (client *NginxClient) GetResolvers() (*Resolvers, error) {
 	var resolvers Resolvers
+	if client.version < 5 {
+		return &resolvers, nil
+	}
 	err := client.get("resolvers", &resolvers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get resolvers: %v", err)
 	}
 
 	return &resolvers, err
+}
+
+// GetProcesses returns Processes stats.
+func (client *NginxClient) GetProcesses() (*Processes, error) {
+	var processes Processes
+	err := client.get("processes", &processes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get processes: %v", err)
+	}
+
+	return &processes, err
 }
 
 // KeyValPairs are the key-value pairs stored in a zone.
@@ -1289,6 +1394,11 @@ func (client *NginxClient) UpdateStreamServer(upstream string, server StreamUpst
 	}
 
 	return nil
+}
+
+// Version returns client's current N+ API version.
+func (client *NginxClient) Version() int {
+	return client.version
 }
 
 func addPortToServer(server string) string {
