@@ -30,13 +30,13 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 
 * To export NGINX metrics, run:
     ```
-    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.8.0 -nginx.scrape-uri http://<nginx>:8080/stub_status
+    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.8.0 -nginx.scrape-uri=http://<nginx>:8080/stub_status
     ```
     where `<nginx>` is the IP address/DNS name, through which NGINX is available.
 
 * To export NGINX Plus metrics, run:
     ```
-    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.8.0 -nginx.plus -nginx.scrape-uri http://<nginx-plus>:8080/api
+    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.8.0 -nginx.plus -nginx.scrape-uri=http://<nginx-plus>:8080/api
     ```
     where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
 
@@ -44,19 +44,19 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 
 * To export NGINX metrics, run:
     ```
-    $ nginx-prometheus-exporter -nginx.scrape-uri http://<nginx>:8080/stub_status
+    $ nginx-prometheus-exporter -nginx.scrape-uri=http://<nginx>:8080/stub_status
     ```
     where `<nginx>` is the IP address/DNS name, through which NGINX is available.
 
 * To export NGINX Plus metrics:
     ```
-    $ nginx-prometheus-exporter -nginx.plus -nginx.scrape-uri http://<nginx-plus>:8080/api
+    $ nginx-prometheus-exporter -nginx.plus -nginx.scrape-uri=http://<nginx-plus>:8080/api
     ```
     where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
 
 * To export and scrape NGINX metrics with unix domain sockets, run:
     ```
-    $ nginx-prometheus-exporter -nginx.scrape-uri unix:<nginx>:/stub_status -web.listen-address unix:/path/to/socket.sock
+    $ nginx-prometheus-exporter -nginx.scrape-uri=unix:<nginx>:/stub_status -web.listen-address=unix:/path/to/socket.sock
     ```
     where `<nginx>` is the path to unix domain socket, through which NGINX stub status is available.
 
