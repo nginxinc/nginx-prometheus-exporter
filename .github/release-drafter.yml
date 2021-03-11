@@ -3,7 +3,6 @@ tag-template: 'v$RESOLVED_VERSION'
 categories:
   - title: '🚀 Features'
     labels:
-      - "feature"
       - "enhancement"
   - title: '💣 Breaking Change'
     labels:
@@ -21,13 +20,16 @@ categories:
 version-resolver:
   major:
     labels:
-      - 'major'
+      - 'change'
   minor:
     labels:
-      - 'minor'
+      - 'enhancement'
   patch:
     labels:
-      - 'patch'
+      - 'bug'
+      - 'chore'
+      - 'dependencies'
+      - 'documentation'
   default: patch
 exclude-labels:
   - 'skip-changelog'
@@ -45,14 +47,12 @@ autolabeler:
       - '/fix\/.+/'
     title:
       - '/fix/i'
-  - label: 'feature'
-    branch:
-      - '/feat\/.+/'
-      - '/feature\/.+/'
   - label: 'enhancement'
     branch:
       - '/enh\/.+/'
       - '/enhancement\/.+/'
+      - '/feat\/.+/'
+      - '/feature\/.+/'
   - label: 'dependencies'
     files:
       - 'go.mod'
