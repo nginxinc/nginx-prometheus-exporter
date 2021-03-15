@@ -1,4 +1,4 @@
-FROM golang:1.15 as builder
+FROM golang:1.16.2 as builder
 ARG VERSION
 ARG GIT_COMMIT
 WORKDIR /go/src/github.com/nginxinc/nginx-prometheus-exporter
