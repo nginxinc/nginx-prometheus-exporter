@@ -1,0 +1,27 @@
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - make clean
+    - go mod tidy
+    - go mod verify
+    - go mod vendor
+builds:
+  - env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - 386
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - 6
+      - 7
+    flags:
+      - -mod=vendor
+checksum:
+  name_template: 'sha256sums.txt'
+changelog:
+  skip: true

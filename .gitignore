@@ -7,3 +7,4 @@
 
 # the binary
 nginx-prometheus-exporter
+dist/
