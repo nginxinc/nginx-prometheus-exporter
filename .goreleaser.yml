@@ -16,9 +16,15 @@ builds:
       - amd64
       - arm
       - arm64
+      - ppc64le
+      - mips64le
+      - s390x
     goarm:
+      - 5
       - 6
       - 7
+    gomips:
+      - softfloat
     flags:
       - -mod=vendor
 checksum:
