@@ -218,8 +218,9 @@ func getListener(listenAddress string) (net.Listener, error) {
 
 var (
 	// Set during go build
-	version   string
-	gitCommit string
+	version string
+	commit  string
+	date    string
 
 	// Defaults values
 	defaultListenAddress      = getEnv("LISTEN_ADDRESS", ":9113")
@@ -298,11 +299,11 @@ func main() {
 	flag.Parse()
 
 	if *displayVersion {
-		fmt.Printf("NGINX Prometheus Exporter Version=%v GitCommit=%v\n", version, gitCommit)
+		fmt.Printf("NGINX Prometheus Exporter version=%v commit=%v date=%v\n", version, commit, date)
 		os.Exit(0)
 	}
 
-	log.Printf("Starting NGINX Prometheus Exporter Version=%v GitCommit=%v", version, gitCommit)
+	log.Printf("Starting NGINX Prometheus Exporter version=%v commit=%v date=%v", version, commit, date)
 
 	registry := prometheus.NewRegistry()
 
@@ -313,8 +314,9 @@ func main() {
 			ConstLabels: collector.MergeLabels(
 				constLabels.labels,
 				prometheus.Labels{
-					"version":   version,
-					"gitCommit": gitCommit,
+					"version": version,
+					"commit":  commit,
+					"date":    date,
 				},
 			),
 		},
@@ -436,7 +438,6 @@ func main() {
 		log.Printf("NGINX Prometheus Exporter has successfully started")
 		log.Fatal(srv.Serve(listener))
 	}
-
 }
 
 type userAgentRoundTripper struct {
