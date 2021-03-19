@@ -30,13 +30,13 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 
 * To export NGINX metrics, run:
     ```
-    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.8.0 -nginx.scrape-uri=http://<nginx>:8080/stub_status
+    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.9.0 -nginx.scrape-uri=http://<nginx>:8080/stub_status
     ```
     where `<nginx>` is the IP address/DNS name, through which NGINX is available.
 
 * To export NGINX Plus metrics, run:
     ```
-    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.8.0 -nginx.plus -nginx.scrape-uri=http://<nginx-plus>:8080/api
+    $ docker run -p 9113:9113 nginx/nginx-prometheus-exporter:0.9.0 -nginx.plus -nginx.scrape-uri=http://<nginx-plus>:8080/api
     ```
     where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
 
@@ -92,7 +92,7 @@ Usage of ./nginx-prometheus-exporter:
   -web.listen-address string
         An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
-        A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")  
+        A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")
   -web.secured-metrics
         Expose metrics using https. The default value can be overwritten by SECURED_METRICS variable.  (default false)
   -web.ssl-server-cert string
