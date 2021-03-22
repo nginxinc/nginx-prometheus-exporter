@@ -8,12 +8,13 @@ DOCKERFILE = Dockerfile
 GIT_COMMIT = $(shell git rev-parse HEAD)
 
 GOLANGCI_CONTAINER=golangci/golangci-lint:v1.29-alpine
+DATE = $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 export DOCKER_BUILDKIT = 1
 
 .PHONY: nginx-prometheus-exporter
 nginx-prometheus-exporter:
-	GO111MODULE=on CGO_ENABLED=0 go build -mod=vendor -ldflags "-X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT)" -o nginx-prometheus-exporter
+	GO111MODULE=on CGO_ENABLED=0 go build -mod=vendor -ldflags "-X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X main.date=$(DATE)" -o nginx-prometheus-exporter
 
 .PHONY: lint
 lint:
@@ -28,7 +29,7 @@ test:
 
 .PHONY: container
 container:
-	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_COMMIT=$(GIT_COMMIT) --target container -f $(DOCKERFILEPATH)/$(DOCKERFILE) -t $(PREFIX):$(TAG) .
+	docker build --build-arg VERSION=$(VERSION) --build-arg GIT_COMMIT=$(GIT_COMMIT) --build-arg DATE=$(DATE) --target container -f $(DOCKERFILEPATH)/$(DOCKERFILE) -t $(PREFIX):$(TAG) .
 
 .PHONY: push
 push: container
