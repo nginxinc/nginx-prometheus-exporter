@@ -13,7 +13,7 @@ defaults:
     shell: bash
 
 env:
-  FOSSA_VER: 1.1.0
+  FOSSA_VER: 1.1.6
   FOSSA_URL: https://github.com/fossas/fossa-cli/releases/download
   GOLANG_VERSION: 1.16
 
@@ -21,7 +21,7 @@ jobs:
 
   scan:
     name: Fossa
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
 
   notify:
     name: Notify
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     needs: scan
     if: always()
     steps:

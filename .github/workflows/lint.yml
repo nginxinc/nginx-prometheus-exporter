@@ -17,14 +17,14 @@ defaults:
     shell: bash
 
 env:
-  GOLANGCI_VERSION: 1.29
+  GOLANGCI_VERSION: 1.38
   GOLANGCI_TIMEOUT: 10m0s
 
 jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
