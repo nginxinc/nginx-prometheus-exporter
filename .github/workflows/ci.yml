@@ -106,6 +106,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Publish Release Notes
+        uses: release-drafter/release-drafter@v5
+        with:
+            publish: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -127,12 +133,6 @@ jobs:
           build-args: |
             VERSION=${{ steps.get_version.outputs.GIT_TAG }}
             GIT_COMMIT=${{ github.sha }}
-      - name: Publish Release Notes
-        uses: release-drafter/release-drafter@v5
-        with:
-            publish: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   notify:
     name: Notify
