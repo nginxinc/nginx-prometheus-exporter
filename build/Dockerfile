@@ -1,6 +1,7 @@
 FROM golang:1.16 as base
 ARG VERSION
 ARG GIT_COMMIT
+ARG DATE
 ARG TARGETARCH
 
 WORKDIR /go/src/github.com/nginxinc/nginx-prometheus-exporter
@@ -11,7 +12,7 @@ COPY collector ./collector
 COPY client ./client
 
 FROM base as builder
-RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -mod=vendor -a -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${GIT_COMMIT}" -o nginx-prometheus-exporter .
+RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -mod=vendor -a -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${GIT_COMMIT} -X main.date=${DATE}" -o nginx-prometheus-exporter .
 
 
 FROM scratch as intermediate
