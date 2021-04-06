@@ -5,7 +5,6 @@ before:
     - make clean
     - go mod tidy
     - go mod verify
-    - go mod vendor
 builds:
   - env:
       - CGO_ENABLED=0
@@ -26,7 +25,11 @@ builds:
     gomips:
       - softfloat
     flags:
-      - -mod=vendor
+      - -trimpath
+    gcflags:
+      - all=-trimpath={{.Env.GOPATH}}
+    asmflags:
+      - all=-trimpath={{.Env.GOPATH}}
 checksum:
   name_template: 'sha256sums.txt'
 changelog:

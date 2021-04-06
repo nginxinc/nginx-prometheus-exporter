@@ -5,14 +5,14 @@ ARG DATE
 ARG TARGETARCH
 
 WORKDIR /go/src/github.com/nginxinc/nginx-prometheus-exporter
-COPY *.go ./
-COPY vendor ./vendor
-COPY go.mod go.sum ./
-COPY collector ./collector
-COPY client ./client
 
 FROM base as builder
-RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -mod=vendor -a -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${GIT_COMMIT} -X main.date=${DATE}" -o nginx-prometheus-exporter .
+COPY go.mod go.sum ./
+RUN go mod download
+COPY *.go ./
+COPY collector ./collector
+COPY client ./client
+RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -trimpath -a -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${GIT_COMMIT} -X main.date=${DATE}" -o nginx-prometheus-exporter .
 
 
 FROM scratch as intermediate
