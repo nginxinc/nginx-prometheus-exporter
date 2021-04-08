@@ -14,7 +14,7 @@ export DOCKER_BUILDKIT = 1
 
 .PHONY: nginx-prometheus-exporter
 nginx-prometheus-exporter:
-	GO111MODULE=on CGO_ENABLED=0 go build -mod=vendor -ldflags "-X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X main.date=$(DATE)" -o nginx-prometheus-exporter
+	GO111MODULE=on CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=$(VERSION) -X main.commit=$(GIT_COMMIT) -X main.date=$(DATE)" -o nginx-prometheus-exporter
 
 .PHONY: lint
 lint:
@@ -25,7 +25,7 @@ lint:
 
 .PHONY: test
 test:
-	GO111MODULE=on go test -mod=vendor ./...
+	GO111MODULE=on go test ./...
 
 .PHONY: container
 container:
