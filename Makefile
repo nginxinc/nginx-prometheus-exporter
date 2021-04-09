@@ -6,8 +6,6 @@ DOCKERFILEPATH = build
 DOCKERFILE = Dockerfile
 
 GIT_COMMIT = $(shell git rev-parse HEAD)
-
-GOLANGCI_CONTAINER=golangci/golangci-lint:v1.29-alpine
 DATE = $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 export DOCKER_BUILDKIT = 1
@@ -18,10 +16,7 @@ nginx-prometheus-exporter:
 
 .PHONY: lint
 lint:
-	docker run --rm \
-	-v $(shell pwd):/go/src/github.com/nginxinc/nginx-prometheus-exporter \
-	-w /go/src/github.com/nginxinc/nginx-prometheus-exporter \
-	$(GOLANGCI_CONTAINER) golangci-lint run
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint run
 
 .PHONY: test
 test:
@@ -34,6 +29,10 @@ container:
 .PHONY: push
 push: container
 	docker push $(PREFIX):$(TAG)
+
+.PHONY: deps
+deps:
+	@go mod tidy && go mod verify && go mod download
 
 .PHONY: clean
 clean:

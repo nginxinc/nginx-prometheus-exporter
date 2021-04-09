@@ -17,7 +17,6 @@ defaults:
     shell: bash
 
 env:
-  GOLANGCI_VERSION: 1.38
   GOLANGCI_TIMEOUT: 10m0s
 
 jobs:
@@ -31,5 +30,4 @@ jobs:
       - name: Lint Code
         uses: golangci/golangci-lint-action@v2.5.2
         with:
-          version: 'v${{ env.GOLANGCI_VERSION }}'
           args: --timeout ${{ env.GOLANGCI_TIMEOUT }} --issues-exit-code=0
