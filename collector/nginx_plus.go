@@ -281,7 +281,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"responses_5xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
 			"sent":                    newUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", upstreamServerVariableLabelNames, constLabels),
 			"received":                newUpstreamServerMetric(namespace, "received", "Bytes received to this server", upstreamServerVariableLabelNames, constLabels),
-			"fails":                   newUpstreamServerMetric(namespace, "fails", "Active connections", upstreamServerVariableLabelNames, constLabels),
+			"fails":                   newUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server", upstreamServerVariableLabelNames, constLabels),
 			"unavail":                 newUpstreamServerMetric(namespace, "unavail", "How many times the server became unavailable for client requests (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold", upstreamServerVariableLabelNames, constLabels),
 			"header_time":             newUpstreamServerMetric(namespace, "header_time", "Average time to get the response header from the server", upstreamServerVariableLabelNames, constLabels),
 			"response_time":           newUpstreamServerMetric(namespace, "response_time", "Average time to get the full response from the server", upstreamServerVariableLabelNames, constLabels),
