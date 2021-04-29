@@ -108,8 +108,8 @@ Usage of ./nginx-prometheus-exporter:
 ### Common metrics:
 Name | Type | Description | Labels
 ----|----|----|----|
-`nginxexporter_build_info` | Gauge | shows the exporter build information. | `gitCommit` (git commit the exporter was built at), `version` (tagged version the exporter was built at) |
-`nginx_up` | Gauge | shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one | [] |
+`nginxexporter_build_info` | Gauge | Shows the exporter build information. | `gitCommit`, `version` |
+`nginx_up` | Gauge | Shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one | [] |
 
 ### Metrics for NGINX OSS:
 Name | Type | Description | Labels
