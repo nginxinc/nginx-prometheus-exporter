@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -327,7 +326,7 @@ func main() {
 
 	sslConfig := &tls.Config{InsecureSkipVerify: !*sslVerify}
 	if *sslCaCert != "" {
-		caCert, err := ioutil.ReadFile(*sslCaCert)
+		caCert, err := os.ReadFile(*sslCaCert)
 		if err != nil {
 			log.Fatalf("Loading CA cert failed: %v", err)
 		}

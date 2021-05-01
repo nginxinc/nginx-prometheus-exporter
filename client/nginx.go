@@ -2,7 +2,7 @@ package client
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -53,7 +53,7 @@ func (client *NginxClient) GetStubStats() (*StubStats, error) {
 		return nil, fmt.Errorf("expected %v response, got %v", http.StatusOK, resp.StatusCode)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read the response body: %v", err)
 	}
