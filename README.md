@@ -6,7 +6,7 @@ NGINX Prometheus exporter makes it possible to monitor NGINX or NGINX Plus using
 
 ## Overview
 
-[NGINX](http://nginx.org) exposes a handful of metrics via the [stub_status page](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html#stub_status). [NGINX Plus](https://www.nginx.com/products/nginx/) provides a richer set of metrics via the [API](https://nginx.org/en/docs/http/ngx_http_api_module.html) and the [monitoring dashboard](https://www.nginx.com/products/nginx/live-activity-monitoring/). NGINX Prometheus exporter fetches the metrics from a single NGINX or NGINX Plus, converts the metrics into appropriate Prometheus metrics types and finally exposes them via an HTTP server to be collected by [Prometheus](https://prometheus.io/).
+[NGINX](https://nginx.org) exposes a handful of metrics via the [stub_status page](https://nginx.org/en/docs/http/ngx_http_stub_status_module.html#stub_status). [NGINX Plus](https://www.nginx.com/products/nginx/) provides a richer set of metrics via the [API](https://nginx.org/en/docs/http/ngx_http_api_module.html) and the [monitoring dashboard](https://www.nginx.com/products/nginx/live-activity-monitoring/). NGINX Prometheus exporter fetches the metrics from a single NGINX or NGINX Plus, converts the metrics into appropriate Prometheus metrics types and finally exposes them via an HTTP server to be collected by [Prometheus](https://prometheus.io/).
 
 ## Getting Started
 
@@ -20,7 +20,7 @@ If you’d like to use the NGINX Prometheus Exporter with [NGINX Ingress Control
 
 We assume that you have already installed Prometheus and NGINX or NGINX Plus. Additionally, you need to:
 * Expose the built-in metrics in NGINX/NGINX Plus:
-    * For NGINX, expose the [stub_status page](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html#stub_status) at `/stub_status` on port `8080`.
+    * For NGINX, expose the [stub_status page](https://nginx.org/en/docs/http/ngx_http_stub_status_module.html#stub_status) at `/stub_status` on port `8080`.
     * For NGINX Plus, expose the [API](https://nginx.org/en/docs/http/ngx_http_api_module.html#api) at `/api` on port `8080`.
 * Configure Prometheus to scrape metrics from the server with the exporter. Note that the default scrape port of the exporter is `9113` and the default metrics path -- `/metrics`.
 
@@ -103,32 +103,149 @@ Usage of ./nginx-prometheus-exporter:
         Display the NGINX exporter version. (default false)
 ```
 
-### Exported Metrics
+## Exported Metrics
 
-* Common metrics:
-    * `nginxexporter_build_info` -- shows the exporter build information.
-* For NGINX, the following metrics are exported:
-    * All [stub_status](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html) metrics.
-    * `nginx_up` -- shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one.
+### Common metrics:
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxexporter_build_info` | Gauge | Shows the exporter build information. | `gitCommit`, `version` |
+`nginx_up` | Gauge | Shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one | [] |
 
-    Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions.
-* For NGINX Plus, the following metrics are exported:
-    * [Connections](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_connections).
-    * [HTTP](http://nginx.org/en/docs/http/ngx_http_api_module.html#http_).
-    * [SSL](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_ssl_object).
-    * [HTTP Server Zones](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_server_zone).
-    * [Stream Server Zones](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_server_zone).
-    * [HTTP Upstreams](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_upstream). Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"draining"` -> `2.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
-    * [Stream Upstreams](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_upstream). Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
-    * [Stream Zone Sync](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_zone_sync).
-    * `nginxplus_up` -- shows the status of the last metric scrape: `1` for a successful scrape and `0` for a failed one.
-    * [Location Zones](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_location_zone).
-    * [Resolver](http://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_resolver_zone).
+### Metrics for NGINX OSS:
+#### [Stub status metrics](https://nginx.org/en/docs/http/ngx_http_stub_status_module.html)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginx_connections_accepted` | Counter | Accepted client connections. | [] |
+`nginx_connections_active` | Gauge | Active client connections. | [] |
+`nginx_connections_handled` | Counter | Handled client connections. | [] |
+`nginx_connections_reading` | Gauge | Connections where NGINX is reading the request header. | [] |
+`nginx_connections_waiting` | Gauge | Idle client connections. | [] |
+`nginx_connections_writing` | Gauge | Connections where NGINX is writing the response back to the client. | [] |
+`nginx_http_requests_total` | Counter | Total http requests. | [] |
 
+### Metrics for NGINX Plus:
+#### [Connections](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_connections)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_connections_accepted` | Counter | Accepted client connections | [] |
+`nginxplus_connections_active` | Gauge | Active client connections | [] |
+`nginxplus_connections_dropped` | Counter | Dropped client connections dropped | [] |
+`nginxplus_connections_idle` | Gauge | Idle client connections | [] |
 
-    Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions. Note: to see server zones related metrics you must configure [status zones](https://nginx.org/en/docs/http/ngx_http_status_module.html#status_zone) and to see upstream related metrics you must configure upstreams with a [shared memory zone](http://nginx.org/en/docs/http/ngx_http_upstream_module.html#zone).
+#### [HTTP](https://nginx.org/en/docs/http/ngx_http_api_module.html#http_)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_http_requests_total` | Counter | Total http requests | [] |
+`nginxplus_http_requests_current` | Gauge | Current http requests | [] |
 
-### Troubleshooting
+#### [SSL](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_ssl_object)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_ssl_handshakes` | Counter | Successful SSL handshakes | [] |
+`nginxplus_ssl_handshakes_failed` | Counter | Failed SSL handshakes | [] |
+`nginxplus_ssl_session_reuses` | Counter | Session reuses during SSL handshake | [] |
+
+#### [HTTP Server Zones](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_server_zone)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_server_zone_processing` | Gauge | Client requests that are currently being processed | `server_zone` |
+`nginxplus_server_zone_requests` | Counter | Total client requests | `server_zone` |
+`nginxplus_server_zone_responses` | Counter | Total responses sent to clients | `code` (the response status code. The values are: `1xx`, `2xx`, `3xx`, `4xx` and `5xx`), `server_zone` |
+`nginxplus_server_zone_discarded` | Counter | Requests completed without sending a response | `server_zone` |
+`nginxplus_server_zone_received` | Counter | Bytes received from clients | `server_zone` |
+`nginxplus_server_zone_sent` | Counter | Bytes sent to clients | `server_zone` |
+
+#### [Stream Server Zones](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_server_zone)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_stream_server_zone_processing` | Gauge | Client connections that are currently being processed | `server_zone` |
+`nginxplus_stream_server_zone_connections` | Counter | Total connections | `server_zone` |
+`nginxplus_stream_server_zone_sessions` | Counter | Total sessions completed | `code` (the response status code. The values are: `2xx`, `4xx`, and `5xx`), `server_zone` |
+`nginxplus_stream_server_zone_discarded` | Counter | Connections completed without creating a session | `server_zone` |
+`nginxplus_stream_server_zone_received` | Counter | Bytes received from clients | `server_zone` |
+`nginxplus_stream_server_zone_sent` | Counter | Bytes sent to clients | `server_zone` |
+
+#### [HTTP Upstreams](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_upstream)
+
+> Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"draining"` -> `2.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
+
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_upstream_server_state` | Gauge | Current state | `server`, `upstream` |
+`nginxplus_upstream_server_active` | Gauge | Active connections | `server`, `upstream` |
+`nginxplus_upstream_server_requests` | Counter | Total client requests | `server`, `upstream` |
+`nginxplus_upstream_server_responses` | Counter | Total responses sent to clients | `code` (the response status code. The values are: `1xx`, `2xx`, `3xx`, `4xx` and `5xx`), `server`, `upstream` |
+`nginxplus_upstream_server_sent` | Counter | Bytes sent to this server | `server`, `upstream` |
+`nginxplus_upstream_server_received` | Counter | Bytes received to this server | `server`, `upstream` |
+`nginxplus_upstream_server_fails` | Counter | Number of unsuccessful attempts to communicate with the server | `server`, `upstream` |
+`nginxplus_upstream_server_unavail` | Counter | How many times the server became unavailable for client requests (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold | `server`, `upstream` |
+`nginxplus_upstream_server_header_time` | Gauge | Average time to get the response header from the server | `server`, `upstream` |
+`nginxplus_upstream_server_response_time` | Gauge | Average time to get the full response from the server | `server`, `upstream` |
+`nginxplus_upstream_server_health_checks_checks` | Counter | Total health check requests | `server`, `upstream` |
+`nginxplus_upstream_server_health_checks_fails` | Counter | Failed health checks | `server`, `upstream` |
+`nginxplus_upstream_server_health_checks_unhealthy` | Counter | How many times the server became unhealthy (state 'unhealthy') | `server`, `upstream` |
+`nginxplus_upstream_keepalives` | Gauge | Idle keepalive connections | `upstream` |
+`nginxplus_upstream_zombies` | Gauge | Servers removed from the group but still processing active client requests | `upstream` |
+
+#### [Stream Upstreams](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_upstream)
+
+> Note: for the `state` metric, the string values are converted to float64 using the following rule: `"up"` -> `1.0`, `"down"` -> `3.0`, `"unavail"` –> `4.0`, `"checking"` –> `5.0`, `"unhealthy"` -> `6.0`.
+
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_stream_upstream_server_state` | Gauge | Current state | `server`, `upstream` |
+`nginxplus_stream_upstream_server_active` | Gauge | Active connections | `server` , `upstream` |
+`nginxplus_stream_upstream_server_connections` | Counter | Total number of client connections forwarded to this server | `server`, `upstream` |
+`nginxplus_stream_upstream_server_connect_time` | Gauge | Average time to connect to the upstream server | `server`, `upstream` 
+`nginxplus_stream_upstream_server_first_byte_time` | Gauge | Average time to receive the first byte of data | `server`, `upstream` |
+`nginxplus_stream_upstream_server_response_time` | Gauge | Average time to receive the last byte of data | `server`, `upstream` |
+`nginxplus_stream_upstream_server_sent` | Counter | Bytes sent to this server | `server`, `upstream` |
+`nginxplus_stream_upstream_server_received` | Counter | Bytes received from this server | `server`, `upstream` |
+`nginxplus_stream_upstream_server_fails` | Counter | Number of unsuccessful attempts to communicate with the server | `server`, `upstream` |
+`nginxplus_stream_upstream_server_unavail` | Counter | How many times the server became unavailable for client connections (state 'unavail') due to the number of unsuccessful attempts reaching the max_fails threshold | `server`, `upstream` |
+`nginxplus_stream_upstream_server_health_checks_checks` | Counter | Total health check requests | `server`, `upstream` |
+`nginxplus_stream_upstream_server_health_checks_fails` | Counter | Failed health checks | `server`, `upstream` |
+`nginxplus_stream_upstream_server_health_checks_unhealthy` | Counter | How many times the server became unhealthy (state 'unhealthy') | `server`, `upstream` |
+`nginxplus_stream_upstream_zombies` | Gauge | Servers removed from the group but still processing active client connections | `upstream`|
+
+#### [Stream Zone Sync](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_zone_sync)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_stream_zone_sync_zone_records_pending` | Gauge | The number of records that need to be sent to the cluster | `zone` |
+`nginxplus_stream_zone_sync_zone_records_total` | Gauge | The total number of records stored in the shared memory zone | `zone` |
+`nginxplus_stream_zone_sync_zone_bytes_in` | Counter | Bytes received by this node | [] |
+`nginxplus_stream_zone_sync_zone_bytes_out` | Counter | Bytes sent by this node | [] |
+`nginxplus_stream_zone_sync_zone_msgs_in` | Counter | Total messages received by this node | [] |
+`nginxplus_stream_zone_sync_zone_msgs_out` | Counter | Total messages sent by this node | [] |
+`nginxplus_stream_zone_sync_zone_nodes_online` | Gauge | Number of peers this node is connected to | [] |
+
+#### [Location Zones](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_location_zone)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_location_zone_requests` | Counter | Total client requests | `location_zone` |
+`nginxplus_location_zone_responses` | Counter | Total responses sent to clients | `code` (the response status code. The values are: `1xx`, `2xx`, `3xx`, `4xx` and `5xx`), `location_zone` |
+`nginxplus_location_zone_discarded` | Counter | Requests completed without sending a response | `location_zone` |
+`nginxplus_location_zone_received` | Counter | Bytes received from clients | `location_zone` |
+`nginxplus_location_zone_sent` | Counter | Bytes sent to clients | `location_zone` |
+
+#### [Resolver](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_resolver_zone)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_resolver_name` | Counter | Total requests to resolve names to addresses | `resolver` |
+`nginxplus_resolver_srv` | Counter | Total requests to resolve SRV records | `resolver` |
+`nginxplus_resolver_addr` | Counter | Total requests to resolve addresses to names | `resolver` |
+`nginxplus_resolver_noerror` | Counter | Total number of successful responses | `resolver` |
+`nginxplus_resolver_formerr` | Counter | Total number of FORMERR responses | `resolver` |
+`nginxplus_resolver_servfail` | Counter | Total number of SERVFAIL responses | `resolver` |
+`nginxplus_resolver_nxdomain` | Counter | Total number of NXDOMAIN responses | `resolver` |
+`nginxplus_resolver_notimp` | Counter | Total number of NOTIMP responses | `resolver` |
+`nginxplus_resolver_refused` | Counter | Total number of REFUSED responses | `resolver` |
+`nginxplus_resolver_timedout` | Counter | Total number of timed out request | `resolver` |
+`nginxplus_resolver_unknown` | Counter | Total requests completed with an unknown error | `resolver`|
+
+Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions. Note: to see server zones related metrics you must configure [status zones](https://nginx.org/en/docs/http/ngx_http_status_module.html#status_zone) and to see upstream related metrics you must configure upstreams with a [shared memory zone](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#zone).
+
+## Troubleshooting
 
 The exporter logs errors to the standard output. When using Docker, if the exporter doesn’t work as expected, check its logs using [docker logs](https://docs.docker.com/engine/reference/commandline/logs/) command.
 
