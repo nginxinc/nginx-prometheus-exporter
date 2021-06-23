@@ -201,7 +201,7 @@ func getListener(listenAddress string) (net.Listener, error) {
 	if strings.HasPrefix(listenAddress, "unix:") {
 		path, _, pathError := parseUnixSocketAddress(listenAddress)
 		if pathError != nil {
-			return listener, fmt.Errorf("parsing unix domain socket listen address %s failed: %v", listenAddress, pathError)
+			return listener, fmt.Errorf("parsing unix domain socket listen address %s failed: %w", listenAddress, pathError)
 		}
 		listener, err = net.ListenUnix("unix", &net.UnixAddr{Name: path, Net: "unix"})
 	} else {
