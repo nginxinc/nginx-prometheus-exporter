@@ -16,7 +16,7 @@ nginx-prometheus-exporter:
 
 .PHONY: lint
 lint:
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint run
+	docker run --pull always --rm -v $(shell pwd):/nginx-prometheus-exporter -w /nginx-prometheus-exporter -v $(shell go env GOCACHE):/cache/go -e GOCACHE=/cache/go -e GOLANGCI_LINT_CACHE=/cache/go -v $(shell go env GOPATH)/pkg:/go/pkg golangci/golangci-lint:latest golangci-lint --color always run
 
 .PHONY: test
 test:
