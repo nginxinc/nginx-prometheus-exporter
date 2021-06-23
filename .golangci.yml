@@ -4,14 +4,32 @@ linters-settings:
 
 linters:
     enable:
+    - asciicheck
+    - deadcode
+    - errcheck
+    - errorlint
+    - gofmt
+    - gofumpt
     - goimports
+    - gosec
     - gosimple
     - govet
+    - ineffassign
+    - makezero
     - misspell
-    - gofmt
-    - unparam
-    - unconvert
+    - nilerr
+    - noctx
+    - predeclared
+    - promlinter
+    - staticcheck
     - structcheck
-    - errcheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - wastedassign
     disable-all: true
-
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
