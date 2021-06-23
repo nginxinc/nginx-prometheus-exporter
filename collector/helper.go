@@ -4,8 +4,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const nginxUp = 1
-const nginxDown = 0
+const (
+	nginxUp   = 1
+	nginxDown = 0
+)
 
 func newGlobalMetric(namespace string, metricName string, docString string, constLabels map[string]string) *prometheus.Desc {
 	return prometheus.NewDesc(namespace+"_"+metricName, docString, nil, constLabels)
