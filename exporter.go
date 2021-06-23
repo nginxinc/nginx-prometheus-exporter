@@ -324,6 +324,7 @@ func main() {
 
 	registry.MustRegister(buildInfoMetric)
 
+	// #nosec G402
 	sslConfig := &tls.Config{InsecureSkipVerify: !*sslVerify}
 	if *sslCaCert != "" {
 		caCert, err := os.ReadFile(*sslCaCert)
