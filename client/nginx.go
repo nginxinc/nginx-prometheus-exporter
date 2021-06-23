@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -43,7 +44,14 @@ func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, 
 
 // GetStubStats fetches the stub_status metrics.
 func (client *NginxClient) GetStubStats() (*StubStats, error) {
-	resp, err := client.httpClient.Get(client.apiEndpoint)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, client.apiEndpoint, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create a get request: %w", err)
+	}
+	resp, err := client.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get %v: %w", client.apiEndpoint, err)
 	}
