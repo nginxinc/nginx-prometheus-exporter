@@ -434,10 +434,10 @@ func main() {
 		}
 		log.Printf("NGINX Prometheus Exporter has successfully started using https")
 		log.Fatal(srv.ServeTLS(listener, *sslServerCert, *sslServerKey))
-	} else {
-		log.Printf("NGINX Prometheus Exporter has successfully started")
-		log.Fatal(srv.Serve(listener))
 	}
+
+	log.Printf("NGINX Prometheus Exporter has successfully started")
+	log.Fatal(srv.Serve(listener))
 }
 
 type userAgentRoundTripper struct {
