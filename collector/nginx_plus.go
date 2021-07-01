@@ -586,7 +586,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 				prometheus.GaugeValue, upstreamServerStates[peer.State], labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["active"],
 				prometheus.GaugeValue, float64(peer.Active), labelValues...)
-				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["limit"],
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["limit"],
 				prometheus.GaugeValue, float64(peer.MaxConns), labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connections"],
 				prometheus.CounterValue, float64(peer.Connections), labelValues...)
