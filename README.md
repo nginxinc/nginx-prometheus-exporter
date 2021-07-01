@@ -173,6 +173,7 @@ Name | Type | Description | Labels
 ----|----|----|----|
 `nginxplus_upstream_server_state` | Gauge | Current state | `server`, `upstream` |
 `nginxplus_upstream_server_active` | Gauge | Active connections | `server`, `upstream` |
+`nginxplus_upstream_server_limit` | Gauge | Limit of connections | `server`, `upstream` |
 `nginxplus_upstream_server_requests` | Counter | Total client requests | `server`, `upstream` |
 `nginxplus_upstream_server_responses` | Counter | Total responses sent to clients | `code` (the response status code. The values are: `1xx`, `2xx`, `3xx`, `4xx` and `5xx`), `server`, `upstream` |
 `nginxplus_upstream_server_sent` | Counter | Bytes sent to this server | `server`, `upstream` |
@@ -195,8 +196,9 @@ Name | Type | Description | Labels
 ----|----|----|----|
 `nginxplus_stream_upstream_server_state` | Gauge | Current state | `server`, `upstream` |
 `nginxplus_stream_upstream_server_active` | Gauge | Active connections | `server` , `upstream` |
+`nginxplus_stream_upstream_server_limit` | Gauge | Limit of connections | `server` , `upstream` |
 `nginxplus_stream_upstream_server_connections` | Counter | Total number of client connections forwarded to this server | `server`, `upstream` |
-`nginxplus_stream_upstream_server_connect_time` | Gauge | Average time to connect to the upstream server | `server`, `upstream` 
+`nginxplus_stream_upstream_server_connect_time` | Gauge | Average time to connect to the upstream server | `server`, `upstream`
 `nginxplus_stream_upstream_server_first_byte_time` | Gauge | Average time to receive the first byte of data | `server`, `upstream` |
 `nginxplus_stream_upstream_server_response_time` | Gauge | Average time to receive the last byte of data | `server`, `upstream` |
 `nginxplus_stream_upstream_server_sent` | Counter | Bytes sent to this server | `server`, `upstream` |
