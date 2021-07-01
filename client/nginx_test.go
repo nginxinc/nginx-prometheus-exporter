@@ -5,7 +5,7 @@ import "testing"
 const validStabStats = "Active connections: 1457 \nserver accepts handled requests\n 6717066 6717066 65844359 \nReading: 1 Writing: 8 Waiting: 1448 \n"
 
 func TestParseStubStatsValidInput(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		input          []byte
 		expectedResult StubStats
 		expectedError  bool

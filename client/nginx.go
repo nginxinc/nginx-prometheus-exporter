@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -43,9 +44,16 @@ func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, 
 
 // GetStubStats fetches the stub_status metrics.
 func (client *NginxClient) GetStubStats() (*StubStats, error) {
-	resp, err := client.httpClient.Get(client.apiEndpoint)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, client.apiEndpoint, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get %v: %v", client.apiEndpoint, err)
+		return nil, fmt.Errorf("failed to create a get request: %w", err)
+	}
+	resp, err := client.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get %v: %w", client.apiEndpoint, err)
 	}
 	defer resp.Body.Close()
 
@@ -55,13 +63,13 @@ func (client *NginxClient) GetStubStats() (*StubStats, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read the response body: %v", err)
+		return nil, fmt.Errorf("failed to read the response body: %w", err)
 	}
 
 	var stats StubStats
 	err = parseStubStats(body, &stats)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse response body %q: %v", string(body), err)
+		return nil, fmt.Errorf("failed to parse response body %q: %w", string(body), err)
 	}
 
 	return &stats, nil
@@ -82,7 +90,7 @@ func parseStubStats(data []byte, stats *StubStats) error {
 
 	actCons, err := strconv.ParseInt(activeConsParts[2], 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid input for active connections %q: %v", activeConsParts[2], err)
+		return fmt.Errorf("invalid input for active connections %q: %w", activeConsParts[2], err)
 	}
 	stats.Connections.Active = actCons
 
@@ -93,19 +101,19 @@ func parseStubStats(data []byte, stats *StubStats) error {
 
 	acceptedCons, err := strconv.ParseInt(miscParts[0], 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid input for accepted connections %q: %v", miscParts[0], err)
+		return fmt.Errorf("invalid input for accepted connections %q: %w", miscParts[0], err)
 	}
 	stats.Connections.Accepted = acceptedCons
 
 	handledCons, err := strconv.ParseInt(miscParts[1], 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid input for handled connections %q: %v", miscParts[1], err)
+		return fmt.Errorf("invalid input for handled connections %q: %w", miscParts[1], err)
 	}
 	stats.Connections.Handled = handledCons
 
 	requests, err := strconv.ParseInt(miscParts[2], 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid input for requests %q: %v", miscParts[2], err)
+		return fmt.Errorf("invalid input for requests %q: %w", miscParts[2], err)
 	}
 	stats.Requests = requests
 
@@ -116,19 +124,19 @@ func parseStubStats(data []byte, stats *StubStats) error {
 
 	readingCons, err := strconv.ParseInt(consParts[1], 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid input for reading connections %q: %v", consParts[1], err)
+		return fmt.Errorf("invalid input for reading connections %q: %w", consParts[1], err)
 	}
 	stats.Connections.Reading = readingCons
 
 	writingCons, err := strconv.ParseInt(consParts[3], 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid input for writing connections %q: %v", consParts[3], err)
+		return fmt.Errorf("invalid input for writing connections %q: %w", consParts[3], err)
 	}
 	stats.Connections.Writing = writingCons
 
 	waitingCons, err := strconv.ParseInt(consParts[5], 10, 64)
 	if err != nil {
-		return fmt.Errorf("invalid input for waiting connections %q: %v", consParts[5], err)
+		return fmt.Errorf("invalid input for waiting connections %q: %w", consParts[5], err)
 	}
 	stats.Connections.Waiting = waitingCons
 
