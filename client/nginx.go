@@ -8,6 +8,12 @@ import (
 	"net/http"
 )
 
+const templateMetrics string = `Active connections: %d 
+server accepts handled requests
+%d %d %d 
+Reading: %d Writing: %d Waiting: %d 
+`
+
 // NginxClient allows you to fetch NGINX metrics from the stub_status page.
 type NginxClient struct {
 	apiEndpoint string
@@ -65,53 +71,26 @@ func (client *NginxClient) GetStubStats() (*StubStats, error) {
 		return nil, fmt.Errorf("failed to read the response body: %w", err)
 	}
 
-	var stats StubStats
-	err = parseStubStats(body, &stats)
+	r := bytes.NewReader(body)
+	stats, err := parseStubStats(r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse response body %q: %w", string(body), err)
 	}
 
-	return &stats, nil
+	return stats, nil
 }
 
-func parseStubStats(data []byte, stats *StubStats) error {
-	if bytes.Count(data, []byte("\n")) != 4 {
-		return fmt.Errorf("invalid input %s", data)
+func parseStubStats(r io.Reader) (*StubStats, error) {
+	var s StubStats
+	if _, err := fmt.Fscanf(r, templateMetrics,
+		&s.Connections.Active,
+		&s.Connections.Accepted,
+		&s.Connections.Handled,
+		&s.Requests,
+		&s.Connections.Reading,
+		&s.Connections.Writing,
+		&s.Connections.Waiting); err != nil {
+		return nil, err
 	}
-
-	cnt, value := 0, int64(0)
-	for _, s := range data {
-		if s >= '0' && s <= '9' {
-			value *= 10
-			value += int64(s & 0x0f)
-			continue
-		}
-
-		if value > 0 {
-			switch cnt {
-			case 0:
-				stats.Connections.Active = value
-			case 1:
-				stats.Connections.Accepted = value
-			case 2:
-				stats.Connections.Handled = value
-			case 3:
-				stats.Requests = value
-			case 4:
-				stats.Connections.Reading = value
-			case 5:
-				stats.Connections.Writing = value
-			case 6:
-				stats.Connections.Waiting = value
-			}
-			value = 0
-			cnt++
-		}
-	}
-
-	if cnt != 7 {
-		return fmt.Errorf("invalid input %s", data)
-	}
-
-	return nil
+	return &s, nil
 }
