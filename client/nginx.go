@@ -90,7 +90,7 @@ func parseStubStats(r io.Reader) (*StubStats, error) {
 		&s.Connections.Reading,
 		&s.Connections.Writing,
 		&s.Connections.Waiting); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to scan template metrics: %w", err)
 	}
 	return &s, nil
 }
