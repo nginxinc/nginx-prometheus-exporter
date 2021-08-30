@@ -164,16 +164,24 @@ func createConstLabelsFlag(name string, value constLabel, usage string) *constLa
 func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval time.Duration) (interface{}, error) {
 	var err error
 	var nginxClient interface{}
+	var i = 0
 
-	for i := 0; i <= int(retries); i++ {
+	for {
 		nginxClient, err = getClient()
 		if err == nil {
 			return nginxClient, nil
 		}
-		if i < int(retries) {
+		if retries != 0 {
+			i = i + 1
+		}
+
+		if i <= int(retries) {
 			log.Printf("Could not create Nginx Client. Retrying in %v...", retryInterval)
 			time.Sleep(retryInterval)
+		} else {
+			break
 		}
+
 	}
 	return nil, err
 }
