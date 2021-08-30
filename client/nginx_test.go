@@ -1,11 +1,14 @@
 package client
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 const validStabStats = "Active connections: 1457 \nserver accepts handled requests\n 6717066 6717066 65844359 \nReading: 1 Writing: 8 Waiting: 1448 \n"
 
 func TestParseStubStatsValidInput(t *testing.T) {
-	var tests = []struct {
+	tests := []struct {
 		input          []byte
 		expectedResult StubStats
 		expectedError  bool
@@ -32,15 +35,14 @@ func TestParseStubStatsValidInput(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		var result StubStats
-
-		err := parseStubStats(test.input, &result)
+		r := bytes.NewReader(test.input)
+		result, err := parseStubStats(r)
 
 		if err != nil && !test.expectedError {
 			t.Errorf("parseStubStats() returned error for valid input %q: %v", string(test.input), err)
 		}
 
-		if !test.expectedError && test.expectedResult != result {
+		if !test.expectedError && test.expectedResult != *result {
 			t.Errorf("parseStubStats() result %v != expected %v for input %q", result, test.expectedResult, test.input)
 		}
 	}
