@@ -273,6 +273,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		upstreamServerMetrics: map[string]*prometheus.Desc{
 			"state":                   newUpstreamServerMetric(namespace, "state", "Current state", upstreamServerVariableLabelNames, constLabels),
 			"active":                  newUpstreamServerMetric(namespace, "active", "Active connections", upstreamServerVariableLabelNames, constLabels),
+			"limit":                   newUpstreamServerMetric(namespace, "limit", "Limit for connections which corresponds to the max_conns parameter of the upstream server. Zero value means there is no limit", upstreamServerVariableLabelNames, constLabels),
 			"requests":                newUpstreamServerMetric(namespace, "requests", "Total client requests", upstreamServerVariableLabelNames, constLabels),
 			"responses_1xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
 			"responses_2xx":           newUpstreamServerMetric(namespace, "responses", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
@@ -292,6 +293,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		streamUpstreamServerMetrics: map[string]*prometheus.Desc{
 			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state", streamUpstreamServerVariableLabelNames, constLabels),
 			"active":                  newStreamUpstreamServerMetric(namespace, "active", "Active connections", streamUpstreamServerVariableLabelNames, constLabels),
+			"limit":                   newStreamUpstreamServerMetric(namespace, "limit", "Limit for connections which corresponds to the max_conns parameter of the upstream server. Zero value means there is no limit", streamUpstreamServerVariableLabelNames, constLabels),
 			"sent":                    newStreamUpstreamServerMetric(namespace, "sent", "Bytes sent to this server", streamUpstreamServerVariableLabelNames, constLabels),
 			"received":                newStreamUpstreamServerMetric(namespace, "received", "Bytes received from this server", streamUpstreamServerVariableLabelNames, constLabels),
 			"fails":                   newStreamUpstreamServerMetric(namespace, "fails", "Number of unsuccessful attempts to communicate with the server", streamUpstreamServerVariableLabelNames, constLabels),
@@ -511,6 +513,8 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 				prometheus.GaugeValue, upstreamServerStates[peer.State], labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["active"],
 				prometheus.GaugeValue, float64(peer.Active), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["limit"],
+				prometheus.GaugeValue, float64(peer.MaxConns), labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["requests"],
 				prometheus.CounterValue, float64(peer.Requests), labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["responses_1xx"],
@@ -582,6 +586,8 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 				prometheus.GaugeValue, upstreamServerStates[peer.State], labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["active"],
 				prometheus.GaugeValue, float64(peer.Active), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["limit"],
+				prometheus.GaugeValue, float64(peer.MaxConns), labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connections"],
 				prometheus.CounterValue, float64(peer.Connections), labelValues...)
 			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["connect_time"],
