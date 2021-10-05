@@ -7,6 +7,8 @@ on:
     paths-ignore:
       - '**.md'
       - 'LICENSE'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   pull_request:
     branches:
       - master
@@ -17,12 +19,12 @@ on:
       - opened
       - reopened
       - synchronize
-  create:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  schedule:
+    - cron:  '0 3 * * *'
 
 env:
-  DOCKER_BUILDKIT: 1
+  DOCKER_PLATFORMS: "linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x,linux/mips64le,linux/386"
+
 
 jobs:
 
@@ -41,64 +43,15 @@ jobs:
       - name: Run Tests
         run: make test
 
-  build:
-    name: Build Image
+  build-docker:
+    name: Build Docker Image
     runs-on: ubuntu-20.04
+    needs: [unit-tests]
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Determine Go version from go.mod
-        run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
-      - name: Setup QEMU
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: arm,arm64,ppc64le,s390x,mips64le,386
-      - name: Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Determine GOPATH
-        run: echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
-      - name: Setup Golang Environment
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{ env.GO_VERSION }}
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: build --snapshot --rm-dist
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOPATH: ${{ env.GOPATH }}
-      - name: Build Image
-        uses: docker/build-push-action@v2
-        with:
-          file: build/Dockerfile
-          context: '.'
-          target: local
-          platforms: linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x,linux/mips64le,linux/386
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: nginx/nginx-prometheus-exporter:${{ github.sha }}
-          push: false
-
-  release-docker:
-    name: Release Image
-    runs-on: ubuntu-20.04
-    needs: [build, unit-tests]
-    if:
-      github.repository == 'nginxinc/nginx-prometheus-exporter' &&
-      github.event_name == 'create' &&
-      contains(github.ref, 'refs/tags/')
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Retrieve Tag
-        id: get_version
-        run: echo ::set-output name=GIT_TAG::$(echo ${GITHUB_REF/refs\/tags\//} | tr -d v)
       - name: Determine Go version from go.mod
         run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
       - name: Setup Golang Environment
@@ -109,6 +62,7 @@ jobs:
         uses: docker/setup-qemu-action@v1
         with:
           platforms: arm,arm64,ppc64le,s390x,mips64le,386
+        if: github.event_name != 'pull_request'
       - name: Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: DockerHub Login
@@ -116,17 +70,32 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+        if: github.event_name != 'pull_request'
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: nginx/nginx-prometheus-exporter
+          tags: |
+            type=edge
+            type=ref,event=pr
+            type=schedule
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          labels: |
+            org.opencontainers.image.vendor=NGINX Inc <kubernetes@nginx.com>
       - name: Publish Release Notes
         uses: release-drafter/release-drafter@v5
         with:
             publish: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ startsWith(github.ref, 'refs/tags/') }}
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: release --rm-dist
+          args: --rm-dist ${{ github.event_name == 'pull_request' && '--single-target' || '' }} ${{ !startsWith(github.ref, 'refs/tags/') && 'build --snapshot' || 'release' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOPATH: ${{ env.GOPATH }}
@@ -136,19 +105,21 @@ jobs:
           file: build/Dockerfile
           context: '.'
           target: local
-          platforms: linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x,linux/mips64le,linux/386
-          tags: |
-            nginx/nginx-prometheus-exporter:latest
-            nginx/nginx-prometheus-exporter:${{ steps.get_version.outputs.GIT_TAG }}
-          push: true
+          platforms: ${{ github.event_name != 'pull_request' && env.DOCKER_PLATFORMS || '' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          load: ${{ github.event_name == 'pull_request' }}
+          push: ${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
-            VERSION=${{ steps.get_version.outputs.GIT_TAG }}
+            VERSION=${{ steps.meta.outputs.version }}
             GIT_COMMIT=${{ github.sha }}
 
   notify:
     name: Notify
     runs-on: ubuntu-20.04
-    needs: release-docker
+    needs: build-docker
     if: always() && github.ref == 'refs/heads/master'
     steps:
       - name: Workflow Status
