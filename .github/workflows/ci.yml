@@ -71,11 +71,20 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
         if: github.event_name != 'pull_request'
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name != 'pull_request'
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: nginx/nginx-prometheus-exporter
+          images: |
+            nginx/nginx-prometheus-exporter
+            ghcr.io/nginxinc/nginx-prometheus-exporter
           tags: |
             type=edge
             type=ref,event=pr
@@ -95,7 +104,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v2
         with:
           version: latest
-          args: --rm-dist ${{ github.event_name == 'pull_request' && '--single-target' || '' }} ${{ !startsWith(github.ref, 'refs/tags/') && 'build --snapshot' || 'release' }}
+          args: ${{ !startsWith(github.ref, 'refs/tags/') && 'build --snapshot' || 'release' }} ${{ github.event_name == 'pull_request' && '--single-target' || '' }} --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOPATH: ${{ env.GOPATH }}
