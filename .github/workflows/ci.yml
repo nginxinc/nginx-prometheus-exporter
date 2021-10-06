@@ -19,8 +19,6 @@ on:
       - opened
       - reopened
       - synchronize
-  schedule:
-    - cron:  '0 3 * * *'
 
 env:
   DOCKER_PLATFORMS: "linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x,linux/mips64le,linux/386"
