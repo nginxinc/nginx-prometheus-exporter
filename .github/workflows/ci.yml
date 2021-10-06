@@ -113,7 +113,7 @@ jobs:
         with:
           file: build/Dockerfile
           context: '.'
-          target: local
+          target: goreleaser
           platforms: ${{ github.event_name != 'pull_request' && env.DOCKER_PLATFORMS || '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
