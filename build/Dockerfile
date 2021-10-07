@@ -25,8 +25,12 @@ FROM intermediate as container
 COPY --from=builder /go/src/github.com/nginxinc/nginx-prometheus-exporter/nginx-prometheus-exporter /usr/bin/
 
 
-FROM intermediate as local
+FROM intermediate as goreleaser
 ARG TARGETARCH
 ARG TARGETVARIANT
+ARG TARGETPLATFORM
+
+LABEL org.nginx.exporter.image.build.target="${TARGETPLATFORM}"
+LABEL org.nginx.exporter.image.build.version="goreleaser"
 
 COPY dist/nginx-prometheus-exporter_linux_$TARGETARCH${TARGETVARIANT:+_7}*/nginx-prometheus-exporter /usr/bin/
