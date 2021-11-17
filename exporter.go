@@ -24,6 +24,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/exporter-toolkit/web"
+    "github.com/prometheus/common/promlog"
+)
 )
 
 func getEnv(key, defaultValue string) string {
@@ -223,9 +226,6 @@ var (
 
 	// Defaults values
 	defaultListenAddress      = getEnv("LISTEN_ADDRESS", ":9113")
-	defaultSecuredMetrics     = getEnvBool("SECURED_METRICS", false)
-	defaultSslServerCert      = getEnv("SSL_SERVER_CERT", "")
-	defaultSslServerKey       = getEnv("SSL_SERVER_KEY", "")
 	defaultMetricsPath        = getEnv("TELEMETRY_PATH", "/metrics")
 	defaultNginxPlus          = getEnvBool("NGINX_PLUS", false)
 	defaultScrapeURI          = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
@@ -242,15 +242,6 @@ var (
 	listenAddr = flag.String("web.listen-address",
 		defaultListenAddress,
 		"An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable.")
-	securedMetrics = flag.Bool("web.secured-metrics",
-		defaultSecuredMetrics,
-		"Expose metrics using https. The default value can be overwritten by SECURED_METRICS variable.")
-	sslServerCert = flag.String("web.ssl-server-cert",
-		defaultSslServerCert,
-		"Path to the PEM encoded certificate for the nginx-exporter metrics server(when web.secured-metrics=true). The default value can be overwritten by SSL_SERVER_CERT variable.")
-	sslServerKey = flag.String("web.ssl-server-key",
-		defaultSslServerKey,
-		"Path to the PEM encoded key for the nginx-exporter metrics server (when web.secured-metrics=true). The default value can be overwritten by SSL_SERVER_KEY variable.")
 	metricsPath = flag.String("web.telemetry-path",
 		defaultMetricsPath,
 		"A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable.")
@@ -292,6 +283,9 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 	constLabels = createConstLabelsFlag("prometheus.const-labels",
 		defaultConstLabels,
 		"A comma separated list of constant labels that will be used in every metric. Format is label1=value1,label2=value2... The default value can be overwritten by CONST_LABELS environment variable.")
+	
+	webcfgFile  = flag.String("web.config","",
+        "Path to config yaml file that can enable TLS or authentication.")    
 )
 
 func main() {
@@ -426,27 +420,16 @@ func main() {
 			log.Printf("Error while sending a response for the '/' path: %v", err)
 		}
 	})
-
-	listener, err := getListener(*listenAddr)
-	if err != nil {
-		log.Fatalf("Could not create listener: %v", err)
-	}
-
-	if *securedMetrics {
-		_, err = os.Stat(*sslServerCert)
-		if err != nil {
-			log.Fatalf("Cert file is not set, not readable or non-existent. Make sure you set -web.ssl-server-cert when starting your exporter with -web.secured-metrics=true: %v", err)
-		}
-		_, err = os.Stat(*sslServerKey)
-		if err != nil {
-			log.Fatalf("Key file is not set, not readable or non-existent. Make sure you set -web.ssl-server-key when starting your exporter with -web.secured-metrics=true: %v", err)
-		}
-		log.Printf("NGINX Prometheus Exporter has successfully started using https")
-		log.Fatal(srv.ServeTLS(listener, *sslServerCert, *sslServerKey))
+	
+	promlogConfig := &promlog.Config{}
+	logger := promlog.New(promlogConfig)
+	server := &http.Server{Addr: *listenAddr}
+	if err := https.Listen(server, *webcfgFile, logger); err != nil {
+		log.Fatal(err)
 	}
 
 	log.Printf("NGINX Prometheus Exporter has successfully started")
-	log.Fatal(srv.Serve(listener))
+
 }
 
 type userAgentRoundTripper struct {
