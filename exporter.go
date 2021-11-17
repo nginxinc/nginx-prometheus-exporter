@@ -24,9 +24,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/model"
+	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/exporter-toolkit/web"
-    "github.com/prometheus/common/promlog"
-)
 )
 
 func getEnv(key, defaultValue string) string {
@@ -283,9 +282,9 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 	constLabels = createConstLabelsFlag("prometheus.const-labels",
 		defaultConstLabels,
 		"A comma separated list of constant labels that will be used in every metric. Format is label1=value1,label2=value2... The default value can be overwritten by CONST_LABELS environment variable.")
-	
-	webcfgFile  = flag.String("web.config","",
-        "Path to config yaml file that can enable TLS or authentication.")    
+
+	webcfgFile = flag.String("web.config", "",
+		"Path to config yaml file that can enable TLS or authentication.")
 )
 
 func main() {
@@ -420,11 +419,11 @@ func main() {
 			log.Printf("Error while sending a response for the '/' path: %v", err)
 		}
 	})
-	
+
 	promlogConfig := &promlog.Config{}
 	logger := promlog.New(promlogConfig)
 	server := &http.Server{Addr: *listenAddr}
-	if err := https.Listen(server, *webcfgFile, logger); err != nil {
+	if err := web.Listen(server, *webcfgFile, logger); err != nil {
 		log.Fatal(err)
 	}
 

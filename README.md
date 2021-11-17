@@ -93,15 +93,21 @@ Usage of ./nginx-prometheus-exporter:
         An address or unix domain socket path to listen on for web interface and telemetry. The default value can be overwritten by LISTEN_ADDRESS environment variable. (default ":9113")
   -web.telemetry-path string
         A path under which to expose metrics. The default value can be overwritten by TELEMETRY_PATH environment variable. (default "/metrics")
-  -web.secured-metrics
-        Expose metrics using https. The default value can be overwritten by SECURED_METRICS variable.  (default false)
-  -web.ssl-server-cert string
-        Path to the PEM encoded certificate for the nginx-exporter metrics server(when web.secured-metrics=true). The default value can be overwritten by SSL_SERVER_CERT variable.
-  -web.ssl-server-key string
-        Path to the PEM encoded key for the nginx-exporter metrics server (when web.secured-metrics=true). The default value can be overwritten by SSL_SERVER_KEY variable.
+  -web.config string
+        Path to config yaml file that can enable TLS or authentication.
   -version
         Display the NGINX exporter version. (default false)
 ```
+
+## TLS and basic authentication
+
+The nginx-prometheus Exporter supports TLS and basic authentication. This enables better
+control of the various HTTP endpoints.
+
+To use TLS and/or basic authentication, you need to pass a configuration file
+using the `--web.config` parameter. The format of the file is described
+[in the exporter-toolkit repository](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
+
 
 ## Exported Metrics
 
