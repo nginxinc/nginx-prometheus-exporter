@@ -68,7 +68,7 @@ template: |
 
   ## Upgrade
 
-  - Use the $RESOLVED_VERSION image from our DockerHub: `nginx/nginx-prometheus-exporter:$RESOLVED_VERSION`
+  - Use the $RESOLVED_VERSION image from our [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/tags?page=1&ordering=last_updated&name=$RESOLVED_VERSION), [GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter) or [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter)
   - Download the latest binaries from [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v$RESOLVED_VERSION).
 
   ## Compatibility

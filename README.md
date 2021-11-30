@@ -253,7 +253,9 @@ The exporter logs errors to the standard output. When using Docker, if the expor
 
 ## Releases
 
-For each release, we publish the corresponding Docker image at `nginx/nginx-prometheus-exporter` [DockerHub repo](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/) and the binaries on the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
+For each release, we publish the corresponding Docker image on [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/), [GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter) and [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter). We publish the binaries on the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
+
+As an alternative, you can choose the *edge* version built from the [latest commit](https://github.com/nginxinc/nginx-prometheus-exporter/commits/master) from the master branch. The edge version is useful for experimenting with new features that are not yet published in a stable release.
 
 ## Building the Exporter
 
