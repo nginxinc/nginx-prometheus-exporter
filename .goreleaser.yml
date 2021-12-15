@@ -1,6 +1,5 @@
 before:
   hooks:
-    - make clean
     - go mod tidy
     - go mod verify
 builds:
@@ -9,6 +8,7 @@ builds:
     goos:
       - linux
       - darwin
+      - windows
     goarch:
       - 386
       - amd64
@@ -23,12 +23,19 @@ builds:
       - 7
     gomips:
       - softfloat
+    ignore:
+      - goos: windows
+        goarch: arm
     flags:
       - -trimpath
     gcflags:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:
       - all=-trimpath={{.Env.GOPATH}}
+archives:
+- format_overrides:
+    - goos: windows
+      format: zip
 checksum:
   name_template: 'sha256sums.txt'
 changelog:
