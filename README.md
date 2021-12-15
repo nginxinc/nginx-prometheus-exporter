@@ -264,11 +264,11 @@ We publish the binaries for multiple Operating Systems and architectures on the 
 ### Homebrew
 You can add the NGINX homebrew tap with
 ```
-brew tap nginxinc/tap
+$ brew tap nginxinc/tap
 ```
 and then install the formula with
 ```
-brew install nginx-prometheus-exporter
+$ brew install nginx-prometheus-exporter
 ```
 
 ## Building the Exporter
