@@ -253,9 +253,23 @@ The exporter logs errors to the standard output. When using Docker, if the expor
 
 ## Releases
 
-For each release, we publish the corresponding Docker image on [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/), [GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter) and [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter). We publish the binaries on the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
+### Docker images
+We publish the Docker image on [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/), [GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter) and [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter).
 
 As an alternative, you can choose the *edge* version built from the [latest commit](https://github.com/nginxinc/nginx-prometheus-exporter/commits/master) from the master branch. The edge version is useful for experimenting with new features that are not yet published in a stable release.
+
+### Binaries
+We publish the binaries for multiple Operating Systems and architectures on the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
+
+### Homebrew
+You can add the NGINX homebrew tap with
+```
+$ brew tap nginxinc/tap
+```
+and then install the formula with
+```
+$ brew install nginx-prometheus-exporter
+```
 
 ## Building the Exporter
 

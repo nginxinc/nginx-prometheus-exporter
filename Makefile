@@ -17,7 +17,7 @@ nginx-prometheus-exporter:
 .PHONY: build-goreleaser
 build-goreleaser: ## Build all binaries using GoReleaser
 	@goreleaser -v || (code=$$?; printf "\033[0;31mError\033[0m: there was a problem with GoReleaser. Follow the docs to install it https://goreleaser.com/install\n"; exit $$code)
-	GOPATH=$(shell go env GOPATH) goreleaser build --rm-dist --debug --snapshot
+	GOPATH=$(shell go env GOPATH) goreleaser build --rm-dist --snapshot
 
 .PHONY: lint
 lint:
