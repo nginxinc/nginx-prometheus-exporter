@@ -1,4 +1,4 @@
-VERSION = 0.9.0
+VERSION = 0.10.0
 TAG = $(VERSION)
 PREFIX = nginx/nginx-prometheus-exporter
 
