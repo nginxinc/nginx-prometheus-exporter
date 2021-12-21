@@ -44,6 +44,7 @@ brews:
   - tap:
       owner: nginxinc
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     folder: Formula
     homepage: https://www.nginx.com/
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
