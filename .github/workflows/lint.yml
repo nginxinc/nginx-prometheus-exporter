@@ -16,9 +16,6 @@ defaults:
   run:
     shell: bash
 
-env:
-  GOLANGCI_TIMEOUT: 10m0s
-
 jobs:
 
   lint:
@@ -27,7 +24,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
-      - name: Lint Code
-        uses: golangci/golangci-lint-action@v2
+      - name: Output Variables
+        id: vars
+        run: echo "::set-output name=go_version::$(grep "go 1." go.mod | cut -d " " -f 2)"
+      - name: Setup Golang Environment
+        uses: actions/setup-go@v2
         with:
-          args: --timeout ${{ env.GOLANGCI_TIMEOUT }}
+          go-version: ${{ steps.vars.outputs.go_version }}
+      - name: Lint Code
+        uses: golangci/golangci-lint-action@v3
