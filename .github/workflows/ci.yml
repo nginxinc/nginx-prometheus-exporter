@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Determine Go version from go.mod
         run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
       - name: Setup Golang Environment
@@ -47,7 +47,7 @@ jobs:
     needs: [unit-tests]
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Determine Go version from go.mod
