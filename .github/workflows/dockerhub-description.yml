@@ -2,7 +2,7 @@ name: Update Docker Hub Description
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - README.md
       - .github/workflows/dockerhub-description.yml
@@ -15,7 +15,7 @@ jobs:
       - name: Modify readme for DockerHub
         run: |
           sed -i '1,2d' README.md
-          sed -i 's/(LICENSE)/(https:\/\/github.com\/nginxinc\/nginx-prometheus-exporter\/blob\/master\/LICENSE)/' README.md
+          sed -i 's/(LICENSE)/(https:\/\/github.com\/nginxinc\/nginx-prometheus-exporter\/blob\/main\/LICENSE)/' README.md
 
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v2
