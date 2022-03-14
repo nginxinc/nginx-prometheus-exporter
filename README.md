@@ -14,7 +14,7 @@ In this section, we show how to quickly run NGINX Prometheus Exporter for NGINX 
 
 ### A Note about NGINX Ingress Controller
 
-If you’d like to use the NGINX Prometheus Exporter with [NGINX Ingress Controller](https://github.com/nginxinc/kubernetes-ingress/) for Kubernetes, see [this doc](https://github.com/nginxinc/kubernetes-ingress/blob/master/docs/installation.md#5-access-the-live-activity-monitoring-dashboard) for the installation instructions.
+If you’d like to use the NGINX Prometheus Exporter with [NGINX Ingress Controller](https://github.com/nginxinc/kubernetes-ingress/) for Kubernetes, see [this doc](https://docs.nginx.com/nginx-ingress-controller/logging-and-monitoring/prometheus/) for the installation instructions.
 
 ### Prerequisites
 
@@ -256,7 +256,7 @@ The exporter logs errors to the standard output. When using Docker, if the expor
 ### Docker images
 We publish the Docker image on [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/), [GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter) and [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter).
 
-As an alternative, you can choose the *edge* version built from the [latest commit](https://github.com/nginxinc/nginx-prometheus-exporter/commits/master) from the master branch. The edge version is useful for experimenting with new features that are not yet published in a stable release.
+As an alternative, you can choose the *edge* version built from the [latest commit](https://github.com/nginxinc/nginx-prometheus-exporter/commits/main) from the main branch. The edge version is useful for experimenting with new features that are not yet published in a stable release.
 
 ### Binaries
 We publish the binaries for multiple Operating Systems and architectures on the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
