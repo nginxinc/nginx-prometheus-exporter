@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.4
-FROM golang:1.17 as base
+FROM golang:1.18.0 as base
 ARG VERSION
 ARG GIT_COMMIT
 ARG DATE
