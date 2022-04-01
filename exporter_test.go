@@ -8,6 +8,8 @@ import (
 )
 
 func TestCreateClientWithRetries(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		client        interface{}
 		err           error
@@ -83,6 +85,8 @@ func TestCreateClientWithRetries(t *testing.T) {
 }
 
 func TestParsePositiveDuration(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		testInput string
@@ -123,6 +127,8 @@ func TestParsePositiveDuration(t *testing.T) {
 }
 
 func TestParseUnixSocketAddress(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name            string
 		testInput       string
@@ -177,6 +183,8 @@ func TestParseUnixSocketAddress(t *testing.T) {
 }
 
 func TestParseConstLabels(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		labels  string

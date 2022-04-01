@@ -25,7 +25,7 @@ lint:
 
 .PHONY: test
 test:
-	go test ./...
+	go test ./... -race -shuffle=on
 
 .PHONY: container
 container:
