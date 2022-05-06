@@ -83,6 +83,13 @@ jobs:
           username: ${{ secrets.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         if: github.event_name != 'pull_request'
+      - name: Login to Quay.io
+        uses: docker/login-action@v2
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_ROBOT_TOKEN }}
+        if: github.event_name != 'pull_request'
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v3
@@ -91,6 +98,7 @@ jobs:
             nginx/nginx-prometheus-exporter
             ghcr.io/nginxinc/nginx-prometheus-exporter
             public.ecr.aws/nginx/nginx-prometheus-exporter
+            quay.io/nginx/nginx-prometheus-exporter
           tags: |
             type=edge
             type=ref,event=pr
