@@ -124,7 +124,7 @@ jobs:
           GOPATH: ${{ env.GOPATH }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.NGINX_PAT }}
       - name: Push to Dockerhub
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           file: build/Dockerfile
           context: '.'
