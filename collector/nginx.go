@@ -17,7 +17,8 @@ type NginxCollector struct {
 }
 
 // NewNginxCollector creates an NginxCollector.
-func NewNginxCollector(nginxClient *client.NginxClient, namespace string, constLabels map[string]string) *NginxCollector {
+func NewNginxCollector(nginxClient *client.NginxClient, namespace string, runtimeLabels map[string]string, constLabels map[string]string) *NginxCollector {
+	constLabels = MergeLabels(runtimeLabels, constLabels)
 	return &NginxCollector{
 		nginxClient: nginxClient,
 		metrics: map[string]*prometheus.Desc{

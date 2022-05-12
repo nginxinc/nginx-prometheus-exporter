@@ -215,11 +215,24 @@ func getListener(listenAddress string) (net.Listener, error) {
 	return listener, nil
 }
 
+type arrayFlags []string
+
+func (af *arrayFlags) String() string {
+	return strings.Join(*af, " ")
+}
+
+func (af *arrayFlags) Set(value string) error {
+	*af = append(*af, value)
+	return nil
+}
+
 var (
 	// Set during go build
 	version string
 	commit  string
 	date    string
+
+	scrapeURI arrayFlags
 
 	// Defaults values
 	defaultListenAddress      = getEnv("LISTEN_ADDRESS", ":9113")
@@ -257,10 +270,6 @@ var (
 	nginxPlus = flag.Bool("nginx.plus",
 		defaultNginxPlus,
 		"Start the exporter for NGINX Plus. By default, the exporter is started for NGINX. The default value can be overwritten by NGINX_PLUS environment variable.")
-	scrapeURI = flag.String("nginx.scrape-uri",
-		defaultScrapeURI,
-		`A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
-For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
 	sslVerify = flag.Bool("nginx.ssl-verify",
 		defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
@@ -295,7 +304,15 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 )
 
 func main() {
+	flag.Var(&scrapeURI,
+		"nginx.scrape-uri",
+		`A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
+For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
 	flag.Parse()
+
+	if len(scrapeURI) == 0 {
+		scrapeURI = strings.Split(defaultScrapeURI, ",")
+	}
 
 	if *displayVersion {
 		fmt.Printf("NGINX Prometheus Exporter version=%v commit=%v date=%v\n", version, commit, date)
@@ -350,17 +367,19 @@ func main() {
 	transport := &http.Transport{
 		TLSClientConfig: sslConfig,
 	}
-	if strings.HasPrefix(*scrapeURI, "unix:") {
-		socketPath, requestPath, err := parseUnixSocketAddress(*scrapeURI)
-		if err != nil {
-			log.Fatalf("Parsing unix domain socket scrape address %s failed: %v", *scrapeURI, err)
-		}
+	for i, uri := range scrapeURI {
+		if strings.HasPrefix(uri, "unix:") {
+			socketPath, requestPath, err := parseUnixSocketAddress(uri)
+			if err != nil {
+				log.Fatalf("Parsing unix domain socket scrape address %s failed: %v", uri, err)
+			}
 
-		transport.DialContext = func(_ context.Context, _, _ string) (net.Conn, error) {
-			return net.Dial("unix", socketPath)
+			transport.DialContext = func(_ context.Context, _, _ string) (net.Conn, error) {
+				return net.Dial("unix", socketPath)
+			}
+			newScrapeURI := "http://unix" + requestPath
+			scrapeURI[i] = newScrapeURI
 		}
-		newScrapeURI := "http://unix" + requestPath
-		scrapeURI = &newScrapeURI
 	}
 
 	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", version)
@@ -388,22 +407,26 @@ func main() {
 	}()
 
 	if *nginxPlus {
-		plusClient, err := createClientWithRetries(func() (interface{}, error) {
-			return plusclient.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, nginxRetryInterval.Duration)
-		if err != nil {
-			log.Fatalf("Could not create Nginx Plus Client: %v", err)
+		for _, uri := range scrapeURI {
+			plusClient, err := createClientWithRetries(func() (interface{}, error) {
+				return plusclient.NewNginxClient(httpClient, uri)
+			}, *nginxRetries, nginxRetryInterval.Duration)
+			if err != nil {
+				log.Fatalf("Could not create Nginx Plus Client: %v", err)
+			}
+			variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil)
+			registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", variableLabelNames, prometheus.Labels{"target": uri}, constLabels.labels))
 		}
-		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil)
-		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", variableLabelNames, constLabels.labels))
 	} else {
-		ossClient, err := createClientWithRetries(func() (interface{}, error) {
-			return client.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, nginxRetryInterval.Duration)
-		if err != nil {
-			log.Fatalf("Could not create Nginx Client: %v", err)
+		for _, uri := range scrapeURI {
+			ossClient, err := createClientWithRetries(func() (interface{}, error) {
+				return client.NewNginxClient(httpClient, uri)
+			}, *nginxRetries, nginxRetryInterval.Duration)
+			if err != nil {
+				log.Fatalf("Could not create Nginx Client: %v", err)
+			}
+			registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx", prometheus.Labels{"target": uri}, constLabels.labels))
 		}
-		registry.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx", constLabels.labels))
 	}
 	http.Handle(*metricsPath, promhttp.HandlerFor(registry, promhttp.HandlerOpts{}))
 
