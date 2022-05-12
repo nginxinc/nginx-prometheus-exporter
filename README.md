@@ -60,6 +60,12 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
     ```
     where `<nginx>` is the path to unix domain socket, through which NGINX stub status is available.
 
+* To export and scrape NGINX metrics from multiple NGINX endpoints, run:
+    ```
+    $ nginx-prometheus-exporter -nginx.scrape-uri=http://<nginx_1>:8080/stub_status -nginx.scrape-uri=http://<nginx_2>:8080/stub_status
+    ```
+    where `<nginx_1>` and `<nginx_2>` are the IP addresses/DNS names, through which NGINX is available.
+
 **Note**. The `nginx-prometheus-exporter` is not a daemon. To run the exporter as a system service (daemon), configure the init system of your Linux server (such as systemd or Upstart) accordingly. Alternatively, you can run the exporter in a Docker container.
 
 ## Usage
@@ -75,8 +81,8 @@ Usage of ./nginx-prometheus-exporter:
   -nginx.retry-interval duration
         An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start. The default value can be overwritten by NGINX_RETRY_INTERVAL environment variable. (default 5s)
   -nginx.scrape-uri string
-        A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
-        For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
+        A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. It can be set multiple times.
+        For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by comma-separated SCRAPE_URI environment variable. (default "http://127.0.0.1:8080/stub_status")
   -nginx.ssl-ca-cert string
         Path to the PEM encoded CA certificate file used to validate the servers SSL certificate. The default value can be overwritten by SSL_CA_CERT environment variable.
   -nginx.ssl-client-cert string

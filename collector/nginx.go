@@ -17,19 +17,19 @@ type NginxCollector struct {
 }
 
 // NewNginxCollector creates an NginxCollector.
-func NewNginxCollector(nginxClient *client.NginxClient, namespace string, constLabels map[string]string) *NginxCollector {
+func NewNginxCollector(nginxClient *client.NginxClient, namespace string, runtimeLabels map[string]string, constLabels map[string]string) *NginxCollector {
 	return &NginxCollector{
 		nginxClient: nginxClient,
 		metrics: map[string]*prometheus.Desc{
-			"connections_active":   newGlobalMetric(namespace, "connections_active", "Active client connections", constLabels),
-			"connections_accepted": newGlobalMetric(namespace, "connections_accepted", "Accepted client connections", constLabels),
-			"connections_handled":  newGlobalMetric(namespace, "connections_handled", "Handled client connections", constLabels),
-			"connections_reading":  newGlobalMetric(namespace, "connections_reading", "Connections where NGINX is reading the request header", constLabels),
-			"connections_writing":  newGlobalMetric(namespace, "connections_writing", "Connections where NGINX is writing the response back to the client", constLabels),
-			"connections_waiting":  newGlobalMetric(namespace, "connections_waiting", "Idle client connections", constLabels),
-			"http_requests_total":  newGlobalMetric(namespace, "http_requests_total", "Total http requests", constLabels),
+			"connections_active":   newGlobalMetric(namespace, "connections_active", "Active client connections", MergeLabels(runtimeLabels, constLabels)),
+			"connections_accepted": newGlobalMetric(namespace, "connections_accepted", "Accepted client connections", MergeLabels(runtimeLabels, constLabels)),
+			"connections_handled":  newGlobalMetric(namespace, "connections_handled", "Handled client connections", MergeLabels(runtimeLabels, constLabels)),
+			"connections_reading":  newGlobalMetric(namespace, "connections_reading", "Connections where NGINX is reading the request header", MergeLabels(runtimeLabels, constLabels)),
+			"connections_writing":  newGlobalMetric(namespace, "connections_writing", "Connections where NGINX is writing the response back to the client", MergeLabels(runtimeLabels, constLabels)),
+			"connections_waiting":  newGlobalMetric(namespace, "connections_waiting", "Idle client connections", MergeLabels(runtimeLabels, constLabels)),
+			"http_requests_total":  newGlobalMetric(namespace, "http_requests_total", "Total http requests", MergeLabels(runtimeLabels, constLabels)),
 		},
-		upMetric: newUpMetric(namespace, constLabels),
+		upMetric: newUpMetric(namespace, MergeLabels(runtimeLabels, constLabels)),
 	}
 }
 
