@@ -114,6 +114,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
+      - name: Download Syft
+        uses: anchore/sbom-action/download-syft@v0.11.0
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
