@@ -2,6 +2,7 @@ before:
   hooks:
     - go mod tidy
     - go mod verify
+
 builds:
   - env:
       - CGO_ENABLED=0
@@ -32,14 +33,21 @@ builds:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:
       - all=-trimpath={{.Env.GOPATH}}
+
+sboms:
+  - artifacts: archive
+
 archives:
 - format_overrides:
     - goos: windows
       format: zip
+
 checksum:
   name_template: 'sha256sums.txt'
+
 changelog:
   skip: true
+
 brews:
   - tap:
       owner: nginxinc
