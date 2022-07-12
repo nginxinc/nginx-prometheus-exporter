@@ -1,8 +1,6 @@
 # syntax=docker/dockerfile:1.4
 FROM golang:1.18 as base
 ARG VERSION
-ARG GIT_COMMIT
-ARG DATE
 ARG TARGETARCH
 
 WORKDIR /go/src/github.com/nginxinc/nginx-prometheus-exporter
@@ -13,7 +11,7 @@ RUN go mod download
 COPY --link *.go ./
 COPY --link collector ./collector
 COPY --link client ./client
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -trimpath -a -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${GIT_COMMIT} -X main.date=${DATE}" -o nginx-prometheus-exporter .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -trimpath -a -ldflags "-s -w -X main.version=${VERSION}" -o nginx-prometheus-exporter .
 
 
 FROM scratch as intermediate

@@ -11,6 +11,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -218,8 +220,6 @@ func getListener(listenAddress string) (net.Listener, error) {
 var (
 	// Set during go build
 	version string
-	commit  string
-	date    string
 
 	// Defaults values
 	defaultListenAddress      = getEnv("LISTEN_ADDRESS", ":9113")
@@ -297,12 +297,16 @@ For NGINX, the stub_status page must be available through the URI. For NGINX Plu
 func main() {
 	flag.Parse()
 
+	commitHash, commitTime, dirtyBuild := getBuildInfo()
+	arch := fmt.Sprintf("%v/%v", runtime.GOOS, runtime.GOARCH)
+
+	fmt.Printf("NGINX Prometheus Exporter version=%v commit=%v date=%v, dirty=%v, arch=%v, go=%v\n", version, commitHash, commitTime, dirtyBuild, arch, runtime.Version())
+
 	if *displayVersion {
-		fmt.Printf("NGINX Prometheus Exporter version=%v commit=%v date=%v\n", version, commit, date)
 		os.Exit(0)
 	}
 
-	log.Printf("Starting NGINX Prometheus Exporter version=%v commit=%v date=%v", version, commit, date)
+	log.Printf("Starting...")
 
 	registry := prometheus.NewRegistry()
 
@@ -314,8 +318,11 @@ func main() {
 				constLabels.labels,
 				prometheus.Labels{
 					"version": version,
-					"commit":  commit,
-					"date":    date,
+					"commit":  commitHash,
+					"date":    commitTime,
+					"dirty":   strconv.FormatBool(dirtyBuild),
+					"arch":    arch,
+					"go":      runtime.Version(),
 				},
 			),
 		},
@@ -463,4 +470,24 @@ func cloneRequest(req *http.Request) *http.Request {
 		r.Header[key] = newValues
 	}
 	return r
+}
+
+func getBuildInfo() (string, string, bool) {
+	var commitHash, commitTime string
+	var dirtyBuild bool
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "", "", false
+	}
+	for _, kv := range info.Settings {
+		switch kv.Key {
+		case "vcs.revision":
+			commitHash = kv.Value
+		case "vcs.time":
+			commitTime = kv.Value
+		case "vcs.modified":
+			dirtyBuild = kv.Value == "true"
+		}
+	}
+	return commitHash, commitTime, dirtyBuild
 }
