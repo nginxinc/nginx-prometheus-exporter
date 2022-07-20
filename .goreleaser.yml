@@ -61,4 +61,4 @@ brews:
       bin.install "nginx-prometheus-exporter"
     commit_author:
       name: nginx-bot
-      email: kubernetes@nginx.com
+      email: integrations@nginx.com

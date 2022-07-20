@@ -106,7 +106,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
           labels: |
-            org.opencontainers.image.vendor=NGINX Inc <kubernetes@nginx.com>
+            org.opencontainers.image.vendor=NGINX Inc <integrations@nginx.com>
       - name: Publish Release Notes
         uses: release-drafter/release-drafter@v5
         with:
