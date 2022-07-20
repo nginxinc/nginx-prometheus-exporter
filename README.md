@@ -245,6 +245,30 @@ Name | Type | Description | Labels
 `nginxplus_resolver_timedout` | Counter | Total number of timed out request | `resolver` |
 `nginxplus_resolver_unknown` | Counter | Total requests completed with an unknown error | `resolver`|
 
+#### [HTTP Requests Rate Limiting](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_limit_req_zone)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_limit_request_passed` | Counter | Total number of requests that were neither limited nor accounted as limited | `zone` |
+`nginxplus_limit_request_rejected` | Counter | Total number of requests that were that were rejected | `zone` |
+`nginxplus_limit_request_delayed` | Counter | Total number of requests that were delayed | `zone` |
+`nginxplus_limit_request_rejected_dry_run` | Counter | Total number of requests accounted as rejected in the dry run mode | `zone` |
+`nginxplus_limit_request_delayed_dry_run` | Counter | Total number of requests accounted as delayed in the dry run mode | `zone` |
+
+#### [HTTP Connections Limiting](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_limit_conn_zone)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_limit_connection_passed` | Counter | Total number of connections that were neither limited nor accounted as limited | `zone` |
+`nginxplus_limit_connection_rejected` | Counter | Total number of connections that were rejected | `zone` |
+`nginxplus_limit_connection_rejected_dry_run` | Counter | Total number of connections accounted as rejected in the dry run mode | `zone` |
+
+
+#### [Stream Connections Limiting](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_limit_conn_zone)
+Name | Type | Description | Labels
+----|----|----|----|
+`nginxplus_stream_limit_connection_passed` | Counter | Total number of connections that were neither limited nor accounted as limited | `zone` |
+`nginxplus_stream_limit_connection_rejected` | Counter | Total number of connections that were rejected | `zone` |
+`nginxplus_stream_limit_connection_rejected_dry_run` | Counter | Total number of connections accounted as rejected in the dry run mode | `zone` |
+
 Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their descriptions. Note: to see server zones related metrics you must configure [status zones](https://nginx.org/en/docs/http/ngx_http_status_module.html#status_zone) and to see upstream related metrics you must configure upstreams with a [shared memory zone](https://nginx.org/en/docs/http/ngx_http_upstream_module.html#zone).
 
 ## Troubleshooting
