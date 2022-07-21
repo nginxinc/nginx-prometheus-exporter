@@ -381,7 +381,9 @@ func main() {
 		Transport: userAgentRT,
 	}
 
-	srv := http.Server{}
+	srv := http.Server{
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
