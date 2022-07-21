@@ -305,7 +305,7 @@ The official Grafana dashboard is provided with the exporter for NGINX. Check th
 ## Contacts
 
 We’d like to hear your feedback! If you have any suggestions or experience issues with the NGINX Prometheus Exporter, please create an issue or send a pull request on GitHub.
-You can contact us directly via integrations@nginx.com or on the [NGINX Community Slack](https://nginxcommunity.slack.com/channels/nginx-prometheus-exporter).
+You can contact us directly via integrations@nginx.com or on the [NGINX Community Slack](https://nginxcommunity.slack.com/channels/nginx-prometheus-exporter) in the `#nginx-prometheus-exporter` channel.
 
 ## Contributing
 
