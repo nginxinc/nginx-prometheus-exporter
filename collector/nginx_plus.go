@@ -38,6 +38,9 @@ type NginxPlusCollector struct {
 	streamUpstreamServerMetrics    map[string]*prometheus.Desc
 	locationZoneMetrics            map[string]*prometheus.Desc
 	resolverMetrics                map[string]*prometheus.Desc
+	limitRequestMetrics            map[string]*prometheus.Desc
+	limitConnectionMetrics         map[string]*prometheus.Desc
+	streamLimitConnectionMetrics   map[string]*prometheus.Desc
 	upMetric                       prometheus.Gauge
 	mutex                          sync.Mutex
 	variableLabelNames             VariableLabelNames
@@ -340,6 +343,23 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"timedout": newResolverMetric(namespace, "timedout", "Total number of timed out requests", constLabels),
 			"unknown":  newResolverMetric(namespace, "unknown", "Total requests completed with an unknown error", constLabels),
 		},
+		limitRequestMetrics: map[string]*prometheus.Desc{
+			"passed":           newLimitRequestMetric(namespace, "passed", "Total number of requests that were neither limited nor accounted as limited", constLabels),
+			"delayed":          newLimitRequestMetric(namespace, "delayed", "Total number of requests that were delayed", constLabels),
+			"rejected":         newLimitRequestMetric(namespace, "rejected", "Total number of requests that were that were rejected", constLabels),
+			"delayed_dry_run":  newLimitRequestMetric(namespace, "delayed_dry_run", "Total number of requests accounted as delayed in the dry run mode", constLabels),
+			"rejected_dry_run": newLimitRequestMetric(namespace, "rejected_dry_run", "Total number of requests accounted as rejected in the dry run mode", constLabels),
+		},
+		limitConnectionMetrics: map[string]*prometheus.Desc{
+			"passed":           newLimitConnectionMetric(namespace, "passed", "Total number of connections that were neither limited nor accounted as limited", constLabels),
+			"rejected":         newLimitConnectionMetric(namespace, "rejected", "Total number of connections that were rejected", constLabels),
+			"rejected_dry_run": newLimitConnectionMetric(namespace, "rejected_dry_run", "Total number of connections accounted as rejected in the dry run mode", constLabels),
+		},
+		streamLimitConnectionMetrics: map[string]*prometheus.Desc{
+			"passed":           newStreamLimitConnectionMetric(namespace, "passed", "Total number of connections that were neither limited nor accounted as limited", constLabels),
+			"rejected":         newStreamLimitConnectionMetric(namespace, "rejected", "Total number of connections that were rejected", constLabels),
+			"rejected_dry_run": newStreamLimitConnectionMetric(namespace, "rejected_dry_run", "Total number of connections accounted as rejected in the dry run mode", constLabels),
+		},
 		upMetric: newUpMetric(namespace, constLabels),
 	}
 }
@@ -377,6 +397,15 @@ func (c *NginxPlusCollector) Describe(ch chan<- *prometheus.Desc) {
 		ch <- m
 	}
 	for _, m := range c.resolverMetrics {
+		ch <- m
+	}
+	for _, m := range c.limitRequestMetrics {
+		ch <- m
+	}
+	for _, m := range c.limitConnectionMetrics {
+		ch <- m
+	}
+	for _, m := range c.streamLimitConnectionMetrics {
 		ch <- m
 	}
 }
@@ -683,6 +712,26 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.resolverMetrics["unknown"],
 			prometheus.CounterValue, float64(zone.Responses.Unknown), name)
 	}
+
+	for name, zone := range stats.HTTPLimitRequests {
+		ch <- prometheus.MustNewConstMetric(c.limitRequestMetrics["passed"], prometheus.CounterValue, float64(zone.Passed), name)
+		ch <- prometheus.MustNewConstMetric(c.limitRequestMetrics["rejected"], prometheus.CounterValue, float64(zone.Rejected), name)
+		ch <- prometheus.MustNewConstMetric(c.limitRequestMetrics["delayed"], prometheus.CounterValue, float64(zone.Delayed), name)
+		ch <- prometheus.MustNewConstMetric(c.limitRequestMetrics["rejected_dry_run"], prometheus.CounterValue, float64(zone.RejectedDryRun), name)
+		ch <- prometheus.MustNewConstMetric(c.limitRequestMetrics["delayed_dry_run"], prometheus.CounterValue, float64(zone.DelayedDryRun), name)
+	}
+
+	for name, zone := range stats.HTTPLimitConnections {
+		ch <- prometheus.MustNewConstMetric(c.limitConnectionMetrics["passed"], prometheus.CounterValue, float64(zone.Passed), name)
+		ch <- prometheus.MustNewConstMetric(c.limitConnectionMetrics["rejected"], prometheus.CounterValue, float64(zone.Rejected), name)
+		ch <- prometheus.MustNewConstMetric(c.limitConnectionMetrics["rejected_dry_run"], prometheus.CounterValue, float64(zone.RejectedDryRun), name)
+	}
+
+	for name, zone := range stats.StreamLimitConnections {
+		ch <- prometheus.MustNewConstMetric(c.streamLimitConnectionMetrics["passed"], prometheus.CounterValue, float64(zone.Passed), name)
+		ch <- prometheus.MustNewConstMetric(c.streamLimitConnectionMetrics["rejected"], prometheus.CounterValue, float64(zone.Rejected), name)
+		ch <- prometheus.MustNewConstMetric(c.streamLimitConnectionMetrics["rejected_dry_run"], prometheus.CounterValue, float64(zone.RejectedDryRun), name)
+	}
 }
 
 var upstreamServerStates = map[string]float64{
@@ -740,4 +789,16 @@ func newLocationZoneMetric(namespace string, metricName string, docString string
 
 func newResolverMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "resolver", metricName), docString, []string{"resolver"}, constLabels)
+}
+
+func newLimitRequestMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "limit_request", metricName), docString, []string{"zone"}, constLabels)
+}
+
+func newLimitConnectionMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "limit_connection", metricName), docString, []string{"zone"}, constLabels)
+}
+
+func newStreamLimitConnectionMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_limit_connection", metricName), docString, []string{"zone"}, constLabels)
 }
