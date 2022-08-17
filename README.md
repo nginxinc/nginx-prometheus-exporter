@@ -249,7 +249,7 @@ Name | Type | Description | Labels
 Name | Type | Description | Labels
 ----|----|----|----|
 `nginxplus_limit_request_passed` | Counter | Total number of requests that were neither limited nor accounted as limited | `zone` |
-`nginxplus_limit_request_rejected` | Counter | Total number of requests that were that were rejected | `zone` |
+`nginxplus_limit_request_rejected` | Counter | Total number of requests that were rejected | `zone` |
 `nginxplus_limit_request_delayed` | Counter | Total number of requests that were delayed | `zone` |
 `nginxplus_limit_request_rejected_dry_run` | Counter | Total number of requests accounted as rejected in the dry run mode | `zone` |
 `nginxplus_limit_request_delayed_dry_run` | Counter | Total number of requests accounted as delayed in the dry run mode | `zone` |
