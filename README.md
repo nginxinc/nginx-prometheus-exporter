@@ -151,6 +151,7 @@ Name | Type | Description | Labels
 `nginxplus_server_zone_processing` | Gauge | Client requests that are currently being processed | `server_zone` |
 `nginxplus_server_zone_requests` | Counter | Total client requests | `server_zone` |
 `nginxplus_server_zone_responses` | Counter | Total responses sent to clients | `code` (the response status code. The values are: `1xx`, `2xx`, `3xx`, `4xx` and `5xx`), `server_zone` |
+`nginxplus_server_zone_responses_codes` | Counter | Total responses sent to clients by code | `code` (the response status code. The possible values are [here](https://www.nginx.com/resources/wiki/extending/api/http/)), `server_zone` |
 `nginxplus_server_zone_discarded` | Counter | Requests completed without sending a response | `server_zone` |
 `nginxplus_server_zone_received` | Counter | Bytes received from clients | `server_zone` |
 `nginxplus_server_zone_sent` | Counter | Bytes sent to clients | `server_zone` |
@@ -176,6 +177,7 @@ Name | Type | Description | Labels
 `nginxplus_upstream_server_limit` | Gauge | Limit for connections which corresponds to the max_conns parameter of the upstream server. Zero value means there is no limit | `server`, `upstream` |
 `nginxplus_upstream_server_requests` | Counter | Total client requests | `server`, `upstream` |
 `nginxplus_upstream_server_responses` | Counter | Total responses sent to clients | `code` (the response status code. The values are: `1xx`, `2xx`, `3xx`, `4xx` and `5xx`), `server`, `upstream` |
+`nginxplus_upstream_server_responses_codes` | Counter | Total responses sent to clients by code | `code` (the response status code. The possible values are [here](https://www.nginx.com/resources/wiki/extending/api/http/)), `server`, `upstream` |
 `nginxplus_upstream_server_sent` | Counter | Bytes sent to this server | `server`, `upstream` |
 `nginxplus_upstream_server_received` | Counter | Bytes received to this server | `server`, `upstream` |
 `nginxplus_upstream_server_fails` | Counter | Number of unsuccessful attempts to communicate with the server | `server`, `upstream` |
@@ -226,6 +228,7 @@ Name | Type | Description | Labels
 ----|----|----|----|
 `nginxplus_location_zone_requests` | Counter | Total client requests | `location_zone` |
 `nginxplus_location_zone_responses` | Counter | Total responses sent to clients | `code` (the response status code. The values are: `1xx`, `2xx`, `3xx`, `4xx` and `5xx`), `location_zone` |
+`nginxplus_location_zone_responses_codes` | Counter | Total responses sent to clients by code | `code` (the response status code. The possible values are [here](https://www.nginx.com/resources/wiki/extending/api/http/)), `location_zone` |
 `nginxplus_location_zone_discarded` | Counter | Requests completed without sending a response | `location_zone` |
 `nginxplus_location_zone_received` | Counter | Bytes received from clients | `location_zone` |
 `nginxplus_location_zone_sent` | Counter | Bytes sent to clients | `location_zone` |
