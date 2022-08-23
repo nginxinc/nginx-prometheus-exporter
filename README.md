@@ -155,6 +155,9 @@ Name | Type | Description | Labels
 `nginxplus_server_zone_discarded` | Counter | Requests completed without sending a response | `server_zone` |
 `nginxplus_server_zone_received` | Counter | Bytes received from clients | `server_zone` |
 `nginxplus_server_zone_sent` | Counter | Bytes sent to clients | `server_zone` |
+`nginxplus_server_ssl_handshakes` | Counter | Successful SSL handshakes | `server_zone` |
+`nginxplus_server_ssl_handshakes_failed` | Counter | Failed SSL handshakes | `server_zone` |
+`nginxplus_server_ssl_session_reuses` | Counter | Session reuses during SSL handshake | `server_zone` |
 
 #### [Stream Server Zones](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_server_zone)
 Name | Type | Description | Labels
@@ -165,6 +168,9 @@ Name | Type | Description | Labels
 `nginxplus_stream_server_zone_discarded` | Counter | Connections completed without creating a session | `server_zone` |
 `nginxplus_stream_server_zone_received` | Counter | Bytes received from clients | `server_zone` |
 `nginxplus_stream_server_zone_sent` | Counter | Bytes sent to clients | `server_zone` |
+`nginxplus_stream_server_ssl_handshakes` | Counter | Successful SSL handshakes | `server_zone` |
+`nginxplus_stream_server_ssl_handshakes_failed` | Counter | Failed SSL handshakes | `server_zone` |
+`nginxplus_stream_server_ssl_session_reuses` | Counter | Session reuses during SSL handshake | `server_zone` |
 
 #### [HTTP Upstreams](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_upstream)
 
@@ -187,6 +193,9 @@ Name | Type | Description | Labels
 `nginxplus_upstream_server_health_checks_checks` | Counter | Total health check requests | `server`, `upstream` |
 `nginxplus_upstream_server_health_checks_fails` | Counter | Failed health checks | `server`, `upstream` |
 `nginxplus_upstream_server_health_checks_unhealthy` | Counter | How many times the server became unhealthy (state 'unhealthy') | `server`, `upstream` |
+`nginxplus_upstream_server_ssl_handshakes` | Counter | Successful SSL handshakes | `server`, `upstream` |
+`nginxplus_upstream_server_ssl_handshakes_failed` | Counter | Failed SSL handshakes | `server`, `upstream` |
+`nginxplus_upstream_server_ssl_session_reuses` | Counter | Session reuses during SSL handshake | `server`, `upstream` |
 `nginxplus_upstream_keepalives` | Gauge | Idle keepalive connections | `upstream` |
 `nginxplus_upstream_zombies` | Gauge | Servers removed from the group but still processing active client requests | `upstream` |
 
@@ -210,6 +219,9 @@ Name | Type | Description | Labels
 `nginxplus_stream_upstream_server_health_checks_checks` | Counter | Total health check requests | `server`, `upstream` |
 `nginxplus_stream_upstream_server_health_checks_fails` | Counter | Failed health checks | `server`, `upstream` |
 `nginxplus_stream_upstream_server_health_checks_unhealthy` | Counter | How many times the server became unhealthy (state 'unhealthy') | `server`, `upstream` |
+`nginxplus_stream_upstream_server_ssl_handshakes` | Counter | Successful SSL handshakes | `server`, `upstream` |
+`nginxplus_stream_upstream_server_ssl_handshakes_failed` | Counter | Failed SSL handshakes | `server`, `upstream` |
+`nginxplus_stream_upstream_server_ssl_session_reuses` | Counter | Session reuses during SSL handshake | `server`, `upstream` |
 `nginxplus_stream_upstream_zombies` | Gauge | Servers removed from the group but still processing active client connections | `upstream`|
 
 #### [Stream Zone Sync](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_zone_sync)
