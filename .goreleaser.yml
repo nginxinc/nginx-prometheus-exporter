@@ -62,3 +62,9 @@ brews:
     commit_author:
       name: nginx-bot
       email: integrations@nginx.com
+
+announce:
+  slack:
+    enabled: true
+    channel: '#announcements'
+    message_template: 'NGINX Prometheus Exporter {{ .Tag }} is out! Check it out: {{ .ReleaseURL }}'

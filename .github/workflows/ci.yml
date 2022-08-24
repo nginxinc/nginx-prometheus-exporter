@@ -126,6 +126,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GOPATH: ${{ steps.go.outputs.go_path }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.NGINX_PAT }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_COMMUNITY }}
       - name: Push to Dockerhub
         uses: docker/build-push-action@v3
         with:
