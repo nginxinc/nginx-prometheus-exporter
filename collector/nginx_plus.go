@@ -346,7 +346,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		limitRequestMetrics: map[string]*prometheus.Desc{
 			"passed":           newLimitRequestMetric(namespace, "passed", "Total number of requests that were neither limited nor accounted as limited", constLabels),
 			"delayed":          newLimitRequestMetric(namespace, "delayed", "Total number of requests that were delayed", constLabels),
-			"rejected":         newLimitRequestMetric(namespace, "rejected", "Total number of requests that were that were rejected", constLabels),
+			"rejected":         newLimitRequestMetric(namespace, "rejected", "Total number of requests that were rejected", constLabels),
 			"delayed_dry_run":  newLimitRequestMetric(namespace, "delayed_dry_run", "Total number of requests accounted as delayed in the dry run mode", constLabels),
 			"rejected_dry_run": newLimitRequestMetric(namespace, "rejected_dry_run", "Total number of requests accounted as rejected in the dry run mode", constLabels),
 		},
