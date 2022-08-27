@@ -246,26 +246,72 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"ssl_session_reuses":    newGlobalMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", constLabels),
 		},
 		serverZoneMetrics: map[string]*prometheus.Desc{
-			"processing":    newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"requests":      newServerZoneMetric(namespace, "requests", "Total client requests", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"responses_1xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
-			"responses_2xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"responses_3xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
-			"responses_4xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"responses_5xx": newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
-			"discarded":     newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"received":      newServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
-			"sent":          newServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"processing":            newServerZoneMetric(namespace, "processing", "Client requests that are currently being processed", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"requests":              newServerZoneMetric(namespace, "requests", "Total client requests", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"responses_1xx":         newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "1xx"})),
+			"responses_2xx":         newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
+			"responses_3xx":         newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "3xx"})),
+			"responses_4xx":         newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
+			"responses_5xx":         newServerZoneMetric(namespace, "responses", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"discarded":             newServerZoneMetric(namespace, "discarded", "Requests completed without sending a response", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"received":              newServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"sent":                  newServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"codes_100":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "100"})),
+			"codes_101":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "101"})),
+			"codes_102":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "102"})),
+			"codes_200":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "200"})),
+			"codes_201":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "201"})),
+			"codes_202":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "202"})),
+			"codes_204":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "204"})),
+			"codes_206":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "206"})),
+			"codes_300":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "300"})),
+			"codes_301":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "301"})),
+			"codes_302":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "302"})),
+			"codes_303":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "303"})),
+			"codes_304":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "304"})),
+			"codes_307":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "307"})),
+			"codes_400":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "400"})),
+			"codes_401":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "401"})),
+			"codes_403":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "403"})),
+			"codes_404":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "404"})),
+			"codes_405":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "405"})),
+			"codes_408":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "408"})),
+			"codes_409":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "409"})),
+			"codes_411":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "411"})),
+			"codes_412":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "412"})),
+			"codes_413":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "413"})),
+			"codes_414":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "414"})),
+			"codes_415":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "415"})),
+			"codes_416":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "416"})),
+			"codes_429":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "429"})),
+			"codes_444":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "444"})),
+			"codes_494":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "494"})),
+			"codes_495":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "495"})),
+			"codes_496":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "496"})),
+			"codes_497":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "497"})),
+			"codes_499":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "499"})),
+			"codes_500":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "500"})),
+			"codes_501":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "501"})),
+			"codes_502":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "502"})),
+			"codes_503":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "503"})),
+			"codes_504":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "504"})),
+			"codes_507":             newServerZoneMetric(namespace, "responses_codes", "Total responses sent to clients", variableLabelNames.ServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "507"})),
+			"ssl_handshakes":        newServerZoneMetric(namespace, "ssl_handshakes", "Successful SSL handshakes", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"ssl_handshakes_failed": newServerZoneMetric(namespace, "ssl_handshakes_failed", "Failed SSL handshakes", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
+			"ssl_session_reuses":    newServerZoneMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", variableLabelNames.ServerZoneVariableLabelNames, constLabels),
 		},
 		streamServerZoneMetrics: map[string]*prometheus.Desc{
-			"processing":   newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
-			"connections":  newStreamServerZoneMetric(namespace, "connections", "Total connections", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
-			"sessions_2xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
-			"sessions_4xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
-			"sessions_5xx": newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
-			"discarded":    newStreamServerZoneMetric(namespace, "discarded", "Connections completed without creating a session", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
-			"received":     newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
-			"sent":         newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"processing":            newStreamServerZoneMetric(namespace, "processing", "Client connections that are currently being processed", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"connections":           newStreamServerZoneMetric(namespace, "connections", "Total connections", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"sessions_2xx":          newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "2xx"})),
+			"sessions_4xx":          newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "4xx"})),
+			"sessions_5xx":          newStreamServerZoneMetric(namespace, "sessions", "Total sessions completed", variableLabelNames.StreamServerZoneVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "5xx"})),
+			"discarded":             newStreamServerZoneMetric(namespace, "discarded", "Connections completed without creating a session", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"received":              newStreamServerZoneMetric(namespace, "received", "Bytes received from clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"sent":                  newStreamServerZoneMetric(namespace, "sent", "Bytes sent to clients", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"ssl_handshakes":        newStreamServerZoneMetric(namespace, "ssl_handshakes", "Successful SSL handshakes", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"ssl_handshakes_failed": newStreamServerZoneMetric(namespace, "ssl_handshakes_failed", "Failed SSL handshakes", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
+			"ssl_session_reuses":    newStreamServerZoneMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
 		},
 		upstreamMetrics: map[string]*prometheus.Desc{
 			"keepalives": newUpstreamMetric(namespace, "keepalives", "Idle keepalive connections", constLabels),
@@ -293,6 +339,49 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"health_checks_checks":    newUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", upstreamServerVariableLabelNames, constLabels),
 			"health_checks_fails":     newUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", upstreamServerVariableLabelNames, constLabels),
 			"health_checks_unhealthy": newUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", upstreamServerVariableLabelNames, constLabels),
+			"codes_100":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "100"})),
+			"codes_101":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "101"})),
+			"codes_102":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "102"})),
+			"codes_200":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "200"})),
+			"codes_201":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "201"})),
+			"codes_202":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "202"})),
+			"codes_204":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "204"})),
+			"codes_206":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "206"})),
+			"codes_300":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "300"})),
+			"codes_301":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "301"})),
+			"codes_302":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "302"})),
+			"codes_303":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "303"})),
+			"codes_304":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "304"})),
+			"codes_307":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "307"})),
+			"codes_400":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "400"})),
+			"codes_401":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "401"})),
+			"codes_403":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "403"})),
+			"codes_404":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "404"})),
+			"codes_405":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "405"})),
+			"codes_408":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "408"})),
+			"codes_409":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "409"})),
+			"codes_411":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "411"})),
+			"codes_412":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "412"})),
+			"codes_413":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "413"})),
+			"codes_414":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "414"})),
+			"codes_415":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "415"})),
+			"codes_416":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "416"})),
+			"codes_429":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "429"})),
+			"codes_444":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "444"})),
+			"codes_494":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "494"})),
+			"codes_495":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "495"})),
+			"codes_496":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "496"})),
+			"codes_497":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "497"})),
+			"codes_499":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "499"})),
+			"codes_500":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "500"})),
+			"codes_501":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "501"})),
+			"codes_502":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "502"})),
+			"codes_503":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "503"})),
+			"codes_504":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "504"})),
+			"codes_507":               newUpstreamServerMetric(namespace, "responses_codes", "Total responses sent to clients", upstreamServerVariableLabelNames, MergeLabels(constLabels, prometheus.Labels{"code": "507"})),
+			"ssl_handshakes":          newUpstreamServerMetric(namespace, "ssl_handshakes", "Successful SSL handshakes", upstreamServerVariableLabelNames, constLabels),
+			"ssl_handshakes_failed":   newUpstreamServerMetric(namespace, "ssl_handshakes_failed", "Failed SSL handshakes", upstreamServerVariableLabelNames, constLabels),
+			"ssl_session_reuses":      newUpstreamServerMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", upstreamServerVariableLabelNames, constLabels),
 		},
 		streamUpstreamServerMetrics: map[string]*prometheus.Desc{
 			"state":                   newStreamUpstreamServerMetric(namespace, "state", "Current state", streamUpstreamServerVariableLabelNames, constLabels),
@@ -309,6 +398,9 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"health_checks_checks":    newStreamUpstreamServerMetric(namespace, "health_checks_checks", "Total health check requests", streamUpstreamServerVariableLabelNames, constLabels),
 			"health_checks_fails":     newStreamUpstreamServerMetric(namespace, "health_checks_fails", "Failed health checks", streamUpstreamServerVariableLabelNames, constLabels),
 			"health_checks_unhealthy": newStreamUpstreamServerMetric(namespace, "health_checks_unhealthy", "How many times the server became unhealthy (state 'unhealthy')", streamUpstreamServerVariableLabelNames, constLabels),
+			"ssl_handshakes":          newStreamUpstreamServerMetric(namespace, "ssl_handshakes", "Successful SSL handshakes", streamUpstreamServerVariableLabelNames, constLabels),
+			"ssl_handshakes_failed":   newStreamUpstreamServerMetric(namespace, "ssl_handshakes_failed", "Failed SSL handshakes", streamUpstreamServerVariableLabelNames, constLabels),
+			"ssl_session_reuses":      newStreamUpstreamServerMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", streamUpstreamServerVariableLabelNames, constLabels),
 		},
 		streamZoneSyncMetrics: map[string]*prometheus.Desc{
 			"bytes_in":        newStreamZoneSyncMetric(namespace, "bytes_in", "Bytes received by this node", constLabels),
@@ -329,6 +421,46 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"discarded":     newLocationZoneMetric(namespace, "discarded", "Requests completed without sending a response", constLabels),
 			"received":      newLocationZoneMetric(namespace, "received", "Bytes received from clients", constLabels),
 			"sent":          newLocationZoneMetric(namespace, "sent", "Bytes sent to clients", constLabels),
+			"codes_100":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "100"})),
+			"codes_101":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "101"})),
+			"codes_102":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "102"})),
+			"codes_200":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "200"})),
+			"codes_201":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "201"})),
+			"codes_202":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "202"})),
+			"codes_204":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "204"})),
+			"codes_206":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "206"})),
+			"codes_300":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "300"})),
+			"codes_301":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "301"})),
+			"codes_302":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "302"})),
+			"codes_303":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "303"})),
+			"codes_304":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "304"})),
+			"codes_307":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "307"})),
+			"codes_400":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "400"})),
+			"codes_401":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "401"})),
+			"codes_403":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "403"})),
+			"codes_404":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "404"})),
+			"codes_405":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "405"})),
+			"codes_408":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "408"})),
+			"codes_409":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "409"})),
+			"codes_411":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "411"})),
+			"codes_412":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "412"})),
+			"codes_413":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "413"})),
+			"codes_414":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "414"})),
+			"codes_415":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "415"})),
+			"codes_416":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "416"})),
+			"codes_429":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "429"})),
+			"codes_444":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "444"})),
+			"codes_494":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "494"})),
+			"codes_495":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "495"})),
+			"codes_496":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "496"})),
+			"codes_497":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "497"})),
+			"codes_499":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "499"})),
+			"codes_500":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "500"})),
+			"codes_501":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "501"})),
+			"codes_502":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "502"})),
+			"codes_503":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "503"})),
+			"codes_504":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "504"})),
+			"codes_507":     newLocationZoneMetric(namespace, "responses_codes", "Total responses sent to clients", MergeLabels(constLabels, prometheus.Labels{"code": "507"})),
 		},
 		resolverMetrics: map[string]*prometheus.Desc{
 			"name":     newResolverMetric(namespace, "name", "Total requests to resolve names to addresses", constLabels),
@@ -479,6 +611,92 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			prometheus.CounterValue, float64(zone.Received), labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["sent"],
 			prometheus.CounterValue, float64(zone.Sent), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_100"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPContinue), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_101"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSwitchingProtocols), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_102"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPProcessing), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_200"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPOk), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_201"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPCreated), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_202"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPAccepted), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_204"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNoContent), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_206"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPPartialContent), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_300"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSpecialResponse), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_301"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPMovedPermanently), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_302"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPMovedTemporarily), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_303"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSeeOther), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_304"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNotModified), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_307"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPTemporaryRedirect), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_400"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPBadRequest), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_401"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPUnauthorized), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_403"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPForbidden), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_404"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNotFound), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_405"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNotAllowed), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_408"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRequestTimeOut), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_409"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPConflict), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_411"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPLengthRequired), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_412"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPPreconditionFailed), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_413"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRequestEntityTooLarge), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_414"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRequestURITooLarge), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_415"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPUnsupportedMediaType), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_416"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRangeNotSatisfiable), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_429"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPTooManyRequests), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_444"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPClose), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_494"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRequestHeaderTooLarge), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_495"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSCertError), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_496"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSNoCert), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_497"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPToHTTPS), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_499"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPClientClosedRequest), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_500"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPInternalServerError), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_501"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNotImplemented), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_502"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPBadGateway), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_503"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPServiceUnavailable), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_504"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPGatewayTimeOut), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["codes_507"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPInsufficientStorage), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["ssl_handshakes"],
+			prometheus.CounterValue, float64(zone.SSL.Handshakes), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["ssl_handshakes_failed"],
+			prometheus.CounterValue, float64(zone.SSL.HandshakesFailed), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.serverZoneMetrics["ssl_session_reuses"],
+			prometheus.CounterValue, float64(zone.SSL.SessionReuses), labelValues...)
 	}
 
 	for name, zone := range stats.StreamServerZones {
@@ -510,6 +728,12 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			prometheus.CounterValue, float64(zone.Received), labelValues...)
 		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["sent"],
 			prometheus.CounterValue, float64(zone.Sent), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["ssl_handshakes"],
+			prometheus.CounterValue, float64(zone.SSL.Handshakes), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["ssl_handshakes_failed"],
+			prometheus.CounterValue, float64(zone.SSL.HandshakesFailed), labelValues...)
+		ch <- prometheus.MustNewConstMetric(c.streamServerZoneMetrics["ssl_session_reuses"],
+			prometheus.CounterValue, float64(zone.SSL.SessionReuses), labelValues...)
 	}
 
 	for name, upstream := range stats.Upstreams {
@@ -578,6 +802,92 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 				ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["health_checks_unhealthy"],
 					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), labelValues...)
 			}
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_100"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPContinue), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_101"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPSwitchingProtocols), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_102"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPProcessing), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_200"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPOk), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_201"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPCreated), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_202"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPAccepted), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_204"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPNoContent), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_206"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPPartialContent), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_300"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPSpecialResponse), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_301"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPMovedPermanently), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_302"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPMovedTemporarily), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_303"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPSeeOther), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_304"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPNotModified), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_307"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPTemporaryRedirect), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_400"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPBadRequest), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_401"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPUnauthorized), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_403"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPForbidden), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_404"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPNotFound), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_405"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPNotAllowed), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_408"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPRequestTimeOut), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_409"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPConflict), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_411"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPLengthRequired), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_412"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPPreconditionFailed), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_413"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPRequestEntityTooLarge), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_414"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPRequestURITooLarge), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_415"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPUnsupportedMediaType), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_416"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPRangeNotSatisfiable), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_429"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPTooManyRequests), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_444"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPClose), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_494"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPRequestHeaderTooLarge), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_495"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPSCertError), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_496"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPSNoCert), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_497"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPToHTTPS), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_499"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPClientClosedRequest), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_500"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPInternalServerError), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_501"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPNotImplemented), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_502"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPBadGateway), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_503"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPServiceUnavailable), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_504"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPGatewayTimeOut), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["codes_507"],
+				prometheus.CounterValue, float64(peer.Responses.Codes.HTTPInsufficientStorage), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["ssl_handshakes"],
+				prometheus.CounterValue, float64(peer.SSL.Handshakes), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["ssl_handshakes_failed"],
+				prometheus.CounterValue, float64(peer.SSL.HandshakesFailed), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["ssl_session_reuses"],
+				prometheus.CounterValue, float64(peer.SSL.SessionReuses), labelValues...)
 		}
 		ch <- prometheus.MustNewConstMetric(c.upstreamMetrics["keepalives"],
 			prometheus.GaugeValue, float64(upstream.Keepalives), name)
@@ -642,6 +952,12 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 				ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["health_checks_unhealthy"],
 					prometheus.CounterValue, float64(peer.HealthChecks.Unhealthy), labelValues...)
 			}
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["ssl_handshakes"],
+				prometheus.CounterValue, float64(peer.SSL.Handshakes), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["ssl_handshakes_failed"],
+				prometheus.CounterValue, float64(peer.SSL.HandshakesFailed), labelValues...)
+			ch <- prometheus.MustNewConstMetric(c.streamUpstreamServerMetrics["ssl_session_reuses"],
+				prometheus.CounterValue, float64(peer.SSL.SessionReuses), labelValues...)
 		}
 		ch <- prometheus.MustNewConstMetric(c.streamUpstreamMetrics["zombies"],
 			prometheus.GaugeValue, float64(upstream.Zombies), name)
@@ -686,6 +1002,86 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			prometheus.CounterValue, float64(zone.Received), name)
 		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["sent"],
 			prometheus.CounterValue, float64(zone.Sent), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_100"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPContinue), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_101"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSwitchingProtocols), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_102"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPProcessing), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_200"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPOk), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_201"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPCreated), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_202"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPAccepted), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_204"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNoContent), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_206"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPPartialContent), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_300"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSpecialResponse), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_301"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPMovedPermanently), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_302"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPMovedTemporarily), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_303"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSeeOther), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_304"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNotModified), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_307"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPTemporaryRedirect), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_400"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPBadRequest), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_401"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPUnauthorized), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_403"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPForbidden), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_404"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNotFound), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_405"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNotAllowed), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_408"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRequestTimeOut), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_409"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPConflict), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_411"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPLengthRequired), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_412"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPPreconditionFailed), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_413"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRequestEntityTooLarge), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_414"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRequestURITooLarge), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_415"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPUnsupportedMediaType), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_416"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRangeNotSatisfiable), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_429"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPTooManyRequests), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_444"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPClose), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_494"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPRequestHeaderTooLarge), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_495"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSCertError), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_496"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPSNoCert), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_497"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPToHTTPS), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_499"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPClientClosedRequest), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_500"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPInternalServerError), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_501"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPNotImplemented), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_502"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPBadGateway), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_503"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPServiceUnavailable), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_504"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPGatewayTimeOut), name)
+		ch <- prometheus.MustNewConstMetric(c.locationZoneMetrics["codes_507"],
+			prometheus.CounterValue, float64(zone.Responses.Codes.HTTPInsufficientStorage), name)
 	}
 
 	for name, zone := range stats.Resolvers {

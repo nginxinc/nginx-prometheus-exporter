@@ -1,4 +1,4 @@
-name: Continuous Integration
+name: CI
 
 on:
   push:
@@ -23,7 +23,6 @@ on:
 env:
   DOCKER_PLATFORMS: "linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x,linux/mips64le,linux/386"
 
-
 jobs:
 
   unit-tests:
@@ -32,12 +31,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-      - name: Determine Go version from go.mod
-        run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
       - name: Setup Golang Environment
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: go.mod
+          cache: true
       - name: Run Tests
         run: make test
 
@@ -50,12 +48,15 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Determine Go version from go.mod
-        run: echo "GO_VERSION=$(grep "go 1." go.mod | cut -d " " -f 2)" >> $GITHUB_ENV
       - name: Setup Golang Environment
         uses: actions/setup-go@v3
         with:
-          go-version: ${{ env.GO_VERSION }}
+          go-version-file: go.mod
+          cache: true
+      - name: Determine GOPATH
+        id: go
+        run: |
+          echo "::set-output name=go_path::$(go env GOPATH)"
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v2
         with:
@@ -115,7 +116,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
       - name: Download Syft
-        uses: anchore/sbom-action/download-syft@v0.11.0
+        uses: anchore/sbom-action/download-syft@v0.12.0
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v3
         with:
@@ -123,8 +124,9 @@ jobs:
           args: ${{ !startsWith(github.ref, 'refs/tags/') && 'build --snapshot' || 'release' }} ${{ github.event_name == 'pull_request' && '--single-target' || '' }} --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOPATH: ${{ env.GOPATH }}
+          GOPATH: ${{ steps.go.outputs.go_path }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.NGINX_PAT }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_COMMUNITY }}
       - name: Push to Dockerhub
         uses: docker/build-push-action@v3
         with:
@@ -138,5 +140,3 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            VERSION=${{ steps.meta.outputs.version }}
