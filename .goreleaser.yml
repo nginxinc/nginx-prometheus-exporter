@@ -68,3 +68,6 @@ announce:
     enabled: true
     channel: '#announcements'
     message_template: 'NGINX Prometheus Exporter {{ .Tag }} is out! Check it out: {{ .ReleaseURL }}'
+
+milestones:
+  - close: true
