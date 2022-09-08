@@ -13,6 +13,9 @@ categories:
   - title: '📝 Documentation'
     labels:
       - "documentation"
+  - title: '🧪 Tests'
+    labels:
+      - "tests"
   - title: '🔨 Maintenance'
     labels:
       - "chore"
@@ -35,32 +38,6 @@ version-resolver:
   default: patch
 exclude-labels:
   - 'skip-changelog'
-autolabeler:
-  - label: 'documentation'
-    files:
-      - '*.md'
-    branch:
-      - '/docs{0,1}\/.+/'
-  - label: 'chore'
-    branch:
-      - '/chore\/.+/'
-  - label: 'bug'
-    branch:
-      - '/fix\/.+/'
-    title:
-      - '/fix/i'
-  - label: 'enhancement'
-    branch:
-      - '/enh\/.+/'
-      - '/enhancement\/.+/'
-      - '/feat\/.+/'
-      - '/feature\/.+/'
-  - label: 'dependencies'
-    files:
-      - 'go.mod'
-      - 'go.sum'
-    branch:
-      - '/deps\/.+/'
 template: |
   ## New in NGINX Prometheus Exporter v$RESOLVED_VERSION
 
