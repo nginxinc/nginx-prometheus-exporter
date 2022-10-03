@@ -16,6 +16,6 @@ docs:
 - '**/*.md'
 
 dependencies:
-- branch: ['deps/**', 'dep/**']
+- branch: ['deps/**', 'dep/**', 'dependabot/**']
 - go.mod
 - go.sum
