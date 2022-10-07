@@ -8,6 +8,9 @@ on:
       - '**.md'
       - 'LICENSE'
 
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
 jobs:
 
   scan:
