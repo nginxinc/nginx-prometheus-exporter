@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
 jobs:
   update_release_draft:
     runs-on: ubuntu-20.04
