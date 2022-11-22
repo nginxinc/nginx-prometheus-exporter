@@ -15,7 +15,7 @@ jobs:
       contents: write
       pull-requests: read
     steps:
-      - uses: release-drafter/release-drafter@v5
+      - uses: release-drafter/release-drafter@6df64e4ba4842c203c604c1f45246c5863410adb # v5.21.1
         with:
           disable-autolabeler: true
         env:
