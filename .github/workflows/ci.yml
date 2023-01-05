@@ -109,7 +109,7 @@ jobs:
           labels: |
             org.opencontainers.image.vendor=NGINX Inc <integrations@nginx.com>
       - name: Publish Release Notes
-        uses: release-drafter/release-drafter@6df64e4ba4842c203c604c1f45246c5863410adb # v5.21.1
+        uses: release-drafter/release-drafter@cfc5540ebc9d65a8731f02032e3d44db5e449fb6 # v5.22.0
         with:
             publish: true
         env:
