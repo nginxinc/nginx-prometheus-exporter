@@ -10,7 +10,7 @@ import (
 
 const templateMetrics string = `Active connections: %d 
 server accepts handled requests
-%d %d %d 
+ %d %d %d 
 Reading: %d Writing: %d Waiting: %d 
 `
 
