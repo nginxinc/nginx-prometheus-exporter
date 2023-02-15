@@ -14,12 +14,15 @@ The following is a set of guidelines for contributing to the NGINX Prometheus Ex
   * [Git Style Guide](#git-style-guide)
   * [Go Style Guide](#go-style-guide)
 
-[Code of Conduct](https://github.com/nginxinc/nginx-prometheus-exporter/blob/main/CODE_OF_CONDUCT.md)
+[Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## Ask a Question
 
-We will have a public forum soon where you can come and ask questions and have a discussion. For now please open an Issue on GitHub with the label `question`.
+To ask a question please use [Github Discussions](https://github.com/nginxinc/nginx-prometheus-exporter/discussions).
 
+You can also join our [Community Slack](https://community.nginx.org/joinslack) which has a wider NGINX audience.
+
+Please reserve GitHub issues for feature requests and bugs rather than general questions.
 
 ## Getting Started
 
@@ -28,7 +31,7 @@ Follow our [Getting Started Guide](README.md#getting-started) to get the NGINX P
 ### Project Structure
 
 * This Prometheus Exporter is written in Go and supports both the open source NGINX software and NGINX Plus.
-* The project dependencies reside in the `/vendor`. We use [go modules](https://github.com/golang/go/wiki/Modules) for managing dependencies.
+* We use [Go modules](https://github.com/golang/go/wiki/Modules) for managing dependencies.
 
 ## Contributing
 
@@ -43,16 +46,22 @@ To suggest an enhancement, please create an issue on GitHub with the label `enha
 ### Open a Pull Request
 
 * Fork the repo, create a branch, submit a PR when your changes are tested and ready for review
-* Fill in [our pull request template](https://github.com/nginxinc/nginx-prometheus-exporter/issues/new?template=bug_report.md)
+* Fill in [our pull request template](.github/PULL_REQUEST_TEMPLATE.md)
 
-Note: if you’d like to implement a new feature, please consider creating a feature request issue first to start a discussion about the feature.
+> **Note**
+>
+> If you’d like to implement a new feature, please consider creating a feature request issue first to start a discussion about the feature.
+
+### Issue lifecycle
+
+* When an issue or PR is created, it will be triaged by the core development team and assigned a label to indicate the type of issue it is (bug, feature request, etc) and to determine the milestone. Please see the [Issue Lifecycle](ISSUE_LIFECYCLE.md) document for more information.
 
 ## Style Guides
 
 ### Git Style Guide
 
 * Keep a clean, concise and meaningful git commit history on your branch, rebasing locally and squashing before submitting a PR
-* Follow the guidelines of writing a good commit message as described here https://chris.beams.io/posts/git-commit/ and summarised in the next few points
+* Follow the guidelines of writing a good commit message as described here https://chris.beams.io/posts/git-commit/ and summarized in the next few points
     * In the subject line, use the present tense ("Add feature" not "Added feature")
     * In the subject line, use the imperative mood ("Move cursor to..." not "Moves cursor to...")
     * Limit the subject line to 72 characters or less
