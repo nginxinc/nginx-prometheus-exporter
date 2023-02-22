@@ -56,7 +56,7 @@ jobs:
       - name: Determine GOPATH
         id: go
         run: |
-          echo "::set-output name=go_path::$(go env GOPATH)"
+          echo "go_path=$(go env GOPATH)" >> $GITHUB_OUTPUT
       - name: Setup QEMU
         uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18 # v2.1.0
         with:
