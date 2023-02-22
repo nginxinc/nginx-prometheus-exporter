@@ -68,6 +68,8 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 
 ```
 Usage of ./nginx-prometheus-exporter:
+  -nginx.host-override string
+        Override for HTTP Host header. The default value can be overwritten by HOST_OVERRIDE environment variable.
   -nginx.plus
         Start the exporter for NGINX Plus. By default, the exporter is started for NGINX. The default value can be overwritten by NGINX_PLUS environment variable.
   -nginx.retries int

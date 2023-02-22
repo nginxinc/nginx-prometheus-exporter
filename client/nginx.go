@@ -16,8 +16,9 @@ Reading: %d Writing: %d Waiting: %d
 
 // NginxClient allows you to fetch NGINX metrics from the stub_status page.
 type NginxClient struct {
-	apiEndpoint string
-	httpClient  *http.Client
+	apiEndpoint  string
+	httpClient   *http.Client
+	hostOverride string
 }
 
 // StubStats represents NGINX stub_status metrics.
@@ -37,10 +38,15 @@ type StubConnections struct {
 }
 
 // NewNginxClient creates an NginxClient.
-func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, error) {
+func NewNginxClient(httpClient *http.Client, apiEndpoint string, hostOverride ...string) (*NginxClient, error) {
+	var h string
+	if len(hostOverride) > 0 {
+		h = hostOverride[0]
+	}
 	client := &NginxClient{
-		apiEndpoint: apiEndpoint,
-		httpClient:  httpClient,
+		apiEndpoint:  apiEndpoint,
+		httpClient:   httpClient,
+		hostOverride: h,
 	}
 
 	_, err := client.GetStubStats()
@@ -55,6 +61,9 @@ func (client *NginxClient) GetStubStats() (*StubStats, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, client.apiEndpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a get request: %w", err)
+	}
+	if client.hostOverride != "" {
+		req.Host = client.hostOverride
 	}
 	resp, err := client.httpClient.Do(req)
 	if err != nil {

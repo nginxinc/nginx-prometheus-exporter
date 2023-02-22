@@ -229,6 +229,7 @@ var (
 	defaultMetricsPath        = getEnv("TELEMETRY_PATH", "/metrics")
 	defaultNginxPlus          = getEnvBool("NGINX_PLUS", false)
 	defaultScrapeURI          = getEnv("SCRAPE_URI", "http://127.0.0.1:8080/stub_status")
+	defaultHostOverride       = getEnv("HOST_OVERRIDE", "")
 	defaultSslVerify          = getEnvBool("SSL_VERIFY", true)
 	defaultSslCaCert          = getEnv("SSL_CA_CERT", "")
 	defaultSslClientCert      = getEnv("SSL_CLIENT_CERT", "")
@@ -261,6 +262,9 @@ var (
 		defaultScrapeURI,
 		`A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics.
 For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. The default value can be overwritten by SCRAPE_URI environment variable.`)
+	hostOverride = flag.String("nginx.host-override",
+		defaultHostOverride,
+		"Override for HTTP Host header. The default value can be overwritten by HOST_OVERRIDE environment variable.")
 	sslVerify = flag.Bool("nginx.ssl-verify",
 		defaultSslVerify,
 		"Perform SSL certificate verification. The default value can be overwritten by SSL_VERIFY environment variable.")
@@ -407,7 +411,7 @@ func main() {
 		registry.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", variableLabelNames, constLabels.labels))
 	} else {
 		ossClient, err := createClientWithRetries(func() (interface{}, error) {
-			return client.NewNginxClient(httpClient, *scrapeURI)
+			return client.NewNginxClient(httpClient, *scrapeURI, *hostOverride)
 		}, *nginxRetries, nginxRetryInterval.Duration)
 		if err != nil {
 			log.Fatalf("Could not create Nginx Client: %v", err)
