@@ -155,3 +155,17 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: false
           sbom: ${{ github.event_name != 'pull_request' }}
+
+      - name: Scan image
+        uses: anchore/scan-action@dafbc97d7259af88b61bd260f2fde565d0668a72 # v3.3.4
+        id: scan
+        continue-on-error: true
+        with:
+          image: nginx/nginx-prometheus-exporter:${{ steps.meta.outputs.version }}
+          only-fixed: true
+
+      - name: Upload scan result to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@17573ee1cc1b9d061760f3a006fc4aac4f944fd5 # v2.2.4
+        continue-on-error: true
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
