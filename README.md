@@ -341,6 +341,23 @@ The binary is built with the name `nginx-prometheus-exporter`.
 ## Grafana Dashboard
 The official Grafana dashboard is provided with the exporter for NGINX. Check the [Grafana Dashboard](./grafana/README.md) documentation for more information.
 
+## SBOM (Software Bill of Materials)
+
+We generate SBOMs for the binaries and the Docker image.
+
+### Binaries
+
+The SBOMs for the binaries are available in the releases page. The SBOMs are generated using [syft](https://github.com/anchore/syft) and are available in SPDX format.
+
+### Docker Image
+
+The SBOM for the Docker image is available in the [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter), [GitHub Container registry](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter), [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) and [Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter) repositories. The SBOMs are generated using [syft](https://github.com/anchore/syft) and stored as an attestation in the image manifest.
+
+For example to retrieve the SBOM for `linux/amd64` from Docker Hub and analyze it using [grype](https://github.com/anchore/grype) you can run the following command:
+```
+$ docker buildx imagetools inspect nginx/nginx-prometheus-exporter:edge --format '{{ json (index .SBOM "linux/amd64").SPDX }}' | grype
+```
+
 ## Contacts
 
 We’d like to hear your feedback! If you have any suggestions or experience issues with the NGINX Prometheus Exporter, please create an issue or send a pull request on GitHub.
