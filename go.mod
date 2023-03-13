@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/nginxinc/nginx-plus-go-client v0.10.0
 	github.com/prometheus/client_golang v1.14.0
-	github.com/prometheus/common v0.41.0
+	github.com/prometheus/common v0.42.0
 )
 
 require (
