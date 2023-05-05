@@ -43,6 +43,11 @@ jobs:
   build-docker:
     name: Build Docker Image
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read # for docker/build-push-action to read repo content
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      id-token: write # for OIDC login to AWS ECR
+      packages: write # for docker/build-push-action to push to GHCR
     needs: unit-tests
     steps:
       - name: Checkout Repository
@@ -83,12 +88,17 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
         if: github.event_name != 'pull_request'
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@e1e17a757e536f70e52b5a12b2e8d1d1c60e04ef # v2.0.0
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.AWS_ROLE_PUBLIC_ECR }}
+        if: github.event_name != 'pull_request'
+
       - name: Login to Public ECR
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a # v2.1.0
         with:
           registry: public.ecr.aws
-          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         if: github.event_name != 'pull_request'
 
       - name: Login to Quay.io
