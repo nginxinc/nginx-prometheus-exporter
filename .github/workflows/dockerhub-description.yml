@@ -10,7 +10,7 @@ jobs:
   dockerHubDescription:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c # v3.3.0
+      - uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3.5.2
 
       - name: Modify readme for DockerHub
         run: |
@@ -18,7 +18,7 @@ jobs:
           sed -i 's/(LICENSE)/(https:\/\/github.com\/nginxinc\/nginx-prometheus-exporter\/blob\/main\/LICENSE)/' README.md
 
       - name: Docker Hub Description
-        uses: peter-evans/dockerhub-description@93b93397c27ed52b4055b8c6b2f8d92456ab3c56 # v3.1.2
+        uses: peter-evans/dockerhub-description@579f64ca0abced29dbbc44ab4c6a0b9e33ab3588 # v3.4.1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
