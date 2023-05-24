@@ -4,12 +4,12 @@ PREFIX = nginx/nginx-prometheus-exporter
 
 .PHONY: nginx-prometheus-exporter
 nginx-prometheus-exporter:
-	CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=$(VERSION)" -o nginx-prometheus-exporter
+	CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X github.com/prometheus/common/version.Version=$(VERSION)" -o nginx-prometheus-exporter
 
 .PHONY: build-goreleaser
 build-goreleaser: ## Build all binaries using GoReleaser
 	@goreleaser -v || (code=$$?; printf "\033[0;31mError\033[0m: there was a problem with GoReleaser. Follow the docs to install it https://goreleaser.com/install\n"; exit $$code)
-	GOPATH=$(shell go env GOPATH) goreleaser build --rm-dist --snapshot
+	GOPATH=$(shell go env GOPATH) goreleaser build --clean --snapshot
 
 .PHONY: lint
 lint:

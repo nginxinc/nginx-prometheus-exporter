@@ -1,8 +1,3 @@
-before:
-  hooks:
-    - go mod tidy
-    - go mod verify
-
 builds:
   - env:
       - CGO_ENABLED=0
@@ -33,26 +28,27 @@ builds:
       - all=-trimpath={{.Env.GOPATH}}
     asmflags:
       - all=-trimpath={{.Env.GOPATH}}
-
-sboms:
-  - artifacts: archive
-
-archives:
-- format_overrides:
-    - goos: windows
-      format: zip
-
-checksum:
-  name_template: 'sha256sums.txt'
+    ldflags:
+      - '-s -w -X github.com/prometheus/common/version.Version={{.Version}} -X github.com/prometheus/common/version.BuildDate={{.Date}} -X github.com/prometheus/common/version.Branch={{.Branch}} -X github.com/prometheus/common/version.BuildUser=goreleaser'
 
 changelog:
   skip: true
+
+archives:
+  - format_overrides:
+      - goos: windows
+        format: zip
+
+sboms:
+  - artifacts: archive
+    documents:
+      - "${artifact}.spdx.json"
 
 brews:
   - tap:
       owner: nginxinc
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+      token: '{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}'
     folder: Formula
     homepage: https://www.nginx.com/
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
@@ -71,3 +67,6 @@ announce:
 
 milestones:
   - close: true
+
+snapshot:
+  name_template: 'edge'

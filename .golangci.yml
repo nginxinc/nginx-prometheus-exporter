@@ -28,6 +28,9 @@ linters-settings:
       - name: unused-parameter
       - name: var-declaration
       - name: var-naming
+  errcheck:
+    exclude-functions:
+    - (github.com/go-kit/log.Logger).Log
 
 linters:
     enable:
