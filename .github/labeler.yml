@@ -1,21 +1,20 @@
 enhancement:
-- branch: ['feature/**', 'feat/**', 'enhancement/**', 'enh/**']
+  - head-branch: ['^feature/', '^feat/', '^enhancement/', '^enh/']
 
 bug:
-- branch: ['fix/**', 'bug/**']
+  - head-branch: ['^fix/', '^bug/']
 
 chore:
-- branch: ['chore/**']
+  - head-branch: ['^chore/']
 
 tests:
-- branch: ['tests/**', 'test/**']
-- '**/*_test.go'
+  - head-branch: ['^tests/', '^test/']
+  - changed-files: '**/*_test.go'
 
-docs:
-- branch: ['docs/**', 'doc/**']
-- '**/*.md'
+documentation:
+  - head-branch: ['^docs/', '^doc/']
+  - changed-files: '**/*.md'
 
 dependencies:
-- branch: ['deps/**', 'dep/**', 'dependabot/**']
-- go.mod
-- go.sum
+  - head-branch: ['^deps/', '^dep/', '^dependabot/']
+  - changed-files: ['go.mod', 'go.sum']
