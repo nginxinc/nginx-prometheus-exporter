@@ -1,3 +1,6 @@
+change:
+  - head-branch: ['^change/']
+
 enhancement:
   - head-branch: ['^feature/', '^feat/', '^enhancement/', '^enh/']
 
