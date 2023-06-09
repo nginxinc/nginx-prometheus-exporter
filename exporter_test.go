@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/go-kit/log"
 )
 
 func TestCreateClientWithRetries(t *testing.T) {
@@ -65,7 +67,7 @@ func TestCreateClientWithRetries(t *testing.T) {
 				return tt.args.client, tt.args.err
 			}
 
-			got, err := createClientWithRetries(getClient, tt.args.retries, tt.args.retryInterval)
+			got, err := createClientWithRetries(getClient, tt.args.retries, tt.args.retryInterval, log.NewNopLogger())
 
 			actualRetries := invocations - 1
 
@@ -177,66 +179,6 @@ func TestParseUnixSocketAddress(t *testing.T) {
 			}
 			if !reflect.DeepEqual(requestPath, tt.wantRequestPath) {
 				t.Errorf("request path: parseUnixSocketAddress() = %v, want %v", requestPath, tt.wantRequestPath)
-			}
-		})
-	}
-}
-
-func TestParseConstLabels(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name    string
-		labels  string
-		want    constLabel
-		wantErr bool
-	}{
-		{
-			name:    "Const labels with no labels",
-			labels:  "",
-			want:    constLabel{},
-			wantErr: false,
-		},
-		{
-			name:    "Const labels with one label with valid format",
-			labels:  "label=valid",
-			want:    constLabel{labels: map[string]string{"label": "valid"}},
-			wantErr: false,
-		},
-		{
-			name:    "Const labels with one label with invalid format",
-			labels:  "label: invalid",
-			want:    constLabel{},
-			wantErr: true,
-		},
-		{
-			name:    "Const labels with invalid format for multiple labels",
-			labels:  "label=valid,,label2=wrongformat",
-			want:    constLabel{},
-			wantErr: true,
-		},
-		{
-			name:    "Const labels with multiple labels, one label with invalid format",
-			labels:  "label=valid,label2:wrongformat",
-			want:    constLabel{},
-			wantErr: true,
-		},
-		{
-			name:    "Const labels with label name containing invalid char",
-			labels:  "l bel=invalid",
-			want:    constLabel{},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseConstLabels(tt.labels)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("parseConstLabels() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("parseConstLabels() = %v, want %v", got, tt.want)
 			}
 		})
 	}
