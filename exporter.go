@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -110,6 +111,36 @@ func getListener(listenAddress string) (net.Listener, error) {
 	return listener, nil
 }
 
+func start(server http.Server, listener net.Listener, logger log.Logger) {
+	level.Info(logger).Log("msg", "NGINX Prometheus Exporter has successfully started")
+
+	if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		panic(err)
+	}
+}
+
+func shutdown(ctx context.Context, server http.Server, logger log.Logger) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		level.Error(logger).Log("msg", "Error occurred while closing the server", "error", err.Error())
+		os.Exit(1)
+	} else {
+		level.Info(logger).Log("msg", "Graceful shutdown complete.")
+		os.Exit(0)
+	}
+}
+
+func createChannel() (chan os.Signal, func()) {
+	stopCh := make(chan os.Signal, 1)
+	signal.Notify(stopCh, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+
+	return stopCh, func() {
+		close(stopCh)
+	}
+}
+
 var (
 	constLabels = map[string]string{}
 
@@ -207,18 +238,6 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		level.Info(logger).Log("msg", "Signal received, exiting...", "signal", <-signalChan)
-		err := srv.Close()
-		if err != nil {
-			level.Error(logger).Log("msg", "Error occurred while closing the server", "error", err.Error())
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}()
-
 	if *nginxPlus {
 		plusClient, err := createClientWithRetries(func() (interface{}, error) {
 			return plusclient.NewNginxClient(httpClient, *scrapeURI)
@@ -279,11 +298,14 @@ func main() {
 		}
 	}
 
-	level.Info(logger).Log("msg", "NGINX Prometheus Exporter has successfully started")
-	if err := srv.Serve(listener); err != nil {
-		level.Error(logger).Log("msg", "Error while serving", "error", err.Error())
-		os.Exit(1)
-	}
+	// start server
+	go start(srv, listener, logger)
+
+	stopCh, closeCh := createChannel()
+	defer closeCh()
+
+	level.Info(logger).Log("msg", "Signal received", "signal", <-stopCh)
+	shutdown(context.Background(), srv, logger)
 }
 
 type userAgentRoundTripper struct {
