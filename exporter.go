@@ -111,7 +111,7 @@ func getListener(listenAddress string) (net.Listener, error) {
 	return listener, nil
 }
 
-func start(server http.Server, listener net.Listener, logger log.Logger) {
+func start(server *http.Server, listener net.Listener, logger log.Logger) {
 	level.Info(logger).Log("msg", "NGINX Prometheus Exporter has successfully started")
 
 	if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -119,17 +119,17 @@ func start(server http.Server, listener net.Listener, logger log.Logger) {
 	}
 }
 
-func shutdown(ctx context.Context, server http.Server, logger log.Logger) {
+func shutdown(ctx context.Context, server *http.Server, logger log.Logger) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
 		level.Error(logger).Log("msg", "Error occurred while closing the server", "error", err.Error())
 		os.Exit(1)
-	} else {
-		level.Info(logger).Log("msg", "Graceful shutdown complete.")
-		os.Exit(0)
 	}
+
+	level.Info(logger).Log("msg", "Graceful shutdown complete.")
+	os.Exit(0)
 }
 
 func createChannel() (chan os.Signal, func()) {
@@ -299,13 +299,13 @@ func main() {
 	}
 
 	// start server
-	go start(srv, listener, logger)
+	go start(&srv, listener, logger)
 
 	stopCh, closeCh := createChannel()
 	defer closeCh()
 
 	level.Info(logger).Log("msg", "Signal received", "signal", <-stopCh)
-	shutdown(context.Background(), srv, logger)
+	shutdown(context.Background(), &srv, logger)
 }
 
 type userAgentRoundTripper struct {
