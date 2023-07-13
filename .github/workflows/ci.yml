@@ -115,13 +115,25 @@ jobs:
           labels: |
             org.opencontainers.image.vendor=NGINX Inc <integrations@nginx.com>
 
-      - name: Publish Release Notes
-        uses: release-drafter/release-drafter@65c5fb495d1e69aa8c08a3317bc44ff8aabe9772 # v5.24.0
+      - name: Create/Update Draft
+        uses: lucacome/draft-release@d13ccde6350706e32f451566ee5cd4bf5a27de3d # v0.2.1
         with:
-          publish: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+          minor-label: "enhancement"
+          major-label: "change"
+          publish: ${{ startsWith(github.ref, 'refs/tags/') }}
+          collapse-after: 30
+          notes-footer: |
+            ## Upgrade
+
+            - Use the {{version}} image from our [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/tags?page=1&ordering=last_updated&name={{version-number}}), [GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter), [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) or [Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter/tag/{{version-number}}?tab=tags).
+            - Download the latest binaries from the [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/{{version}}).
+            - Update to the latest version with `brew upgrade nginx-prometheus-exporter`.
+
+            ## Compatibility
+
+            - NGINX 0.1.18 or newer.
+            - NGINX Plus R19 or newer.
+        if: github.event_name != 'pull_request'
 
       - name: Download Syft
         uses: anchore/sbom-action/download-syft@78fc58e266e87a38d4194b2137a3d4e9bcaf7ca1 # v0.14.3
