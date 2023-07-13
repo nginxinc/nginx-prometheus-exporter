@@ -12,9 +12,6 @@ changelog:
     - title: 🐛 Bug Fixes
       labels:
         - bug
-    - title: 📦 Helm Chart
-      labels:
-        - helm_chart
     - title: 🧪 Tests
       labels:
         - tests
