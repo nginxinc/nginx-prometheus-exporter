@@ -37,6 +37,10 @@ repos:
   hooks:
   - id: golangci-lint
     args: [--new-from-patch=/tmp/diff.patch]
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.17.0
+  hooks:
+  - id: gitleaks
 
 ci:
   skip: [golang-diff, golangci-lint]
