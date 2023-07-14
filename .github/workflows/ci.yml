@@ -13,6 +13,9 @@ on:
 env:
   DOCKER_PLATFORMS: "linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x,linux/mips64le,linux/386"
 
+permissions:
+  contents: read
+
 jobs:
   unit-tests:
     name: Unit Tests
@@ -33,7 +36,7 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-22.04
     permissions:
-      contents: read # for docker/build-push-action to read repo content
+      contents: write # for lucacome/draft-release to create/update release draft
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
       id-token: write # for OIDC login to AWS ECR
       packages: write # for docker/build-push-action to push to GHCR
