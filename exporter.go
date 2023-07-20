@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -25,6 +26,9 @@ import (
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
+
+	"github.com/prometheus/exporter-toolkit/web"
+	"github.com/prometheus/exporter-toolkit/web/kingpinflag"
 )
 
 // positiveDuration is a wrapper of time.Duration to ensure only positive values are accepted
@@ -90,42 +94,19 @@ func parseUnixSocketAddress(address string) (string, string, error) {
 	return unixSocketPath, requestPath, nil
 }
 
-func getListener(listenAddress string) (net.Listener, error) {
-	var listener net.Listener
-	var err error
-
-	if strings.HasPrefix(listenAddress, "unix:") {
-		path, _, pathError := parseUnixSocketAddress(listenAddress)
-		if pathError != nil {
-			return listener, fmt.Errorf("parsing unix domain socket listen address %s failed: %w", listenAddress, pathError)
-		}
-		listener, err = net.ListenUnix("unix", &net.UnixAddr{Name: path, Net: "unix"})
-	} else {
-		listener, err = net.Listen("tcp", listenAddress)
-	}
-
-	if err != nil {
-		return listener, err
-	}
-	return listener, nil
-}
-
 var (
 	constLabels = map[string]string{}
 
 	// Command-line flags
-	listenAddr     = kingpin.Flag("web.listen-address", "An address or unix domain socket path to listen on for web interface and telemetry.").Default(":9113").Envar("LISTEN_ADDRESS").String()
-	securedMetrics = kingpin.Flag("web.secured-metrics", "Expose metrics using https.").Default("false").Envar("SECURED_METRICS").Bool()
-	sslServerCert  = kingpin.Flag("web.ssl-server-cert", "Path to the PEM encoded certificate for the nginx-exporter metrics server(when web.secured-metrics=true).").Default("").Envar("SSL_SERVER_CERT").String()
-	sslServerKey   = kingpin.Flag("web.ssl-server-key", "Path to the PEM encoded key for the nginx-exporter metrics server(when web.secured-metrics=true).").Default("").Envar("SSL_SERVER_KEY").String()
-	metricsPath    = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").Envar("TELEMETRY_PATH").String()
-	nginxPlus      = kingpin.Flag("nginx.plus", "Start the exporter for NGINX Plus. By default, the exporter is started for NGINX.").Default("false").Envar("NGINX_PLUS").Bool()
-	scrapeURI      = kingpin.Flag("nginx.scrape-uri", "A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API.").Default("http://127.0.0.1:8080/stub_status").String()
-	sslVerify      = kingpin.Flag("nginx.ssl-verify", "Perform SSL certificate verification.").Default("false").Envar("SSL_VERIFY").Bool()
-	sslCaCert      = kingpin.Flag("nginx.ssl-ca-cert", "Path to the PEM encoded CA certificate file used to validate the servers SSL certificate.").Default("").Envar("SSL_CA_CERT").String()
-	sslClientCert  = kingpin.Flag("nginx.ssl-client-cert", "Path to the PEM encoded client certificate file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_CERT").String()
-	sslClientKey   = kingpin.Flag("nginx.ssl-client-key", "Path to the PEM encoded client certificate key file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_KEY").String()
-	nginxRetries   = kingpin.Flag("nginx.retries", "A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error.").Default("0").Envar("NGINX_RETRIES").Uint()
+	webConfig     = kingpinflag.AddFlags(kingpin.CommandLine, ":9113")
+	metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").Envar("TELEMETRY_PATH").String()
+	nginxPlus     = kingpin.Flag("nginx.plus", "Start the exporter for NGINX Plus. By default, the exporter is started for NGINX.").Default("false").Envar("NGINX_PLUS").Bool()
+	scrapeURI     = kingpin.Flag("nginx.scrape-uri", "A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API.").Default("http://127.0.0.1:8080/stub_status").String()
+	sslVerify     = kingpin.Flag("nginx.ssl-verify", "Perform SSL certificate verification.").Default("false").Envar("SSL_VERIFY").Bool()
+	sslCaCert     = kingpin.Flag("nginx.ssl-ca-cert", "Path to the PEM encoded CA certificate file used to validate the servers SSL certificate.").Default("").Envar("SSL_CA_CERT").String()
+	sslClientCert = kingpin.Flag("nginx.ssl-client-cert", "Path to the PEM encoded client certificate file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_CERT").String()
+	sslClientKey  = kingpin.Flag("nginx.ssl-client-key", "Path to the PEM encoded client certificate key file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_KEY").String()
+	nginxRetries  = kingpin.Flag("nginx.retries", "A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error.").Default("0").Envar("NGINX_RETRIES").Uint()
 
 	// Custom command-line flags
 	timeout            = createPositiveDurationFlag(kingpin.Flag("nginx.timeout", "A timeout for scraping metrics from NGINX or NGINX Plus.").Default("5s").Envar("TIMEOUT"))
@@ -213,22 +194,6 @@ func main() {
 		Transport: userAgentRT,
 	}
 
-	srv := http.Server{
-		ReadHeaderTimeout: 5 * time.Second,
-	}
-
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		level.Info(logger).Log("msg", "Signal received, exiting...", "signal", <-signalChan)
-		err := srv.Close()
-		if err != nil {
-			level.Error(logger).Log("msg", "Error occurred while closing the server", "error", err.Error())
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}()
-
 	if *nginxPlus {
 		plusClient, err := createClientWithRetries(func() (interface{}, error) {
 			return plusclient.NewNginxClient(httpClient, *scrapeURI)
@@ -252,48 +217,50 @@ func main() {
 
 	http.Handle(*metricsPath, promhttp.Handler())
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := fmt.Fprintf(w, `<!DOCTYPE html>
-			<title>NGINX Exporter</title>
-			<h1>NGINX Exporter</h1>
-			<p><a href=%q>Metrics</a></p>`,
-			*metricsPath)
+	if *metricsPath != "/" && *metricsPath != "" {
+		landingConfig := web.LandingConfig{
+			Name:        "NGINX Prometheus Exporter",
+			Description: "Prometheus Exporter for NGINX and NGINX Plus",
+			HeaderColor: "#039900",
+			Version:     version.Info(),
+			Links: []web.LandingLinks{
+				{
+					Address: *metricsPath,
+					Text:    "Metrics",
+				},
+			},
+		}
+		landingPage, err := web.NewLandingPage(landingConfig)
 		if err != nil {
-			level.Error(logger).Log("msg", "Error while sending a response for the '/' path", "error", err.Error())
+			level.Error(logger).Log("err", err)
 			os.Exit(1)
 		}
-	})
-
-	listener, err := getListener(*listenAddr)
-	if err != nil {
-		level.Error(logger).Log("msg", "Could not create listener", "error", err.Error())
-		os.Exit(1)
-	}
-	level.Info(logger).Log("msg", "Listening on address", "address", *listenAddr)
-
-	if *securedMetrics {
-		_, err = os.Stat(*sslServerCert)
-		if err != nil {
-			level.Error(logger).Log("msg", "Cert file is not set, not readable or non-existent. Make sure you set -web.ssl-server-cert when starting your exporter with -web.secured-metrics=true", "error", err.Error())
-			os.Exit(1)
-		}
-		_, err = os.Stat(*sslServerKey)
-		if err != nil {
-			level.Error(logger).Log("msg", "Key file is not set, not readable or non-existent. Make sure you set -web.ssl-server-key when starting your exporter with -web.secured-metrics=true", "error", err.Error())
-			os.Exit(1)
-		}
-		level.Info(logger).Log("msg", "NGINX Prometheus Exporter has successfully started using https")
-		if err := srv.ServeTLS(listener, *sslServerCert, *sslServerKey); err != nil {
-			level.Error(logger).Log("msg", "Error while serving", "error", err.Error())
-			os.Exit(1)
-		}
+		http.Handle("/", landingPage)
 	}
 
-	level.Info(logger).Log("msg", "NGINX Prometheus Exporter has successfully started")
-	if err := srv.Serve(listener); err != nil {
-		level.Error(logger).Log("msg", "Error while serving", "error", err.Error())
-		os.Exit(1)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill, syscall.SIGTERM)
+	defer cancel()
+
+	srv := &http.Server{
+		ReadHeaderTimeout: 5 * time.Second,
 	}
+
+	go func() {
+		if err := web.ListenAndServe(srv, webConfig, logger); err != nil {
+			if errors.Is(err, http.ErrServerClosed) {
+				level.Info(logger).Log("msg", "HTTP server closed")
+				os.Exit(0)
+			}
+			level.Error(logger).Log("err", err)
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+	level.Info(logger).Log("msg", "Shutting down")
+	srvCtx, srvCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer srvCancel()
+	_ = srv.Shutdown(srvCtx)
 }
 
 type userAgentRoundTripper struct {

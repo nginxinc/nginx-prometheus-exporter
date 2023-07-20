@@ -1,0 +1,10 @@
+[Unit]
+Description=NGINX Prometheus Exporter
+Requires=nginx_exporter.socket
+
+[Service]
+User=nginx_exporter
+ExecStart=/usr/local/bin/nginx-prometheus-exporter --nginx.scrape-uri="http://127.0.0.1:8080/stub_status" --web.systemd-socket
+
+[Install]
+WantedBy=multi-user.target

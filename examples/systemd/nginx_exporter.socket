@@ -1,0 +1,8 @@
+[Unit]
+Description=NGINX Prometheus Exporter
+
+[Socket]
+ListenStream=9113
+
+[Install]
+WantedBy=sockets.target
