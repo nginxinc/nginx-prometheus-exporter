@@ -13,6 +13,10 @@ on:
 env:
   DOCKER_PLATFORMS: "linux/arm,linux/arm64,linux/amd64,linux/ppc64le,linux/s390x,linux/mips64le,linux/386"
 
+concurrency:
+  group: ${{ github.ref_name }}-ci
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
