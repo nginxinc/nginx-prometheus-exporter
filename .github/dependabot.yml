@@ -1,21 +1,16 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
       interval: weekly
-    reviewers:
-      - "nginxinc/kic"
-      - "ciarams87"
-  - package-ecosystem: "gomod"
-    directory: "/"
+
+  - package-ecosystem: gomod
+    directory: /
     schedule:
       interval: weekly
-    reviewers:
-      - "nginxinc/kic"
-  - package-ecosystem: "docker"
-    directory: "/build"
+
+  - package-ecosystem: docker
+    directory: /build
     schedule:
       interval: weekly
-    reviewers:
-      - "nginxinc/kic"

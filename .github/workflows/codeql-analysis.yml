@@ -20,7 +20,11 @@ on:
   schedule:
     - cron: "24 0 * * 0"
 
-permissions: # added using https://github.com/step-security/secure-workflows
+concurrency:
+  group: ${{ github.ref_name }}-codeql
+  cancel-in-progress: true
+
+permissions:
   contents: read
 
 jobs:
