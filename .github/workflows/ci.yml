@@ -123,7 +123,7 @@ jobs:
             org.opencontainers.image.vendor=NGINX Inc <integrations@nginx.com>
 
       - name: Create/Update Draft
-        uses: lucacome/draft-release@d13ccde6350706e32f451566ee5cd4bf5a27de3d # v0.2.1
+        uses: lucacome/draft-release@f6dc37dcdf44be100a649b72c62c628776750190 # v0.2.2
         with:
           minor-label: "enhancement"
           major-label: "change"
@@ -185,7 +185,7 @@ jobs:
           only-fixed: true
 
       - name: Upload scan result to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@489225d82a57396c6f426a40e66d461b16b3461d # v2.20.4
+        uses: github/codeql-action/upload-sarif@1813ca74c3faaa3a2da2070b9b8a0b3e7373a0d8 # v2.21.0
         continue-on-error: true
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
