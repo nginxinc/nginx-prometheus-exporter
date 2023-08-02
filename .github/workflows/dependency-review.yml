@@ -3,7 +3,6 @@ on:
   pull_request:
     branches:
       - main
-      - release-*
 
 concurrency:
   group: ${{ github.ref_name }}-deps-review
