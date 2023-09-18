@@ -123,7 +123,7 @@ jobs:
             org.opencontainers.image.vendor=NGINX Inc <integrations@nginx.com>
 
       - name: Create/Update Draft
-        uses: lucacome/draft-release@f6dc37dcdf44be100a649b72c62c628776750190 # v0.2.2
+        uses: lucacome/draft-release@3ed3808cb75e4398e021a19a171ce62f4943f2f7 # v1.0.0
         with:
           minor-label: "enhancement"
           major-label: "change"
