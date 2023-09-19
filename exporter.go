@@ -196,7 +196,7 @@ func main() {
 
 	if *nginxPlus {
 		plusClient, err := createClientWithRetries(func() (interface{}, error) {
-			return plusclient.NewNginxClient(httpClient, *scrapeURI)
+			return plusclient.NewNginxClient(*scrapeURI, plusclient.WithHTTPClient(httpClient))
 		}, *nginxRetries, *nginxRetryInterval, logger)
 		if err != nil {
 			level.Error(logger).Log("msg", "Could not create Nginx Plus Client", "error", err.Error())
