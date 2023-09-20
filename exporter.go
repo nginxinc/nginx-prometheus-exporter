@@ -19,7 +19,6 @@ import (
 	"github.com/nginxinc/nginx-prometheus-exporter/collector"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -61,23 +60,6 @@ func createPositiveDurationFlag(s kingpin.Settings) (target *time.Duration) {
 	return
 }
 
-func createClientWithRetries(getClient func() (interface{}, error), retries uint, retryInterval time.Duration, logger log.Logger) (interface{}, error) {
-	var err error
-	var nginxClient interface{}
-
-	for i := 0; i <= int(retries); i++ {
-		nginxClient, err = getClient()
-		if err == nil {
-			return nginxClient, nil
-		}
-		if i < int(retries) {
-			level.Error(logger).Log("msg", fmt.Sprintf("Could not create Nginx Client. Retrying in %v...", retryInterval))
-			time.Sleep(retryInterval)
-		}
-	}
-	return nil, err
-}
-
 func parseUnixSocketAddress(address string) (string, string, error) {
 	addressParts := strings.Split(address, ":")
 	addressPartsLength := len(addressParts)
@@ -106,11 +88,9 @@ var (
 	sslCaCert     = kingpin.Flag("nginx.ssl-ca-cert", "Path to the PEM encoded CA certificate file used to validate the servers SSL certificate.").Default("").Envar("SSL_CA_CERT").String()
 	sslClientCert = kingpin.Flag("nginx.ssl-client-cert", "Path to the PEM encoded client certificate file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_CERT").String()
 	sslClientKey  = kingpin.Flag("nginx.ssl-client-key", "Path to the PEM encoded client certificate key file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_KEY").String()
-	nginxRetries  = kingpin.Flag("nginx.retries", "A number of retries the exporter will make on start to connect to the NGINX stub_status page/NGINX Plus API before exiting with an error.").Default("0").Envar("NGINX_RETRIES").Uint()
 
 	// Custom command-line flags
-	timeout            = createPositiveDurationFlag(kingpin.Flag("nginx.timeout", "A timeout for scraping metrics from NGINX or NGINX Plus.").Default("5s").Envar("TIMEOUT"))
-	nginxRetryInterval = createPositiveDurationFlag(kingpin.Flag("nginx.retry-interval", "An interval between retries to connect to the NGINX stub_status page/NGINX Plus API on start.").Default("5s").Envar("NGINX_RETRY_INTERVAL"))
+	timeout = createPositiveDurationFlag(kingpin.Flag("nginx.timeout", "A timeout for scraping metrics from NGINX or NGINX Plus.").Default("5s").Envar("TIMEOUT"))
 )
 
 const exporterName = "nginx_exporter"
@@ -123,7 +103,7 @@ func main() {
 
 	// convert deprecated flags to new format
 	for i, arg := range os.Args {
-		if strings.HasPrefix(arg, "-") && len(arg) > 1 {
+		if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") && len(arg) > 2 {
 			newArg := fmt.Sprintf("-%s", arg)
 			level.Warn(logger).Log("msg", "the flag format is deprecated and will be removed in a future release, please use the new format", "old", arg, "new", newArg)
 			os.Args[i] = newArg
@@ -195,24 +175,16 @@ func main() {
 	}
 
 	if *nginxPlus {
-		plusClient, err := createClientWithRetries(func() (interface{}, error) {
-			return plusclient.NewNginxClient(*scrapeURI, plusclient.WithHTTPClient(httpClient))
-		}, *nginxRetries, *nginxRetryInterval, logger)
+		plusClient, err := plusclient.NewNginxClient(*scrapeURI, plusclient.WithHTTPClient(httpClient))
 		if err != nil {
 			level.Error(logger).Log("msg", "Could not create Nginx Plus Client", "error", err.Error())
 			os.Exit(1)
 		}
 		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil)
-		prometheus.MustRegister(collector.NewNginxPlusCollector(plusClient.(*plusclient.NginxClient), "nginxplus", variableLabelNames, constLabels, logger))
+		prometheus.MustRegister(collector.NewNginxPlusCollector(plusClient, "nginxplus", variableLabelNames, constLabels, logger))
 	} else {
-		ossClient, err := createClientWithRetries(func() (interface{}, error) {
-			return client.NewNginxClient(httpClient, *scrapeURI)
-		}, *nginxRetries, *nginxRetryInterval, logger)
-		if err != nil {
-			level.Error(logger).Log("msg", "Could not create Nginx Client", "error", err.Error())
-			os.Exit(1)
-		}
-		prometheus.MustRegister(collector.NewNginxCollector(ossClient.(*client.NginxClient), "nginx", constLabels, logger))
+		ossClient := client.NewNginxClient(httpClient, *scrapeURI)
+		prometheus.MustRegister(collector.NewNginxCollector(ossClient, "nginx", constLabels, logger))
 	}
 
 	http.Handle(*metricsPath, promhttp.Handler())

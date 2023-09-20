@@ -37,14 +37,13 @@ type StubConnections struct {
 }
 
 // NewNginxClient creates an NginxClient.
-func NewNginxClient(httpClient *http.Client, apiEndpoint string) (*NginxClient, error) {
+func NewNginxClient(httpClient *http.Client, apiEndpoint string) *NginxClient {
 	client := &NginxClient{
 		apiEndpoint: apiEndpoint,
 		httpClient:  httpClient,
 	}
 
-	_, err := client.GetStubStats()
-	return client, err
+	return client
 }
 
 // GetStubStats fetches the stub_status metrics.
