@@ -5,7 +5,7 @@ go 1.21.3
 require (
 	github.com/alecthomas/kingpin/v2 v2.3.2
 	github.com/go-kit/log v0.2.1
-	github.com/nginxinc/nginx-plus-go-client v1.0.0
+	github.com/nginxinc/nginx-plus-go-client v1.1.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/prometheus/common v0.45.0
 	github.com/prometheus/exporter-toolkit v0.10.0
