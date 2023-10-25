@@ -98,22 +98,22 @@ const exporterName = "nginx_exporter"
 func main() {
 	kingpin.Flag("prometheus.const-label", "Label that will be used in every metric. Format is label=value. It can be repeated multiple times.").Envar("CONST_LABELS").StringMapVar(&constLabels)
 
-	promlogConfig := &promlog.Config{}
-	logger := promlog.New(promlogConfig)
-
 	// convert deprecated flags to new format
 	for i, arg := range os.Args {
 		if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") && len(arg) > 2 {
 			newArg := fmt.Sprintf("-%s", arg)
-			level.Warn(logger).Log("msg", "the flag format is deprecated and will be removed in a future release, please use the new format", "old", arg, "new", newArg)
+			fmt.Printf("the flag format is deprecated and will be removed in a future release, please use the new format: %s\n", newArg)
 			os.Args[i] = newArg
 		}
 	}
+
+	promlogConfig := &promlog.Config{}
 
 	flag.AddFlags(kingpin.CommandLine, promlogConfig)
 	kingpin.Version(version.Print(exporterName))
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
+	logger := promlog.New(promlogConfig)
 
 	level.Info(logger).Log("msg", "Starting nginx-prometheus-exporter", "version", version.Info())
 	level.Info(logger).Log("msg", "Build context", "build_context", version.BuildContext())
