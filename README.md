@@ -336,6 +336,32 @@ Name | Type | Description | Labels
 `nginxplus_stream_limit_connection_rejected` | Counter | Total number of connections that were rejected | `zone` |
 `nginxplus_stream_limit_connection_rejected_dry_run` | Counter | Total number of connections accounted as rejected in the dry run mode | `zone` |
 
+#### [Cache](https://nginx.org/en/docs/http/ngx_http_api_module.html#http_caches_http_cache_zone_name)
+
+Name | Type | Description | Labels
+----|----|----|----
+`nginxplus_cache_size` | Gauge | Total size of the cache | `cache`
+`nginxplus_cache_max_size` | Gauge | Maximum size of the cache | `cache`
+`nginxplus_cache_cold` | Gauge | Is the cache considered cold | `cache`
+`nginxplus_cache_hit_responses` | Counter | Total number of cache hits | `cache`
+`nginxplus_cache_hit_bytes` | Counter | Total number of bytes returned from cache hits | `cache`
+`nginxplus_cache_stale_responses` | Counter | Total number of stale cache hits | `cache`
+`nginxplus_cache_stale_bytes` | Counter | Total number of bytes returned from stale cache hits | `cache`
+`nginxplus_cache_updating_responses` | Counter | Total number of cache hits while cache is updating | `cache`
+`nginxplus_cache_updating_bytes` | Counter | Total number of bytes returned from cache while cache is updating | `cache`
+`nginxplus_cache_revalidated_responses` | Counter | Total number of cache revalidations | `cache`
+`nginxplus_cache_revalidated_bytes` | Counter | Total number of bytes returned from cache revalidations | `cache`
+`nginxplus_cache_miss_responses` | Counter | Total number of cache misses | `cache`
+`nginxplus_cache_miss_bytes` | Counter | Total number of bytes returned from cache misses | `cache`
+`nginxplus_cache_expired_responses` | Counter | Total number of cache hits with expired TTL | `cache`
+`nginxplus_cache_expired_bytes` | Counter | Total number of bytes returned from cache hits with expired TTL | `cache`
+`nginxplus_cache_expired_responses_written` | Counter | Total number of cache hits with expired TTL written to cache | `cache`
+`nginxplus_cache_expired_bytes_written` | Counter | Total number of bytes written to cache from cache hits with expired TTL | `cache`
+`nginxplus_cache_bypass_responses` | Counter | Total number of cache bypasses | `cache`
+`nginxplus_cache_bypass_bytes` | Counter | Total number of bytes returned from cache bypasses | `cache`
+`nginxplus_cache_bypass_responses_written` | Counter | Total number of cache bypasses written to cache | `cache`
+`nginxplus_cache_bypass_bytes_written` | Counter | Total number of bytes written to cache from cache bypasses | `cache`
+
 Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their
 descriptions. Note: to see server zones related metrics you must configure [status
 zones](https://nginx.org/en/docs/http/ngx_http_status_module.html#status_zone) and to see upstream related metrics you

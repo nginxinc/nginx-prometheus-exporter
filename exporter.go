@@ -180,7 +180,7 @@ func main() {
 			level.Error(logger).Log("msg", "Could not create Nginx Plus Client", "error", err.Error())
 			os.Exit(1)
 		}
-		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil)
+		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil, nil)
 		prometheus.MustRegister(collector.NewNginxPlusCollector(plusClient, "nginxplus", variableLabelNames, constLabels, logger))
 	} else {
 		ossClient := client.NewNginxClient(httpClient, *scrapeURI)
