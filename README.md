@@ -362,6 +362,17 @@ Name | Type | Description | Labels
 `nginxplus_cache_bypass_responses_written` | Counter | Total number of cache bypasses written to cache | `cache`
 `nginxplus_cache_bypass_bytes_written` | Counter | Total number of bytes written to cache from cache bypasses | `cache`
 
+#### [Worker](hhttps://nginx.org/en/docs/http/ngx_http_api_module.html#workers)
+
+Name | Type  | Description | Labels
+----|-------|----|------------|
+`nginxplus_worker_connection_accepted` | Counter | The total number of accepted client connections | `id`, `pid` |
+`nginxplus_worker_connection_dropped` | Counter | The total number of accepted client connections | `id`, `pid` |
+`nginxplus_worker_connection_active` | Gauge | The current number of active client connections | `id`, `pid` |
+`nginxplus_worker_connection_idle` | Gauge | The current number of idle client connection | `id`, `pid` |
+`nginxplus_worker_http_requests_total` | Counter | The total number of client requests received by the worker process | `id`, `pid` |
+`nginxplus_worker_http_requests_current` | Gauge | The current number of client requests that are currently being processed by the worker process | `id`, `pid` |
+
 Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their
 descriptions. Note: to see server zones related metrics you must configure [status
 zones](https://nginx.org/en/docs/http/ngx_http_status_module.html#status_zone) and to see upstream related metrics you
