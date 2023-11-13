@@ -24,6 +24,8 @@ type LabelUpdater interface {
 	DeleteServerZoneLabels(zoneNames []string)
 	UpdateStreamServerZoneLabels(streamServerZoneLabelValues map[string][]string)
 	DeleteStreamServerZoneLabels(zoneNames []string)
+	UpdateCacheZoneLabels(cacheLabelValues map[string][]string)
+	DeleteCacheZoneLabels(cacheNames []string)
 }
 
 // NginxPlusCollector collects NGINX Plus metrics. It implements prometheus.Collector interface.
@@ -42,6 +44,7 @@ type NginxPlusCollector struct {
 	limitRequestMetrics            map[string]*prometheus.Desc
 	limitConnectionMetrics         map[string]*prometheus.Desc
 	streamLimitConnectionMetrics   map[string]*prometheus.Desc
+	cacheZoneMetrics               map[string]*prometheus.Desc
 	upMetric                       prometheus.Gauge
 	mutex                          sync.Mutex
 	variableLabelNames             VariableLabelNames
@@ -51,6 +54,7 @@ type NginxPlusCollector struct {
 	streamServerZoneLabels         map[string][]string
 	upstreamServerPeerLabels       map[string][]string
 	streamUpstreamServerPeerLabels map[string][]string
+	cacheZoneLabels                map[string][]string
 	variableLabelsMutex            sync.RWMutex
 	logger                         log.Logger
 }
@@ -163,6 +167,24 @@ func (c *NginxPlusCollector) DeleteStreamServerZoneLabels(zoneNames []string) {
 	c.variableLabelsMutex.Unlock()
 }
 
+// UpdateCacheZoneLabels updates the Upstream Cache Zone labels
+func (c *NginxPlusCollector) UpdateCacheZoneLabels(cacheZoneLabelValues map[string][]string) {
+	c.variableLabelsMutex.Lock()
+	for k, v := range cacheZoneLabelValues {
+		c.cacheZoneLabels[k] = v
+	}
+	c.variableLabelsMutex.Unlock()
+}
+
+// DeleteCacheZoneLabels deletes the Cache Zone Labels
+func (c *NginxPlusCollector) DeleteCacheZoneLabels(cacheZoneNames []string) {
+	c.variableLabelsMutex.Lock()
+	for _, k := range cacheZoneNames {
+		delete(c.cacheZoneLabels, k)
+	}
+	c.variableLabelsMutex.Unlock()
+}
+
 func (c *NginxPlusCollector) getUpstreamServerLabelValues(upstreamName string) []string {
 	c.variableLabelsMutex.RLock()
 	defer c.variableLabelsMutex.RUnlock()
@@ -207,11 +229,12 @@ type VariableLabelNames struct {
 	StreamUpstreamServerPeerVariableLabelNames []string
 	StreamServerZoneVariableLabelNames         []string
 	StreamUpstreamServerVariableLabelNames     []string
+	CacheZoneLabelNames                        []string
 }
 
 // NewVariableLabels creates a new struct for VariableNames for the collector
 func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZoneVariableLabelNames []string, upstreamServerPeerVariableLabelNames []string,
-	streamUpstreamServerVariableLabelNames []string, streamServerZoneLabels []string, streamUpstreamServerPeerVariableLabelNames []string,
+	streamUpstreamServerVariableLabelNames []string, streamServerZoneLabels []string, streamUpstreamServerPeerVariableLabelNames []string, cacheZoneLabelNames []string,
 ) VariableLabelNames {
 	return VariableLabelNames{
 		UpstreamServerVariableLabelNames:           upstreamServerVariableLabelNames,
@@ -220,6 +243,7 @@ func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZone
 		StreamUpstreamServerVariableLabelNames:     streamUpstreamServerVariableLabelNames,
 		StreamServerZoneVariableLabelNames:         streamServerZoneLabels,
 		StreamUpstreamServerPeerVariableLabelNames: streamUpstreamServerPeerVariableLabelNames,
+		CacheZoneLabelNames:                        cacheZoneLabelNames,
 	}
 }
 
@@ -496,6 +520,29 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"rejected_dry_run": newStreamLimitConnectionMetric(namespace, "rejected_dry_run", "Total number of connections accounted as rejected in the dry run mode", constLabels),
 		},
 		upMetric: newUpMetric(namespace, constLabels),
+		cacheZoneMetrics: map[string]*prometheus.Desc{
+			"size":                      newCacheZoneMetric(namespace, "size", "Total size of the cache", constLabels),
+			"max_size":                  newCacheZoneMetric(namespace, "max_size", "Maximum size of the cache", constLabels),
+			"cold":                      newCacheZoneMetric(namespace, "cold", "Is the cache considered cold", constLabels),
+			"hit_responses":             newCacheZoneMetric(namespace, "hit_responses", "Total number of cache hits", constLabels),
+			"hit_bytes":                 newCacheZoneMetric(namespace, "hit_bytes", "Total number of bytes returned from cache", constLabels),
+			"stale_responses":           newCacheZoneMetric(namespace, "stale_responses", "Total number of stale cache hits", constLabels),
+			"stale_bytes":               newCacheZoneMetric(namespace, "stale_bytes", "Total number of bytes returned from stale cache", constLabels),
+			"updating_responses":        newCacheZoneMetric(namespace, "updating_responses", "Total number of cache hits while cache is updating", constLabels),
+			"updating_bytes":            newCacheZoneMetric(namespace, "updating_bytes", "Total number of bytes returned from cache while cache is updating", constLabels),
+			"revalidated_responses":     newCacheZoneMetric(namespace, "revalidated_responses", "Total number of cache revalidations", constLabels),
+			"revalidated_bytes":         newCacheZoneMetric(namespace, "revalidated_bytes", "Total number of bytes returned from cache revalidations", constLabels),
+			"miss_responses":            newCacheZoneMetric(namespace, "miss_responses", "Total number of cache misses", constLabels),
+			"miss_bytes":                newCacheZoneMetric(namespace, "miss_bytes", "Total number of bytes returned from cache misses", constLabels),
+			"expired_responses":         newCacheZoneMetric(namespace, "expired_responses", "Total number of cache hits with expired TTL", constLabels),
+			"expired_bytes":             newCacheZoneMetric(namespace, "expired_bytes", "Total number of bytes returned from cache hits with expired TTL", constLabels),
+			"expired_responses_written": newCacheZoneMetric(namespace, "expired_responses_written", "Total number of cache hits with expired TTL written to cache", constLabels),
+			"expired_bytes_written":     newCacheZoneMetric(namespace, "expired_bytes_written", "Total number of bytes written to cache from cache hits with expired TTL", constLabels),
+			"bypass_responses":          newCacheZoneMetric(namespace, "bypass_responses", "Total number of cache bypasses", constLabels),
+			"bypass_bytes":              newCacheZoneMetric(namespace, "bypass_bytes", "Total number of bytes returned from cache bypasses", constLabels),
+			"bypass_responses_written":  newCacheZoneMetric(namespace, "bypass_responses_written", "Total number of cache bypasses written to cache", constLabels),
+			"bypass_bytes_written":      newCacheZoneMetric(namespace, "bypass_bytes_written", "Total number of bytes written to cache from cache bypasses", constLabels),
+		},
 	}
 }
 
@@ -541,6 +588,9 @@ func (c *NginxPlusCollector) Describe(ch chan<- *prometheus.Desc) {
 		ch <- m
 	}
 	for _, m := range c.streamLimitConnectionMetrics {
+		ch <- m
+	}
+	for _, m := range c.cacheZoneMetrics {
 		ch <- m
 	}
 }
@@ -1125,6 +1175,38 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 		ch <- prometheus.MustNewConstMetric(c.streamLimitConnectionMetrics["rejected"], prometheus.CounterValue, float64(zone.Rejected), name)
 		ch <- prometheus.MustNewConstMetric(c.streamLimitConnectionMetrics["rejected_dry_run"], prometheus.CounterValue, float64(zone.RejectedDryRun), name)
 	}
+
+	for name, zone := range stats.Caches {
+
+		var cold float64
+		if zone.Cold {
+			cold = 1.0
+		} else {
+			cold = 0.0
+		}
+
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["size"], prometheus.GaugeValue, float64(zone.Size), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["max_size"], prometheus.GaugeValue, float64(zone.MaxSize), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["cold"], prometheus.GaugeValue, cold, name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["hit_responses"], prometheus.CounterValue, float64(zone.Hit.Responses), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["hit_bytes"], prometheus.CounterValue, float64(zone.Hit.Bytes), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["stale_responses"], prometheus.CounterValue, float64(zone.Stale.Responses), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["stale_bytes"], prometheus.CounterValue, float64(zone.Stale.Bytes), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["updating_responses"], prometheus.CounterValue, float64(zone.Updating.Responses), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["updating_bytes"], prometheus.CounterValue, float64(zone.Updating.Bytes), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["revalidated_responses"], prometheus.CounterValue, float64(zone.Revalidated.Responses), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["revalidated_bytes"], prometheus.CounterValue, float64(zone.Revalidated.Bytes), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["miss_responses"], prometheus.CounterValue, float64(zone.Miss.Responses), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["miss_bytes"], prometheus.CounterValue, float64(zone.Miss.Bytes), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["expired_responses"], prometheus.CounterValue, float64(zone.Expired.Responses), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["expired_bytes"], prometheus.CounterValue, float64(zone.Expired.Bytes), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["expired_responses_written"], prometheus.CounterValue, float64(zone.Expired.ResponsesWritten), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["expired_bytes_written"], prometheus.CounterValue, float64(zone.Expired.BytesWritten), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["bypass_responses"], prometheus.CounterValue, float64(zone.Bypass.Responses), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["bypass_bytes"], prometheus.CounterValue, float64(zone.Bypass.Bytes), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["bypass_responses_written"], prometheus.CounterValue, float64(zone.Bypass.ResponsesWritten), name)
+		ch <- prometheus.MustNewConstMetric(c.cacheZoneMetrics["bypass_bytes_written"], prometheus.CounterValue, float64(zone.Bypass.BytesWritten), name)
+	}
 }
 
 var upstreamServerStates = map[string]float64{
@@ -1194,4 +1276,8 @@ func newLimitConnectionMetric(namespace string, metricName string, docString str
 
 func newStreamLimitConnectionMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
 	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "stream_limit_connection", metricName), docString, []string{"zone"}, constLabels)
+}
+
+func newCacheZoneMetric(namespace string, metricName string, docString string, constLabels prometheus.Labels) *prometheus.Desc {
+	return prometheus.NewDesc(prometheus.BuildFQName(namespace, "cache", metricName), docString, []string{"zone"}, constLabels)
 }
