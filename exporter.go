@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"maps"
 	"net"
 	"net/http"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"github.com/nginxinc/nginx-prometheus-exporter/collector"
 
 	"github.com/alecthomas/kingpin/v2"
+	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -83,7 +85,7 @@ var (
 	webConfig     = kingpinflag.AddFlags(kingpin.CommandLine, ":9113")
 	metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").Envar("TELEMETRY_PATH").String()
 	nginxPlus     = kingpin.Flag("nginx.plus", "Start the exporter for NGINX Plus. By default, the exporter is started for NGINX.").Default("false").Envar("NGINX_PLUS").Bool()
-	scrapeURI     = kingpin.Flag("nginx.scrape-uri", "A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API.").Default("http://127.0.0.1:8080/stub_status").String()
+	scrapeURIs    = kingpin.Flag("nginx.scrape-uri", "A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API.").Default("http://127.0.0.1:8080/stub_status").Strings()
 	sslVerify     = kingpin.Flag("nginx.ssl-verify", "Perform SSL certificate verification.").Default("false").Envar("SSL_VERIFY").Bool()
 	sslCaCert     = kingpin.Flag("nginx.ssl-ca-cert", "Path to the PEM encoded CA certificate file used to validate the servers SSL certificate.").Default("").Envar("SSL_CA_CERT").String()
 	sslClientCert = kingpin.Flag("nginx.ssl-client-cert", "Path to the PEM encoded client certificate file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_CERT").String()
@@ -120,6 +122,11 @@ func main() {
 
 	prometheus.MustRegister(version.NewCollector(exporterName))
 
+	if len(*scrapeURIs) == 0 {
+		level.Error(logger).Log("msg", "No scrape addresses provided")
+		os.Exit(1)
+	}
+
 	// #nosec G402
 	sslConfig := &tls.Config{InsecureSkipVerify: !*sslVerify}
 	if *sslCaCert != "" {
@@ -149,42 +156,17 @@ func main() {
 	transport := &http.Transport{
 		TLSClientConfig: sslConfig,
 	}
-	if strings.HasPrefix(*scrapeURI, "unix:") {
-		socketPath, requestPath, err := parseUnixSocketAddress(*scrapeURI)
-		if err != nil {
-			level.Error(logger).Log("msg", "Parsing unix domain socket scrape address failed", "uri", *scrapeURI, "error", err.Error())
-			os.Exit(1)
-		}
 
-		transport.DialContext = func(_ context.Context, _, _ string) (net.Conn, error) {
-			return net.Dial("unix", socketPath)
-		}
-		newScrapeURI := "http://unix" + requestPath
-		scrapeURI = &newScrapeURI
-	}
-
-	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", version.Version)
-	userAgentRT := &userAgentRoundTripper{
-		agent: userAgent,
-		rt:    transport,
-	}
-
-	httpClient := &http.Client{
-		Timeout:   *timeout,
-		Transport: userAgentRT,
-	}
-
-	if *nginxPlus {
-		plusClient, err := plusclient.NewNginxClient(*scrapeURI, plusclient.WithHTTPClient(httpClient))
-		if err != nil {
-			level.Error(logger).Log("msg", "Could not create Nginx Plus Client", "error", err.Error())
-			os.Exit(1)
-		}
-		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil, nil, nil)
-		prometheus.MustRegister(collector.NewNginxPlusCollector(plusClient, "nginxplus", variableLabelNames, constLabels, logger))
+	if len(*scrapeURIs) == 1 {
+		registerCollector(logger, transport, (*scrapeURIs)[0], constLabels)
 	} else {
-		ossClient := client.NewNginxClient(httpClient, *scrapeURI)
-		prometheus.MustRegister(collector.NewNginxCollector(ossClient, "nginx", constLabels, logger))
+		for _, addr := range *scrapeURIs {
+			// add scrape URI to const labels
+			labels := maps.Clone(constLabels)
+			labels["addr"] = addr
+
+			registerCollector(logger, transport, addr, labels)
+		}
 	}
 
 	http.Handle(*metricsPath, promhttp.Handler())
@@ -233,6 +215,46 @@ func main() {
 	srvCtx, srvCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer srvCancel()
 	_ = srv.Shutdown(srvCtx)
+}
+
+func registerCollector(logger log.Logger, transport *http.Transport,
+	addr string, labels map[string]string,
+) {
+	if strings.HasPrefix(addr, "unix:") {
+		socketPath, requestPath, err := parseUnixSocketAddress(addr)
+		if err != nil {
+			level.Error(logger).Log("msg", "Parsing unix domain socket scrape address failed", "uri", addr, "error", err.Error())
+			os.Exit(1)
+		}
+
+		transport.DialContext = func(_ context.Context, _, _ string) (net.Conn, error) {
+			return net.Dial("unix", socketPath)
+		}
+		addr = "http://unix" + requestPath
+	}
+
+	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", version.Version)
+
+	httpClient := &http.Client{
+		Timeout: *timeout,
+		Transport: &userAgentRoundTripper{
+			agent: userAgent,
+			rt:    transport,
+		},
+	}
+
+	if *nginxPlus {
+		plusClient, err := plusclient.NewNginxClient(addr, plusclient.WithHTTPClient(httpClient))
+		if err != nil {
+			level.Error(logger).Log("msg", "Could not create Nginx Plus Client", "error", err.Error())
+			os.Exit(1)
+		}
+		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil, nil, nil)
+		prometheus.MustRegister(collector.NewNginxPlusCollector(plusClient, "nginxplus", variableLabelNames, labels, logger))
+	} else {
+		ossClient := client.NewNginxClient(httpClient, addr)
+		prometheus.MustRegister(collector.NewNginxCollector(ossClient, "nginx", labels, logger))
+	}
 }
 
 type userAgentRoundTripper struct {
