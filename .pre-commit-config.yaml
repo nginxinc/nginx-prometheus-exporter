@@ -41,12 +41,12 @@ repos:
     args: [--new-from-patch=/tmp/diff.patch]
 
 - repo: https://github.com/gitleaks/gitleaks
-  rev: v8.18.0
+  rev: v8.18.1
   hooks:
   - id: gitleaks
 
 - repo: https://github.com/DavidAnson/markdownlint-cli2
-  rev: v0.10.0
+  rev: v0.11.0
   hooks:
   - id: markdownlint-cli2
 
