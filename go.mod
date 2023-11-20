@@ -3,7 +3,7 @@ module github.com/nginxinc/nginx-prometheus-exporter
 go 1.21.3
 
 require (
-	github.com/alecthomas/kingpin/v2 v2.3.2
+	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/go-kit/log v0.2.1
 	github.com/nginxinc/nginx-plus-go-client v1.2.0
 	github.com/prometheus/client_golang v1.17.0
