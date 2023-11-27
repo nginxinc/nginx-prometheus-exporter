@@ -23,7 +23,7 @@ jobs:
       actions: read # for 8398a7/action-slack
     steps:
       - name: Data
-        uses: actions/github-script@e69ef5462fd455e02edcaf4dd7708eda96b9eda0 # v7.0.0
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
         continue-on-error: true
         id: data
         with:
