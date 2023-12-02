@@ -45,7 +45,7 @@ sboms:
       - "${artifact}.spdx.json"
 
 brews:
-  - tap:
+  - repository:
       owner: nginxinc
       name: homebrew-tap
       token: '{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}'
