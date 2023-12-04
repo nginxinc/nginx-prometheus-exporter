@@ -45,7 +45,7 @@ sboms:
       - "${artifact}.spdx.json"
 
 brews:
-  - tap:
+  - repository:
       owner: nginxinc
       name: homebrew-tap
       token: '{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}'
@@ -82,3 +82,21 @@ milestones:
 
 snapshot:
   name_template: 'edge'
+
+snapcrafts:
+  - name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    title: NGINX Prometheus Exporter
+    summary: NGINX Prometheus Exporter for NGINX and NGINX Plus
+    description: |
+      NGINX Prometheus exporter fetches the metrics from NGINX or NGINX Plus,
+      converts the metrics into appropriate Prometheus metrics types and finally exposes
+      them via an HTTP server to be collected by Prometheus.
+    grade: stable
+    confinement: strict
+    publish: true
+    license: 'Apache-2.0'
+    apps:
+      nginx-prometheus-exporter:
+        command: nginx-prometheus-exporter
+        plugs: ["network", "network-bind"]
+    disable: "{{ if .IsSnapshot }}true{{ end }}"
