@@ -150,6 +150,18 @@ jobs:
         uses: sigstore/cosign-installer@1fc5bd396d372bee37d608f955b336615edf79c8 # v3.2.0
         if: github.ref_type == 'tag'
 
+      - name: Setup Snapcraft
+        run: |
+          sudo apt-get update
+          sudo apt-get -yq --no-install-suggests --no-install-recommends install snapcraft
+          mkdir -p $HOME/.cache/snapcraft/download
+          mkdir -p $HOME/.cache/snapcraft/stage-packages
+        if: github.ref_type == 'tag'
+
+      - name: Login to Snapcraft
+        run: snapcraft login --with <(echo "${{ secrets.SNAPCRAFT_LOGIN }}")
+        if: github.ref_type == 'tag'
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
         with:
