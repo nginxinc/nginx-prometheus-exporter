@@ -473,7 +473,8 @@ The SBOMs for the binaries are available in the releases page. The SBOMs are gen
 
 ### Docker Image
 
-The SBOM for the Docker image is available in the [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter),
+The SBOM for the Docker image is available in the
+[DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter),
 [GitHub Container registry](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter),
 [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) and
 [Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter) repositories. The SBOMs are generated using
@@ -484,6 +485,21 @@ For example to retrieve the SBOM for `linux/amd64` from Docker Hub and analyze i
 
 ```console
 docker buildx imagetools inspect nginx/nginx-prometheus-exporter:edge --format '{{ json (index .SBOM "linux/amd64").SPDX }}' | grype
+```
+
+## Provenance
+
+We generate provenance for the Docker image and it's available in the
+[DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter),
+[GitHub Container registry](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter),
+[Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) and
+[Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter) repositories, stored as an attestation in the
+image manifest.
+
+For example to retrieve the provenance for `linux/amd64` from Docker Hub you can run the following command:
+
+```console
+docker buildx imagetools inspect nginx/nginx-prometheus-exporter:edge --format '{{ json (index .Provenance "linux/amd64").SLSA }}'
 ```
 
 ## Contacts

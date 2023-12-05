@@ -143,7 +143,7 @@ jobs:
         if: github.event_name != 'pull_request'
 
       - name: Download Syft
-        uses: anchore/sbom-action/download-syft@fd74a6fb98a204a1ad35bbfae0122c1a302ff88b # v0.15.0
+        uses: anchore/sbom-action/download-syft@5ecf649a417b8ae17dc8383dc32d46c03f2312df # v0.15.1
         if: github.ref_type == 'tag'
 
       - name: Install Cosign
@@ -190,7 +190,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: false
+          provenance: ${{ github.event_name != 'pull_request' && 'mode=max' || 'false' }}
           sbom: ${{ github.event_name != 'pull_request' }}
 
       - name: Scan image
