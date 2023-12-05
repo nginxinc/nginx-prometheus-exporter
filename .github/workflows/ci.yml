@@ -121,6 +121,8 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
           labels: |
             org.opencontainers.image.vendor=NGINX Inc <integrations@nginx.com>
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
       - name: Create/Update Draft
         uses: lucacome/draft-release@785af55296512c907875513e397320ae3f1306bb # v1.0.1
@@ -186,6 +188,7 @@ jobs:
           platforms: ${{ github.event_name != 'pull_request' && env.DOCKER_PLATFORMS || '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
           load: ${{ github.event_name == 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
