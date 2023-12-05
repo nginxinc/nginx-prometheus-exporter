@@ -106,7 +106,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
+        uses: docker/metadata-action@31cebacef4805868f9ce9a0cb03ee36c32df2ac4 # v5.3.0
         with:
           images: |
             nginx/nginx-prometheus-exporter
@@ -136,7 +136,7 @@ jobs:
 
             - Use the {{version}} image from our [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/tags?page=1&ordering=last_updated&name={{version-number}}), [GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter), [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) or [Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter/tag/{{version-number}}?tab=tags).
             - Download the latest binaries from the [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/{{version}}).
-            - Update to the latest version with `brew upgrade nginx-prometheus-exporter`.
+            - Update to the latest version with `brew upgrade nginx-prometheus-exporter` or `snap refresh nginx-prometheus-exporter`.
 
             ## Compatibility
 
@@ -145,7 +145,7 @@ jobs:
         if: github.event_name != 'pull_request'
 
       - name: Download Syft
-        uses: anchore/sbom-action/download-syft@fd74a6fb98a204a1ad35bbfae0122c1a302ff88b # v0.15.0
+        uses: anchore/sbom-action/download-syft@5ecf649a417b8ae17dc8383dc32d46c03f2312df # v0.15.1
         if: github.ref_type == 'tag'
 
       - name: Install Cosign
@@ -193,7 +193,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: false
+          provenance: ${{ github.event_name != 'pull_request' && 'mode=max' || 'false' }}
           sbom: ${{ github.event_name != 'pull_request' }}
 
       - name: Scan image
