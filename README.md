@@ -6,6 +6,7 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/nginxinc/nginx-prometheus-exporter/total?logo=github)
 ![GitHub release (latest by SemVer)](https://img.shields.io/github/downloads/nginxinc/nginx-prometheus-exporter/latest/total?sort=semver&logo=github)
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/nginxinc/nginx-prometheus-exporter?logo=github&sort=semver)](https://github.com/nginxinc/nginx-prometheus-exporter/releases/latest)
+[![nginx-prometheus-exporter](https://snapcraft.io/nginx-prometheus-exporter/badge.svg)](https://snapcraft.io/nginx-prometheus-exporter)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/nginxinc/nginx-prometheus-exporter?logo=go)
 [![Docker Pulls](https://img.shields.io/docker/pulls/nginx/nginx-prometheus-exporter?logo=docker&logoColor=white)](https://hub.docker.com/r/nginx/nginx-prometheus-exporter)
 ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/nginx/nginx-prometheus-exporter?logo=docker&logoColor=white&sort=semver)
@@ -399,8 +400,7 @@ useful for experimenting with new features that are not yet published in a stabl
 
 ### Binaries
 
-We publish the binaries for multiple Operating Systems and architectures on the GitHub [releases
-page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
+We publish the binaries for multiple Operating Systems and architectures on the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
 
 ### Homebrew
 
@@ -414,6 +414,14 @@ and then install the formula with
 
 ```console
 brew install nginx-prometheus-exporter
+```
+
+### Snap
+
+You can install the NGINX Prometheus Exporter from the [Snap Store](https://snapcraft.io/nginx-prometheus-exporter).
+
+```console
+snap install nginx-prometheus-exporter
 ```
 
 ## Building the Exporter
