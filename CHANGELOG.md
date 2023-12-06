@@ -1,16 +1,6 @@
 # Changelog
 
-## 0.11.0
-
-A list of changes can be found on Github at: [Release v0.11.0](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.11.0)
-
-## 0.10.0
-
-A list of changes can be found on Github at: [Release v0.10.0](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.10.0)
-
-## 0.9.0
-
-A list of changes can be found on Github at: [Release v0.9.0](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/v0.9.0)
+Starting with version 0.9.0 an automatically generated list of changes can be found on the [GitHub Releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
 
 ## 0.8.0
 

@@ -60,6 +60,7 @@ jobs:
         id: go
         run: |
           echo "go_path=$(go env GOPATH)" >> $GITHUB_OUTPUT
+
       - name: Setup QEMU
         uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
         with:
@@ -68,6 +69,9 @@ jobs:
 
       - name: Docker Buildx
         uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+        with:
+          version: latest
+
       - name: DockerHub Login
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
@@ -160,10 +164,6 @@ jobs:
           mkdir -p $HOME/.cache/snapcraft/stage-packages
         if: github.ref_type == 'tag'
 
-      - name: Login to Snapcraft
-        run: snapcraft login --with <(echo "${{ secrets.SNAPCRAFT_LOGIN }}")
-        if: github.ref_type == 'tag'
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
         with:
@@ -174,6 +174,7 @@ jobs:
           GOPATH: ${{ steps.go.outputs.go_path }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.NGINX_PAT }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_COMMUNITY }}
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN }}
 
       - name: Print NGINX Prometheus Exporter info
         run: ./dist/nginx-prometheus-exporter_linux_amd64_v1/nginx-prometheus-exporter --version
@@ -188,7 +189,7 @@ jobs:
           platforms: ${{ github.event_name != 'pull_request' && env.DOCKER_PLATFORMS || '' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          annotations: ${{ steps.meta.outputs.annotations }}
+          annotations: ${{ github.event_name != 'pull_request' && steps.meta.outputs.annotations || '' }}
           load: ${{ github.event_name == 'pull_request' }}
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
