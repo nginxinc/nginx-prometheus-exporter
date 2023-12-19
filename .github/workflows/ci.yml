@@ -110,7 +110,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@31cebacef4805868f9ce9a0cb03ee36c32df2ac4 # v5.3.0
+        uses: docker/metadata-action@9dc751fe249ad99385a2583ee0d084c400eee04e # v5.4.0
         with:
           images: |
             nginx/nginx-prometheus-exporter
@@ -129,7 +129,7 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
       - name: Create/Update Draft
-        uses: lucacome/draft-release@785af55296512c907875513e397320ae3f1306bb # v1.0.1
+        uses: lucacome/draft-release@52f02d1a69b61568e54ab5cf86ce91503bac4066 # v1.0.2
         with:
           minor-label: "enhancement"
           major-label: "change"
@@ -153,7 +153,7 @@ jobs:
         if: github.ref_type == 'tag'
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@1fc5bd396d372bee37d608f955b336615edf79c8 # v3.2.0
+        uses: sigstore/cosign-installer@9614fae9e5c5eddabb09f90a270fcb487c9f7149 # v3.3.0
         if: github.ref_type == 'tag'
 
       - name: Setup Snapcraft
@@ -207,7 +207,7 @@ jobs:
           add-cpes-if-none: true
 
       - name: Upload scan result to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@407ffafae6a767df3e0230c3df91b6443ae8df75 # v2.22.8
+        uses: github/codeql-action/upload-sarif@b374143c1149a9115d881581d29b8390bbcbb59c # v3.22.11
         continue-on-error: true
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
