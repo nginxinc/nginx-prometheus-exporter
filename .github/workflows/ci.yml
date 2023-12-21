@@ -44,6 +44,7 @@ jobs:
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
       id-token: write # for OIDC login to AWS ECR and goreleaser/goreleaser-action to sign artifacts
       packages: write # for docker/build-push-action to push to GHCR
+      issues: write # for goreleaser/goreleaser-action to close milestones
     needs: unit-tests
     steps:
       - name: Checkout Repository
