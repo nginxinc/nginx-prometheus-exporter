@@ -1,3 +1,8 @@
+before:
+  hooks:
+    - ./scripts/completions.sh
+    - ./scripts/manpages.sh
+
 builds:
   - env:
       - CGO_ENABLED=0
@@ -38,6 +43,11 @@ archives:
   - format_overrides:
       - goos: windows
         format: zip
+    files:
+      - README.md
+      - LICENSE.md
+      - completions/*
+      - manpages/*
 
 sboms:
   - artifacts: archive
@@ -53,11 +63,13 @@ brews:
     homepage: https://github.com/nginxinc/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     license: Apache-2.0
-    install: |
-      bin.install "nginx-prometheus-exporter"
     commit_author:
       name: nginx-bot
       email: integrations@nginx.com
+    extra_install: |-
+      bash_completion.install "completions/nginx-prometheus-exporter.bash" => "nginx-prometheus-exporter"
+      zsh_completion.install "completions/nginx-prometheus-exporter.zsh" => "_nginx-prometheus-exporter"
+      man1.install "manpages/nginx-prometheus-exporter.1.gz"
 
 signs:
   - cmd: cosign
@@ -99,6 +111,7 @@ snapcrafts:
       nginx-prometheus-exporter:
         command: nginx-prometheus-exporter
         plugs: ["network", "network-bind"]
+        completer: completions/nginx-prometheus-exporter.bash
     disable: "{{ if .IsSnapshot }}true{{ end }}"
 
 nix:
