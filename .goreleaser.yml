@@ -108,7 +108,7 @@ nix:
       token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
     homepage: https://github.com/nginxinc/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
-    license: Apache-2.0
+    license: asl20
     commit_author:
       name: nginx-bot
       email: integrations@nginx.com
