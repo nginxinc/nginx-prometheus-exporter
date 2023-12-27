@@ -8,3 +8,6 @@
 # the binary
 nginx-prometheus-exporter
 dist/
+
+completions/
+manpages/
