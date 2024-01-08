@@ -128,3 +128,21 @@ nix:
     extra_install: |-
       installManPage ./manpages/nginx-prometheus-exporter.1.gz
       installShellCompletion ./completions/*
+
+winget:
+  - publisher: nginxinc
+    license: Apache-2.0
+    homepage: https://github.com/nginxinc/nginx-prometheus-exporter
+    short_description: NGINX Prometheus Exporter for NGINX and NGINX Plus
+    repository:
+      owner: nginxinc
+      name: winget-pkgs
+      token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
+      branch: "nginx-prometheus-exporter-{{.Version}}"
+      pull_request:
+        enabled: true
+        draft: true
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
