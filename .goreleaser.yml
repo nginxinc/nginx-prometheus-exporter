@@ -58,9 +58,9 @@ brews:
   - repository:
       owner: nginxinc
       name: homebrew-tap
-      token: '{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}'
+      token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
     folder: Formula
-    homepage: https://www.nginx.com/
+    homepage: https://github.com/nginxinc/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     license: Apache-2.0
     commit_author:
@@ -113,3 +113,18 @@ snapcrafts:
         plugs: ["network", "network-bind"]
         completer: completions/nginx-prometheus-exporter.bash
     disable: "{{ if .IsSnapshot }}true{{ end }}"
+
+nix:
+  - repository:
+      owner: nginxinc
+      name: nur
+      token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
+    homepage: https://github.com/nginxinc/nginx-prometheus-exporter
+    description: NGINX Prometheus Exporter for NGINX and NGINX Plus
+    license: asl20
+    commit_author:
+      name: nginx-bot
+      email: integrations@nginx.com
+    extra_install: |-
+      installManPage ./manpages/nginx-prometheus-exporter.1.gz
+      installShellCompletion ./completions/*
