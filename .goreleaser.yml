@@ -146,3 +146,13 @@ winget:
           owner: microsoft
           name: winget-pkgs
           branch: master
+
+scoops:
+  - repository:
+      owner: nginxinc
+      name: scoop-bucket
+      token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
+    folder: bucket
+    homepage: https://github.com/nginxinc/nginx-prometheus-exporter
+    description: NGINX Prometheus Exporter for NGINX and NGINX Plus
+    license: Apache-2.0

@@ -141,7 +141,7 @@ jobs:
 
             - Use the {{version}} image from our [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/tags?page=1&ordering=last_updated&name={{version-number}}), [GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter), [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) or [Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter/tag/{{version-number}}?tab=tags).
             - Download the latest binaries from the [GitHub releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases/tag/{{version}}).
-            - Update to the latest version with `brew upgrade nginx-prometheus-exporter` or `snap refresh nginx-prometheus-exporter`.
+            - Update to the latest version with `brew upgrade nginx-prometheus-exporter`, `snap refresh nginx-prometheus-exporter` or `scoop update nginx-prometheus-exporter`.
 
             ## Compatibility
 
