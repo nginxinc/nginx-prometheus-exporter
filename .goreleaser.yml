@@ -45,7 +45,7 @@ archives:
         format: zip
     files:
       - README.md
-      - LICENSE.md
+      - LICENSE
       - completions/*
       - manpages/*
 
@@ -115,7 +115,8 @@ snapcrafts:
     disable: "{{ if .IsSnapshot }}true{{ end }}"
 
 nix:
-  - repository:
+  - name: nginx-prometheus-exporter
+    repository:
       owner: nginxinc
       name: nur
       token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
@@ -130,7 +131,8 @@ nix:
       installShellCompletion ./completions/*
 
 winget:
-  - publisher: nginxinc
+  - name: nginx-prometheus-exporter
+    publisher: nginxinc
     license: Apache-2.0
     homepage: https://github.com/nginxinc/nginx-prometheus-exporter
     short_description: NGINX Prometheus Exporter for NGINX and NGINX Plus
