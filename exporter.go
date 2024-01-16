@@ -93,6 +93,13 @@ var (
 
 	// Custom command-line flags
 	timeout = createPositiveDurationFlag(kingpin.Flag("nginx.timeout", "A timeout for scraping metrics from NGINX or NGINX Plus.").Default("5s").Envar("TIMEOUT").HintOptions("5s", "10s", "30s", "1m", "5m"))
+
+	// Flags from external modules which need environment variables added
+	overrideEnvVars = map[string]string{
+		"web.listen-address": "LISTEN_ADDRESS",
+		"web.systemd-socket": "SYSTEMD_SOCKET",
+		"web.config.file":    "CONFIG_FILE",
+	}
 )
 
 const exporterName = "nginx_exporter"
@@ -114,6 +121,15 @@ func main() {
 	flag.AddFlags(kingpin.CommandLine, promlogConfig)
 	kingpin.Version(version.Print(exporterName))
 	kingpin.HelpFlag.Short('h')
+
+	// add environment variable options to flags
+	for k, v := range overrideEnvVars {
+		f := kingpin.CommandLine.GetFlag(k)
+		if f != nil {
+			f.Envar(v)
+		}
+	}
+
 	kingpin.Parse()
 	logger := promlog.New(promlogConfig)
 
