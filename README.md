@@ -110,21 +110,21 @@ usage: nginx-prometheus-exporter [<flags>]
 
 Flags:
   -h, --[no-]help                Show context-sensitive help (also try --help-long and --help-man).
-      --web.listen-address=:9113 ...
-                                 Addresses on which to expose metrics and web interface. Repeatable for multiple addresses.
-      --web.config.file=""       Path to configuration file that can enable TLS or authentication. See: https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md
-      --web.telemetry-path="/metrics"
+      --web.listen-address=:9113 ...  
+                                 Addresses on which to expose metrics and web interface. Repeatable for multiple addresses. ($LISTEN_ADDRESS)
+      --web.config.file=""       Path to configuration file that can enable TLS or authentication. See: https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md ($CONFIG_FILE)
+      --web.telemetry-path="/metrics"  
                                  Path under which to expose metrics. ($TELEMETRY_PATH)
       --[no-]nginx.plus          Start the exporter for NGINX Plus. By default, the exporter is started for NGINX. ($NGINX_PLUS)
-      --nginx.scrape-uri=http://127.0.0.1:8080/stub_status ...
+      --nginx.scrape-uri=http://127.0.0.1:8080/stub_status ...  
                                  A URI or unix domain socket path for scraping NGINX or NGINX Plus metrics. For NGINX, the stub_status page must be available through the URI. For NGINX Plus -- the API. Repeatable for multiple URIs. ($SCRAPE_URI)
       --[no-]nginx.ssl-verify    Perform SSL certificate verification. ($SSL_VERIFY)
       --nginx.ssl-ca-cert=""     Path to the PEM encoded CA certificate file used to validate the servers SSL certificate. ($SSL_CA_CERT)
-      --nginx.ssl-client-cert=""
+      --nginx.ssl-client-cert=""  
                                  Path to the PEM encoded client certificate file to use when connecting to the server. ($SSL_CLIENT_CERT)
       --nginx.ssl-client-key=""  Path to the PEM encoded client certificate key file to use when connecting to the server. ($SSL_CLIENT_KEY)
       --nginx.timeout=5s         A timeout for scraping metrics from NGINX or NGINX Plus. ($TIMEOUT)
-      --prometheus.const-label=PROMETHEUS.CONST-LABEL ...
+      --prometheus.const-label=PROMETHEUS.CONST-LABEL ...  
                                  Label that will be used in every metric. Format is label=value. It can be repeated multiple times. ($CONST_LABELS)
       --log.level=info           Only log messages with the given severity or above. One of: [debug, info, warn, error]
       --log.format=logfmt        Output format of log messages. One of: [logfmt, json]
