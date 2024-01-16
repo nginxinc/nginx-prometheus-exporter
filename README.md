@@ -112,7 +112,7 @@ Flags:
   -h, --[no-]help                Show context-sensitive help (also try --help-long and --help-man).
       --[no-]web.systemd-socket  Use systemd socket activation listeners instead
                                  of port listeners (Linux only). ($SYSTEMD_SOCKET)
-      --web.listen-address=:9113 ...  
+      --web.listen-address=:9113 ...
                                  Addresses on which to expose metrics and web interface. Repeatable for multiple addresses. ($LISTEN_ADDRESS)
       --web.config.file=""       Path to configuration file that can enable TLS or authentication. See: https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md ($CONFIG_FILE)
       --web.telemetry-path="/metrics"
