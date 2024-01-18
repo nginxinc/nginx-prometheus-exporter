@@ -4,6 +4,9 @@ import (
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/alecthomas/kingpin/v2"
+	"github.com/prometheus/exporter-toolkit/web/kingpinflag"
 )
 
 func TestParsePositiveDuration(t *testing.T) {
@@ -101,5 +104,31 @@ func TestParseUnixSocketAddress(t *testing.T) {
 				t.Errorf("request path: parseUnixSocketAddress() = %v, want %v", requestPath, tt.wantRequestPath)
 			}
 		})
+	}
+}
+
+func TestAddMissingEnvironmentFlags(t *testing.T) {
+	expectedMatches := map[string]string{
+		"non-matching-flag":  "",
+		"web.missing-env":    "MISSING_ENV",
+		"web.has-env":        "HAS_ENV_ALREADY",
+		"web.listen-address": "LISTEN_ADDRESS",
+		"web.config.file":    "CONFIG_FILE",
+	}
+	kingpinflag.AddFlags(kingpin.CommandLine, ":9113")
+	kingpin.Flag("non-matching-flag", "").String()
+	kingpin.Flag("web.missing-env", "").String()
+	kingpin.Flag("web.has-env", "").Envar("HAS_ENV_ALREADY").String()
+	addMissingEnvironmentFlags(kingpin.CommandLine)
+	for k, v := range expectedMatches {
+		matched := false
+		for _, f := range kingpin.CommandLine.Model().FlagGroupModel.Flags {
+			if f.Name == k && f.Envar == v {
+				matched = true
+			}
+		}
+		if !matched {
+			t.Errorf("missing %s envar for %s", v, k)
+		}
 	}
 }
