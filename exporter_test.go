@@ -120,6 +120,11 @@ func TestAddMissingEnvironmentFlags(t *testing.T) {
 	kingpin.Flag("web.missing-env", "").String()
 	kingpin.Flag("web.has-env", "").Envar("HAS_ENV_ALREADY").String()
 	addMissingEnvironmentFlags(kingpin.CommandLine)
+
+	// using Envar() on a flag returned from GetFlag()
+	// adds an additional flag, which is processed correctly
+	// at runtime but means that we need to check for a match
+	// instead of checking the envar of each matching flag name
 	for k, v := range expectedMatches {
 		matched := false
 		for _, f := range kingpin.CommandLine.Model().FlagGroupModel.Flags {
@@ -129,6 +134,33 @@ func TestAddMissingEnvironmentFlags(t *testing.T) {
 		}
 		if !matched {
 			t.Errorf("missing %s envar for %s", v, k)
+		}
+	}
+}
+
+func TestConvertFlagToEnvar(t *testing.T) {
+	cases := []struct {
+		input  string
+		output string
+	}{
+		{
+			input:  "dot.separate",
+			output: "DOT_SEPARATE",
+		},
+		{
+			input:  "underscore_separate",
+			output: "UNDERSCORE_SEPARATE",
+		},
+		{
+			input:  "mixed_separate_options",
+			output: "MIXED_SEPARATE_OPTIONS",
+		},
+	}
+
+	for _, c := range cases {
+		res := convertFlagToEnvar(c.input)
+		if res != c.output {
+			t.Errorf("expected %s to resolve to %s but got %s", c.input, c.output, res)
 		}
 	}
 }

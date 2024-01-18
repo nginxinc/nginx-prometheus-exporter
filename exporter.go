@@ -292,12 +292,16 @@ func addMissingEnvironmentFlags(ka *kingpin.Application) {
 		if strings.HasPrefix(f.Name, "web.") && f.Envar == "" {
 			flag := ka.GetFlag(f.Name)
 			if flag != nil {
-				env := strings.ToUpper(strings.TrimPrefix(f.Name, "web."))
-				for _, s := range []string{"-", "."} {
-					env = strings.ReplaceAll(env, s, "_")
-				}
-				flag.Envar(env)
+				flag.Envar(convertFlagToEnvar(strings.TrimPrefix(f.Name, "web.")))
 			}
 		}
 	}
+}
+
+func convertFlagToEnvar(f string) string {
+	env := strings.ToUpper(f)
+	for _, s := range []string{"-", "."} {
+		env = strings.ReplaceAll(env, s, "_")
+	}
+	return env
 }
