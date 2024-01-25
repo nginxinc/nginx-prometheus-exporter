@@ -205,7 +205,7 @@ jobs:
           sbom: ${{ github.event_name != 'pull_request' }}
 
       - name: Scan image
-        uses: anchore/scan-action@1d59d90b47fc11ff8f97822da6c25eec888f81cf # v3.5.0
+        uses: anchore/scan-action@c35e932c2a7c572bfdb1c3dbcdadb2d4fc62418d # v3.6.1
         id: scan
         continue-on-error: true
         with:
