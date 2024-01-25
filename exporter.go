@@ -114,6 +114,9 @@ func main() {
 	flag.AddFlags(kingpin.CommandLine, promlogConfig)
 	kingpin.Version(version.Print(exporterName))
 	kingpin.HelpFlag.Short('h')
+
+	addMissingEnvironmentFlags(kingpin.CommandLine)
+
 	kingpin.Parse()
 	logger := promlog.New(promlogConfig)
 
@@ -280,4 +283,25 @@ func cloneRequest(req *http.Request) *http.Request {
 		r.Header[key] = newValues
 	}
 	return r
+}
+
+// addMissingEnvironmentFlags sets Envar on any flag which has
+// the "web." prefix which doesn't already have an Envar set
+func addMissingEnvironmentFlags(ka *kingpin.Application) {
+	for _, f := range ka.Model().FlagGroupModel.Flags {
+		if strings.HasPrefix(f.Name, "web.") && f.Envar == "" {
+			flag := ka.GetFlag(f.Name)
+			if flag != nil {
+				flag.Envar(convertFlagToEnvar(strings.TrimPrefix(f.Name, "web.")))
+			}
+		}
+	}
+}
+
+func convertFlagToEnvar(f string) string {
+	env := strings.ToUpper(f)
+	for _, s := range []string{"-", "."} {
+		env = strings.ReplaceAll(env, s, "_")
+	}
+	return env
 }
