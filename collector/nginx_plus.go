@@ -33,11 +33,11 @@ type LabelUpdater interface {
 
 // NginxPlusCollector collects NGINX Plus metrics. It implements prometheus.Collector interface.
 type NginxPlusCollector struct {
+	upMetric                       prometheus.Gauge
+	logger                         log.Logger
+	cacheZoneMetrics               map[string]*prometheus.Desc
+	workerMetrics                  map[string]*prometheus.Desc
 	nginxClient                    *plusclient.NginxClient
-	totalMetrics                   map[string]*prometheus.Desc
-	serverZoneMetrics              map[string]*prometheus.Desc
-	upstreamMetrics                map[string]*prometheus.Desc
-	upstreamServerMetrics          map[string]*prometheus.Desc
 	streamServerZoneMetrics        map[string]*prometheus.Desc
 	streamZoneSyncMetrics          map[string]*prometheus.Desc
 	streamUpstreamMetrics          map[string]*prometheus.Desc
@@ -47,21 +47,21 @@ type NginxPlusCollector struct {
 	limitRequestMetrics            map[string]*prometheus.Desc
 	limitConnectionMetrics         map[string]*prometheus.Desc
 	streamLimitConnectionMetrics   map[string]*prometheus.Desc
-	cacheZoneMetrics               map[string]*prometheus.Desc
-	upMetric                       prometheus.Gauge
-	mutex                          sync.Mutex
-	variableLabelNames             VariableLabelNames
+	upstreamServerMetrics          map[string]*prometheus.Desc
+	upstreamMetrics                map[string]*prometheus.Desc
+	streamUpstreamServerPeerLabels map[string][]string
+	serverZoneMetrics              map[string]*prometheus.Desc
 	upstreamServerLabels           map[string][]string
 	streamUpstreamServerLabels     map[string][]string
 	serverZoneLabels               map[string][]string
 	streamServerZoneLabels         map[string][]string
 	upstreamServerPeerLabels       map[string][]string
-	streamUpstreamServerPeerLabels map[string][]string
-	cacheZoneLabels                map[string][]string
-	variableLabelsMutex            sync.RWMutex
-	logger                         log.Logger
 	workerLabels                   map[string][]string
-	workerMetrics                  map[string]*prometheus.Desc
+	cacheZoneLabels                map[string][]string
+	totalMetrics                   map[string]*prometheus.Desc
+	variableLabelNames             VariableLabelNames
+	variableLabelsMutex            sync.RWMutex
+	mutex                          sync.Mutex
 }
 
 // UpdateUpstreamServerPeerLabels updates the Upstream Server Peer Labels

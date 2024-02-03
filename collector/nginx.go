@@ -11,11 +11,11 @@ import (
 
 // NginxCollector collects NGINX metrics. It implements prometheus.Collector interface.
 type NginxCollector struct {
+	upMetric    prometheus.Gauge
+	logger      log.Logger
 	nginxClient *client.NginxClient
 	metrics     map[string]*prometheus.Desc
-	upMetric    prometheus.Gauge
 	mutex       sync.Mutex
-	logger      log.Logger
 }
 
 // NewNginxCollector creates an NginxCollector.

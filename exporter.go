@@ -261,8 +261,8 @@ func registerCollector(logger log.Logger, transport *http.Transport,
 }
 
 type userAgentRoundTripper struct {
-	agent string
 	rt    http.RoundTripper
+	agent string
 }
 
 func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {

@@ -31,10 +31,15 @@ linters-settings:
   errcheck:
     exclude-functions:
       - (github.com/go-kit/log.Logger).Log
+  govet:
+    check-shadowing: true
+    enable-all: true
 
 linters:
   enable:
     - asciicheck
+    - bidichk
+    - dupword
     - errcheck
     - errorlint
     - gofmt
@@ -48,14 +53,18 @@ linters:
     - misspell
     - nilerr
     - noctx
+    - perfsprint
     - predeclared
     - promlinter
     - revive
     - staticcheck
+    - tagalign
+    - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
+    - usestdlibvars
     - wastedassign
   disable-all: true
 issues:

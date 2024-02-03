@@ -20,9 +20,6 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-22.04
-    permissions:
-      contents: read # for actions/checkout to fetch code
-      pull-requests: read # for golangci/golangci-lint-action to fetch pull requests
     steps:
       - name: Checkout Repository
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -34,8 +31,6 @@ jobs:
 
       - name: Lint Code
         uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
-        with:
-          only-new-issues: true
 
   actionlint:
     name: Actionlint

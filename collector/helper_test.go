@@ -9,8 +9,10 @@ func TestMergeLabels(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name             string
-		mapA, mapB, want map[string]string
+		mapA map[string]string
+		mapB map[string]string
+		want map[string]string
+		name string
 	}{
 		{
 			name: "base case",
@@ -32,7 +34,9 @@ func TestMergeLabels(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			if got := MergeLabels(tt.mapA, tt.mapB); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("mergeLabels() = %v, want %v", got, tt.want)
 			}
