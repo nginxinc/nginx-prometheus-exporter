@@ -49,6 +49,7 @@ linters:
     - gosimple
     - govet
     - ineffassign
+    - loggercheck
     - makezero
     - misspell
     - nilerr
