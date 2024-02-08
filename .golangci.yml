@@ -30,10 +30,10 @@ linters-settings:
       - name: var-naming
   errcheck:
     exclude-functions:
-    - (github.com/go-kit/log.Logger).Log
+      - (github.com/go-kit/log.Logger).Log
 
 linters:
-    enable:
+  enable:
     - asciicheck
     - errcheck
     - errorlint
@@ -57,7 +57,7 @@ linters:
     - unparam
     - unused
     - wastedassign
-    disable-all: true
+  disable-all: true
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

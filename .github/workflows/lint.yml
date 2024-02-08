@@ -60,3 +60,15 @@ jobs:
           config: .markdownlint-cli2.yaml
           globs: "**/*.md"
           fix: false
+
+  yaml-lint:
+    name: YAML lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install yamllint
+        run: pip install yamllint
+
+      - name: Lint YAML files
+        run: yamllint .
