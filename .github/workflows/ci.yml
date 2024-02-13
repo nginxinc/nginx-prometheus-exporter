@@ -150,11 +150,11 @@ jobs:
         if: github.event_name != 'pull_request'
 
       - name: Download Syft
-        uses: anchore/sbom-action/download-syft@c6aed38a4323b393d05372c58a74c39ae8386d02 # v0.15.6
+        uses: anchore/sbom-action/download-syft@b6a39da80722a2cb0ef5d197531764a89b5d48c3 # v0.15.8
         if: github.ref_type == 'tag'
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@9614fae9e5c5eddabb09f90a270fcb487c9f7149 # v3.3.0
+        uses: sigstore/cosign-installer@e1523de7571e31dbe865fd2e80c5c7c23ae71eb4 # v3.4.0
         if: github.ref_type == 'tag'
 
       - name: Setup Snapcraft
@@ -205,7 +205,7 @@ jobs:
           sbom: ${{ github.event_name != 'pull_request' }}
 
       - name: Scan image
-        uses: anchore/scan-action@a9603d052605bc41f74b0f27ffd0b6d20a8c8efe # v3.6.2
+        uses: anchore/scan-action@3343887d815d7b07465f6fdcd395bd66508d486a # v3.6.4
         id: scan
         continue-on-error: true
         with:
@@ -214,7 +214,7 @@ jobs:
           add-cpes-if-none: true
 
       - name: Upload scan result to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@b7bf0a3ed3ecfa44160715d7c442788f65f0f923 # v3.23.2
+        uses: github/codeql-action/upload-sarif@e8893c57a1f3a2b659b6b55564fdfdbbd2982911 # v3.24.0
         continue-on-error: true
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
