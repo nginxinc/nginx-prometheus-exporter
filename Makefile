@@ -2,7 +2,7 @@ VERSION = 1.1.0
 TAG = $(VERSION)
 PREFIX = nginx/nginx-prometheus-exporter
 
-.DEFAULT_GOAL:=help
+.DEFAULT_GOAL:=nginx-prometheus-exporter
 
 .PHONY: help
 help: Makefile ## Display this help
