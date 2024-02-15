@@ -11,3 +11,5 @@ dist/
 
 completions/
 manpages/
+
+coverage.txt
