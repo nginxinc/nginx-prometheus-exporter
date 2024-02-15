@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: nginx-demo
+  name: nginx-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nginx-demo
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nginx-demo
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9113"
+    spec:
+      containers:
+        - image: nginxdemos/hello:latest
+          name: nginx-demo
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/nginx/conf.d/status.conf
+              subPath: status.conf
+        - image: nginx/nginx-prometheus-exporter:latest
+          name: nginx-prometheus-exporter
+          args:
+            - "--nginx.scrape-uri=http://localhost:8080/stub_status"
+          ports:
+            - name: metrics
+              containerPort: 9113
+      volumes:
+        - name: config-volume
+          configMap:
+            name: status-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-demo
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: nginx-demo
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 9113
+      targetPort: 9113
+      name: metrics
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: status-config
+data:
+  status.conf: |-
+    server {
+      listen 8080;
+
+      location /stub_status {
+        stub_status;
+      }
+
+    }
