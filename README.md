@@ -426,6 +426,28 @@ You can install the NGINX Prometheus Exporter from the [Snap Store](https://snap
 snap install nginx-prometheus-exporter
 ```
 
+### Scoop
+
+You can add the NGINX Scoop bucket with
+
+```console
+scoop bucket add nginx https://github.com/nginxinc/scoop-bucket.git
+```
+
+and then install the package with
+
+```console
+scoop install nginx-prometheus-exporter
+```
+
+### Nix
+
+First, add the NGINX NUR repository to your Nix configuration:
+
+```console
+nix-env -iA nur.repos.nginx.nginx-prometheus-exporter ### does this work?
+```
+
 ## Building the Exporter
 
 You can build the exporter using the provided Makefile. Before building the exporter, make sure the following software
