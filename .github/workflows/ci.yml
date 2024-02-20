@@ -116,7 +116,7 @@ jobs:
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@dbef88086f6cef02e264edb7dbf63250c17cef6c # v5.5.0
+        uses: docker/metadata-action@8e5442c4ef9f78752691e2d8f8d19755c6f78e81 # v5.5.1
         with:
           images: |
             nginx/nginx-prometheus-exporter
@@ -135,7 +135,7 @@ jobs:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
       - name: Create/Update Draft
-        uses: lucacome/draft-release@52f02d1a69b61568e54ab5cf86ce91503bac4066 # v1.0.2
+        uses: lucacome/draft-release@a98777f0bae0a6815cc1df77ebe48ca70e7cb970 # v1.0.3
         with:
           minor-label: "enhancement"
           major-label: "change"
@@ -219,7 +219,7 @@ jobs:
           add-cpes-if-none: true
 
       - name: Upload scan result to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@e8893c57a1f3a2b659b6b55564fdfdbbd2982911 # v3.24.0
+        uses: github/codeql-action/upload-sarif@379614612a29c9e28f31f39a59013eb8012a51f0 # v3.24.3
         continue-on-error: true
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
