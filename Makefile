@@ -23,7 +23,7 @@ lint: ## Run linter
 
 .PHONY: test
 test: ## Run tests
-	go test ./... -race -shuffle=on
+	go test ./... -race -shuffle=on -coverprofile=coverage.txt -covermode=atomic
 
 .PHONY: container
 container: ## Build container image
