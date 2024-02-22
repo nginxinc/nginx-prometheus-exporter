@@ -67,7 +67,7 @@ func parseUnixSocketAddress(address string) (string, string, error) {
 	addressPartsLength := len(addressParts)
 
 	if addressPartsLength > 3 || addressPartsLength < 1 {
-		return "", "", fmt.Errorf("address for unix domain socket has wrong format")
+		return "", "", errors.New("address for unix domain socket has wrong format")
 	}
 
 	unixSocketPath := addressParts[1]
@@ -103,7 +103,7 @@ func main() {
 	// convert deprecated flags to new format
 	for i, arg := range os.Args {
 		if strings.HasPrefix(arg, "-") && !strings.HasPrefix(arg, "--") && len(arg) > 2 {
-			newArg := fmt.Sprintf("-%s", arg)
+			newArg := "-" + arg
 			fmt.Printf("the flag format is deprecated and will be removed in a future release, please use the new format: %s\n", newArg)
 			os.Args[i] = newArg
 		}
@@ -261,8 +261,8 @@ func registerCollector(logger log.Logger, transport *http.Transport,
 }
 
 type userAgentRoundTripper struct {
-	agent string
 	rt    http.RoundTripper
+	agent string
 }
 
 func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
