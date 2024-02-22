@@ -1,54 +1,58 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.5.0
-  hooks:
-  - id: trailing-whitespace
-  - id: end-of-file-fixer
-  - id: check-yaml
-    args: [--allow-multiple-documents]
-  - id: check-ast
-  - id: check-added-large-files
-  - id: check-merge-conflict
-  - id: check-shebang-scripts-are-executable
-  - id: check-executables-have-shebangs
-  - id: check-symlinks
-  - id: check-case-conflict
-  - id: check-vcs-permalinks
-  - id: check-json
-  - id: pretty-format-json
-    args: [--autofix, --no-ensure-ascii]
-  - id: mixed-line-ending
-    args: [--fix=lf]
-  - id: no-commit-to-branch
-  - id: requirements-txt-fixer
-  - id: fix-byte-order-marker
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-ast
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-executables-have-shebangs
+      - id: check-symlinks
+      - id: check-case-conflict
+      - id: check-vcs-permalinks
+      - id: check-json
+      - id: pretty-format-json
+        args: [--autofix, --no-ensure-ascii]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: no-commit-to-branch
+      - id: requirements-txt-fixer
+      - id: fix-byte-order-marker
 
-- repo: local
-  hooks:
-  - id: golang-diff
-    name: create-go-diff
-    entry: bash -c 'git diff -p origin/main > /tmp/diff.patch'
-    language: system
-    types: [go]
-    pass_filenames: false
+  - repo: local
+    hooks:
+      - id: golang-diff
+        name: create-go-diff
+        entry: bash -c 'git diff -p origin/main > /tmp/diff.patch'
+        language: system
+        types: [go]
+        pass_filenames: false
 
-- repo: https://github.com/golangci/golangci-lint
-  rev: v1.56.2
-  hooks:
-  - id: golangci-lint
-    args: [--new-from-patch=/tmp/diff.patch]
+  - repo: https://github.com/golangci/golangci-lint
+    rev: v1.56.2
+    hooks:
+      - id: golangci-lint
+        args: [--new-from-patch=/tmp/diff.patch]
 
-- repo: https://github.com/gitleaks/gitleaks
-  rev: v8.18.2
-  hooks:
-  - id: gitleaks
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.2
+    hooks:
+      - id: gitleaks
 
-- repo: https://github.com/DavidAnson/markdownlint-cli2
-  rev: v0.12.1
-  hooks:
-  - id: markdownlint-cli2
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.12.1
+    hooks:
+      - id: markdownlint-cli2
 
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
 ci:
-  skip: [golang-diff, golangci-lint]
+  skip: [golang-diff, golangci-lint, yamllint]
