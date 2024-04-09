@@ -50,6 +50,11 @@ issue template.
 ### Open a Pull Request
 
 - Fork the repo, create a branch, submit a PR when your changes are tested and ready for review
+- Acknowledge the F5 Contributor License Agreement (CLA) if prompted
+  - F5 Open Source Policy ***requires*** all external contributors agree to the terms outlined in the
+    [F5 CLA](https://github.com/f5/.github/blob/main/CLA/cla-markdown.md) before their changes can be incorporated into
+    an open source project.
+  - If you have not yet signed an F5 CLA when opening a pull request, our tooling will help walk you through the process.
 - Fill in [our pull request template](.github/PULL_REQUEST_TEMPLATE.md)
 
 > **Note**
