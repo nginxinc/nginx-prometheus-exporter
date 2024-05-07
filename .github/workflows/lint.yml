@@ -30,7 +30,7 @@ jobs:
           go-version: stable
 
       - name: Lint Code
-        uses: golangci/golangci-lint-action@3cfe3a4abbb849e10058ce4af15d205b6da42804 # v4.0.0
+        uses: golangci/golangci-lint-action@23faadfdeb23a6f9e511beaba149bb123b5b145a # v6.0.0
 
   actionlint:
     name: Actionlint
