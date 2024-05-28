@@ -835,7 +835,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			varLabelValues := c.getUpstreamServerLabelValues(name)
 
 			if c.variableLabelNames.UpstreamServerVariableLabelNames != nil && len(varLabelValues) != len(c.variableLabelNames.UpstreamServerVariableLabelNames) {
-				level.Warn(c.logger).Log("msg", "wrong number of labels for upstream, empty labels will be used instead", "upstream", name, "expected", len(c.variableLabelNames.UpstreamServerVariableLabelNames), "got", len(varLabelValues))
+				level.Debug(c.logger).Log("msg", "wrong number of labels for upstream, empty labels will be used instead", "upstream", name, "expected", len(c.variableLabelNames.UpstreamServerVariableLabelNames), "got", len(varLabelValues))
 				for range c.variableLabelNames.UpstreamServerVariableLabelNames {
 					labelValues = append(labelValues, "")
 				}
