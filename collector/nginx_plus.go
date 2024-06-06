@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-// LabelUpdater updates the labels of upstream server and server zone metrics
+// LabelUpdater updates the labels of upstream server and server zone metrics.
 type LabelUpdater interface {
 	UpdateUpstreamServerPeerLabels(upstreamServerPeerLabels map[string][]string)
 	DeleteUpstreamServerPeerLabels(peers []string)
@@ -64,7 +64,7 @@ type NginxPlusCollector struct {
 	mutex                          sync.Mutex
 }
 
-// UpdateUpstreamServerPeerLabels updates the Upstream Server Peer Labels
+// UpdateUpstreamServerPeerLabels updates the Upstream Server Peer Labels.
 func (c *NginxPlusCollector) UpdateUpstreamServerPeerLabels(upstreamServerPeerLabels map[string][]string) {
 	c.variableLabelsMutex.Lock()
 	for k, v := range upstreamServerPeerLabels {
@@ -73,7 +73,7 @@ func (c *NginxPlusCollector) UpdateUpstreamServerPeerLabels(upstreamServerPeerLa
 	c.variableLabelsMutex.Unlock()
 }
 
-// DeleteUpstreamServerPeerLabels deletes the Upstream Server Peer Labels
+// DeleteUpstreamServerPeerLabels deletes the Upstream Server Peer Labels.
 func (c *NginxPlusCollector) DeleteUpstreamServerPeerLabels(peers []string) {
 	c.variableLabelsMutex.Lock()
 	for _, k := range peers {
@@ -82,7 +82,7 @@ func (c *NginxPlusCollector) DeleteUpstreamServerPeerLabels(peers []string) {
 	c.variableLabelsMutex.Unlock()
 }
 
-// UpdateStreamUpstreamServerPeerLabels updates the Upstream Server Peer Labels
+// UpdateStreamUpstreamServerPeerLabels updates the Upstream Server Peer Labels.
 func (c *NginxPlusCollector) UpdateStreamUpstreamServerPeerLabels(streamUpstreamServerPeerLabels map[string][]string) {
 	c.variableLabelsMutex.Lock()
 	for k, v := range streamUpstreamServerPeerLabels {
@@ -91,7 +91,7 @@ func (c *NginxPlusCollector) UpdateStreamUpstreamServerPeerLabels(streamUpstream
 	c.variableLabelsMutex.Unlock()
 }
 
-// DeleteStreamUpstreamServerPeerLabels deletes the Upstream Server Peer Labels
+// DeleteStreamUpstreamServerPeerLabels deletes the Upstream Server Peer Labels.
 func (c *NginxPlusCollector) DeleteStreamUpstreamServerPeerLabels(peers []string) {
 	c.variableLabelsMutex.Lock()
 	for _, k := range peers {
@@ -100,7 +100,7 @@ func (c *NginxPlusCollector) DeleteStreamUpstreamServerPeerLabels(peers []string
 	c.variableLabelsMutex.Unlock()
 }
 
-// UpdateUpstreamServerLabels updates the Upstream Server Labels
+// UpdateUpstreamServerLabels updates the Upstream Server Labels.
 func (c *NginxPlusCollector) UpdateUpstreamServerLabels(upstreamServerLabelValues map[string][]string) {
 	c.variableLabelsMutex.Lock()
 	for k, v := range upstreamServerLabelValues {
@@ -109,7 +109,7 @@ func (c *NginxPlusCollector) UpdateUpstreamServerLabels(upstreamServerLabelValue
 	c.variableLabelsMutex.Unlock()
 }
 
-// DeleteUpstreamServerLabels deletes the Upstream Server Labels
+// DeleteUpstreamServerLabels deletes the Upstream Server Labels.
 func (c *NginxPlusCollector) DeleteUpstreamServerLabels(upstreamNames []string) {
 	c.variableLabelsMutex.Lock()
 	for _, k := range upstreamNames {
@@ -118,7 +118,7 @@ func (c *NginxPlusCollector) DeleteUpstreamServerLabels(upstreamNames []string) 
 	c.variableLabelsMutex.Unlock()
 }
 
-// UpdateStreamUpstreamServerLabels updates the Upstream Server Labels
+// UpdateStreamUpstreamServerLabels updates the Upstream Server Labels.
 func (c *NginxPlusCollector) UpdateStreamUpstreamServerLabels(streamUpstreamServerLabelValues map[string][]string) {
 	c.variableLabelsMutex.Lock()
 	for k, v := range streamUpstreamServerLabelValues {
@@ -127,7 +127,7 @@ func (c *NginxPlusCollector) UpdateStreamUpstreamServerLabels(streamUpstreamServ
 	c.variableLabelsMutex.Unlock()
 }
 
-// DeleteStreamUpstreamServerLabels deletes the Upstream Server Labels
+// DeleteStreamUpstreamServerLabels deletes the Upstream Server Labels.
 func (c *NginxPlusCollector) DeleteStreamUpstreamServerLabels(streamUpstreamNames []string) {
 	c.variableLabelsMutex.Lock()
 	for _, k := range streamUpstreamNames {
@@ -136,7 +136,7 @@ func (c *NginxPlusCollector) DeleteStreamUpstreamServerLabels(streamUpstreamName
 	c.variableLabelsMutex.Unlock()
 }
 
-// UpdateServerZoneLabels updates the Server Zone Labels
+// UpdateServerZoneLabels updates the Server Zone Labels.
 func (c *NginxPlusCollector) UpdateServerZoneLabels(serverZoneLabelValues map[string][]string) {
 	c.variableLabelsMutex.Lock()
 	for k, v := range serverZoneLabelValues {
@@ -145,7 +145,7 @@ func (c *NginxPlusCollector) UpdateServerZoneLabels(serverZoneLabelValues map[st
 	c.variableLabelsMutex.Unlock()
 }
 
-// DeleteServerZoneLabels deletes the Server Zone Labels
+// DeleteServerZoneLabels deletes the Server Zone Labels.
 func (c *NginxPlusCollector) DeleteServerZoneLabels(zoneNames []string) {
 	c.variableLabelsMutex.Lock()
 	for _, k := range zoneNames {
@@ -154,7 +154,7 @@ func (c *NginxPlusCollector) DeleteServerZoneLabels(zoneNames []string) {
 	c.variableLabelsMutex.Unlock()
 }
 
-// UpdateStreamServerZoneLabels updates the Stream Server Zone Labels
+// UpdateStreamServerZoneLabels updates the Stream Server Zone Labels.
 func (c *NginxPlusCollector) UpdateStreamServerZoneLabels(streamServerZoneLabelValues map[string][]string) {
 	c.variableLabelsMutex.Lock()
 	for k, v := range streamServerZoneLabelValues {
@@ -163,7 +163,7 @@ func (c *NginxPlusCollector) UpdateStreamServerZoneLabels(streamServerZoneLabelV
 	c.variableLabelsMutex.Unlock()
 }
 
-// DeleteStreamServerZoneLabels deletes the Stream Server Zone Labels
+// DeleteStreamServerZoneLabels deletes the Stream Server Zone Labels.
 func (c *NginxPlusCollector) DeleteStreamServerZoneLabels(zoneNames []string) {
 	c.variableLabelsMutex.Lock()
 	for _, k := range zoneNames {
@@ -172,7 +172,7 @@ func (c *NginxPlusCollector) DeleteStreamServerZoneLabels(zoneNames []string) {
 	c.variableLabelsMutex.Unlock()
 }
 
-// UpdateCacheZoneLabels updates the Upstream Cache Zone labels
+// UpdateCacheZoneLabels updates the Upstream Cache Zone labels.
 func (c *NginxPlusCollector) UpdateCacheZoneLabels(cacheZoneLabelValues map[string][]string) {
 	c.variableLabelsMutex.Lock()
 	for k, v := range cacheZoneLabelValues {
@@ -181,7 +181,7 @@ func (c *NginxPlusCollector) UpdateCacheZoneLabels(cacheZoneLabelValues map[stri
 	c.variableLabelsMutex.Unlock()
 }
 
-// DeleteCacheZoneLabels deletes the Cache Zone Labels
+// DeleteCacheZoneLabels deletes the Cache Zone Labels.
 func (c *NginxPlusCollector) DeleteCacheZoneLabels(cacheZoneNames []string) {
 	c.variableLabelsMutex.Lock()
 	for _, k := range cacheZoneNames {
@@ -226,7 +226,7 @@ func (c *NginxPlusCollector) getStreamUpstreamServerPeerLabelValues(peer string)
 	return c.streamUpstreamServerPeerLabels[peer]
 }
 
-// UpdateWorkerLabels updates the Worker Labels
+// UpdateWorkerLabels updates the Worker Labels.
 func (c *NginxPlusCollector) UpdateWorkerLabels(workerLabelValues map[string][]string) {
 	c.variableLabelsMutex.Lock()
 	for k, v := range workerLabelValues {
@@ -235,7 +235,7 @@ func (c *NginxPlusCollector) UpdateWorkerLabels(workerLabelValues map[string][]s
 	c.variableLabelsMutex.Unlock()
 }
 
-// DeleteWorkerLabels deletes the Worker Labels
+// DeleteWorkerLabels deletes the Worker Labels.
 func (c *NginxPlusCollector) DeleteWorkerLabels(id []string) {
 	c.variableLabelsMutex.Lock()
 	for _, k := range id {
@@ -250,7 +250,7 @@ func (c *NginxPlusCollector) getWorkerLabelValues(id string) []string {
 	return c.workerLabels[id]
 }
 
-// VariableLabelNames holds all the variable label names for the different metrics
+// VariableLabelNames holds all the variable label names for the different metrics.
 type VariableLabelNames struct {
 	UpstreamServerVariableLabelNames           []string
 	ServerZoneVariableLabelNames               []string
@@ -262,7 +262,7 @@ type VariableLabelNames struct {
 	WorkerPIDVariableLabelNames                []string
 }
 
-// NewVariableLabelNames NewVariableLabels creates a new struct for VariableNames for the collector
+// NewVariableLabelNames NewVariableLabels creates a new struct for VariableNames for the collector.
 func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZoneVariableLabelNames []string, upstreamServerPeerVariableLabelNames []string,
 	streamUpstreamServerVariableLabelNames []string, streamServerZoneLabels []string, streamUpstreamServerPeerVariableLabelNames []string, cacheZoneLabelNames []string, workerPIDVariableLabelNames []string,
 ) VariableLabelNames {
@@ -1219,7 +1219,6 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	for name, zone := range stats.Caches {
-
 		var cold float64
 		if zone.Cold {
 			cold = 1.0

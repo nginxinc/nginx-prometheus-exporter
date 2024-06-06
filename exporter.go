@@ -33,7 +33,7 @@ import (
 	"github.com/prometheus/exporter-toolkit/web/kingpinflag"
 )
 
-// positiveDuration is a wrapper of time.Duration to ensure only positive values are accepted
+// positiveDuration is a wrapper of time.Duration to ensure only positive values are accepted.
 type positiveDuration struct{ time.Duration }
 
 func (pd *positiveDuration) Set(s string) error {
@@ -49,7 +49,7 @@ func (pd *positiveDuration) Set(s string) error {
 func parsePositiveDuration(s string) (positiveDuration, error) {
 	dur, err := time.ParseDuration(s)
 	if err != nil {
-		return positiveDuration{}, err
+		return positiveDuration{}, fmt.Errorf("failed to parse duration %q: %w", s, err)
 	}
 	if dur < 0 {
 		return positiveDuration{}, fmt.Errorf("negative duration %v is not valid", dur)
@@ -82,7 +82,7 @@ func parseUnixSocketAddress(address string) (string, string, error) {
 var (
 	constLabels = map[string]string{}
 
-	// Command-line flags
+	// Command-line flags.
 	webConfig     = kingpinflag.AddFlags(kingpin.CommandLine, ":9113")
 	metricsPath   = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").Envar("TELEMETRY_PATH").String()
 	nginxPlus     = kingpin.Flag("nginx.plus", "Start the exporter for NGINX Plus. By default, the exporter is started for NGINX.").Default("false").Envar("NGINX_PLUS").Bool()
@@ -92,7 +92,7 @@ var (
 	sslClientCert = kingpin.Flag("nginx.ssl-client-cert", "Path to the PEM encoded client certificate file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_CERT").String()
 	sslClientKey  = kingpin.Flag("nginx.ssl-client-key", "Path to the PEM encoded client certificate key file to use when connecting to the server.").Default("").Envar("SSL_CLIENT_KEY").String()
 
-	// Custom command-line flags
+	// Custom command-line flags.
 	timeout = createPositiveDurationFlag(kingpin.Flag("nginx.timeout", "A timeout for scraping metrics from NGINX or NGINX Plus.").Default("5s").Envar("TIMEOUT").HintOptions("5s", "10s", "30s", "1m", "5m"))
 )
 
@@ -269,7 +269,11 @@ type userAgentRoundTripper struct {
 func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	req = cloneRequest(req)
 	req.Header.Set("User-Agent", rt.agent)
-	return rt.rt.RoundTrip(req)
+	roundTrip, err := rt.rt.RoundTrip(req)
+	if err != nil {
+		return nil, fmt.Errorf("round trip failed: %w", err)
+	}
+	return roundTrip, nil
 }
 
 func cloneRequest(req *http.Request) *http.Request {
@@ -287,7 +291,7 @@ func cloneRequest(req *http.Request) *http.Request {
 }
 
 // addMissingEnvironmentFlags sets Envar on any flag which has
-// the "web." prefix which doesn't already have an Envar set
+// the "web." prefix which doesn't already have an Envar set.
 func addMissingEnvironmentFlags(ka *kingpin.Application) {
 	for _, f := range ka.Model().FlagGroupModel.Flags {
 		if strings.HasPrefix(f.Name, "web.") && f.Envar == "" {

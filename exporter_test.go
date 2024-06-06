@@ -112,6 +112,7 @@ func TestParseUnixSocketAddress(t *testing.T) {
 }
 
 func TestAddMissingEnvironmentFlags(t *testing.T) {
+	t.Parallel()
 	expectedMatches := map[string]string{
 		"non-matching-flag":  "",
 		"web.missing-env":    "MISSING_ENV",
@@ -143,6 +144,7 @@ func TestAddMissingEnvironmentFlags(t *testing.T) {
 }
 
 func TestConvertFlagToEnvar(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		input  string
 		output string

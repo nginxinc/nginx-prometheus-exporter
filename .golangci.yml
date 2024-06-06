@@ -14,7 +14,6 @@ linters-settings:
       - name: error-strings
       - name: errorf
       - name: exported
-      - name: if-return
       - name: increment-decrement
       - name: indent-error-flow
       - name: package-comments
@@ -32,34 +31,48 @@ linters-settings:
     exclude-functions:
       - (github.com/go-kit/log.Logger).Log
   govet:
-    check-shadowing: true
     enable-all: true
-
 linters:
   enable:
+    - asasalint
     - asciicheck
     - bidichk
     - dupword
     - errcheck
+    - errname
     - errorlint
+    - exportloopref
+    - fatcontext
+    - forcetypeassert
+    - gocheckcompilerdirectives
+    - godot
     - gofmt
     - gofumpt
     - goimports
     - gosec
     - gosimple
+    - gosmopolitan
     - govet
     - ineffassign
+    - intrange
     - loggercheck
     - makezero
     - misspell
     - nilerr
     - noctx
+    - nolintlint
+    - paralleltest
     - perfsprint
+    - prealloc
     - predeclared
     - promlinter
+    - reassign
     - revive
     - staticcheck
+    - stylecheck
     - tagalign
+    - tenv
+    - thelper
     - tparallel
     - typecheck
     - unconvert
@@ -67,6 +80,8 @@ linters:
     - unused
     - usestdlibvars
     - wastedassign
+    - whitespace
+    - wrapcheck
   disable-all: true
 issues:
   max-issues-per-linter: 0
