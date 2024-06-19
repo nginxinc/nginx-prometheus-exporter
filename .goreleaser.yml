@@ -1,3 +1,4 @@
+version: 2
 before:
   hooks:
     - ./scripts/completions.sh
@@ -34,10 +35,10 @@ builds:
     asmflags:
       - all=-trimpath={{.Env.GOPATH}}
     ldflags:
-      - '-s -w -X github.com/prometheus/common/version.Version={{.Version}} -X github.com/prometheus/common/version.BuildDate={{.Date}} -X github.com/prometheus/common/version.Branch={{.Branch}} -X github.com/prometheus/common/version.BuildUser=goreleaser'
+      - "-s -w -X github.com/prometheus/common/version.Version={{.Version}} -X github.com/prometheus/common/version.BuildDate={{.Date}} -X github.com/prometheus/common/version.Branch={{.Branch}} -X github.com/prometheus/common/version.BuildUser=goreleaser"
 
 changelog:
-  skip: true
+  disable: true
 
 archives:
   - format_overrides:
@@ -58,8 +59,8 @@ brews:
   - repository:
       owner: nginxinc
       name: homebrew-tap
-      token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
-    folder: Formula
+      token: "{{ .Env.NGINX_GITHUB_TOKEN }}"
+    directory: Formula
     homepage: https://github.com/nginxinc/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     license: Apache-2.0
@@ -75,7 +76,7 @@ signs:
   - cmd: cosign
     artifacts: checksum
     output: true
-    certificate: '${artifact}.pem'
+    certificate: "${artifact}.pem"
     args:
       - sign-blob
       - "--output-signature=${signature}"
@@ -86,17 +87,17 @@ signs:
 announce:
   slack:
     enabled: true
-    channel: '#announcements'
-    message_template: 'NGINX Prometheus Exporter {{ .Tag }} is out! Check it out: {{ .ReleaseURL }}'
+    channel: "#announcements"
+    message_template: "NGINX Prometheus Exporter {{ .Tag }} is out! Check it out: {{ .ReleaseURL }}"
 
 milestones:
   - close: true
 
 snapshot:
-  name_template: 'edge'
+  name_template: "edge"
 
 snapcrafts:
-  - name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+  - name_template: "{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     title: NGINX Prometheus Exporter
     summary: NGINX Prometheus Exporter for NGINX and NGINX Plus
     description: |
@@ -106,7 +107,7 @@ snapcrafts:
     grade: stable
     confinement: strict
     publish: true
-    license: 'Apache-2.0'
+    license: "Apache-2.0"
     apps:
       nginx-prometheus-exporter:
         command: nginx-prometheus-exporter
@@ -119,7 +120,7 @@ nix:
     repository:
       owner: nginxinc
       name: nur
-      token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
+      token: "{{ .Env.NGINX_GITHUB_TOKEN }}"
     homepage: https://github.com/nginxinc/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     license: asl20
@@ -139,7 +140,7 @@ winget:
     repository:
       owner: nginxinc
       name: winget-pkgs
-      token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
+      token: "{{ .Env.NGINX_GITHUB_TOKEN }}"
       branch: "nginx-prometheus-exporter-{{.Version}}"
       pull_request:
         enabled: true
@@ -153,8 +154,8 @@ scoops:
   - repository:
       owner: nginxinc
       name: scoop-bucket
-      token: '{{ .Env.NGINX_GITHUB_TOKEN }}'
-    folder: bucket
+      token: "{{ .Env.NGINX_GITHUB_TOKEN }}"
+    directory: bucket
     homepage: https://github.com/nginxinc/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     license: Apache-2.0
