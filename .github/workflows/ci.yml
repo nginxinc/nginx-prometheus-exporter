@@ -193,7 +193,7 @@ jobs:
         continue-on-error: true
 
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@94f8f8c2eec4bc3f1d78c1755580779804cb87b2 # v6.0.1
+        uses: docker/build-push-action@31159d49c0d4756269a0940a750801a1ea5d7003 # v6.1.0
         with:
           file: build/Dockerfile
           context: "."
