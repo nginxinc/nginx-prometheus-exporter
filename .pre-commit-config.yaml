@@ -45,4 +45,4 @@ repos:
     hooks:
       - id: yamllint
 ci:
-  skip: [golangci-lint-full, yamllint]
+  skip: [golangci-lint-full]
