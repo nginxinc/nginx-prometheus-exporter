@@ -1,4 +1,4 @@
-name: "CodeQL"
+name: CodeQL
 
 on:
   push:
@@ -26,51 +26,45 @@ jobs:
       actions: read # for github/codeql-action/init to get workflow details
       contents: read # for actions/checkout to fetch code
       security-events: write # for github/codeql-action/autobuild to send a status report
+      packages: read # required to fetch internal or private CodeQL packs
 
     strategy:
       fail-fast: false
       matrix:
-        language: ["go"]
-        # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby', 'swift' ]
-        # Use only 'java' to analyze code written in Java, Kotlin or both
-        # Use only 'javascript' to analyze code written in JavaScript, TypeScript or both
-        # Learn more about CodeQL language support at https://aka.ms/codeql-docs/language-support
+        include:
+          - language: go
+            build-mode: autobuild
+            # CodeQL supports the following values keywords for 'language': 'c-cpp', 'csharp', 'go', 'java-kotlin', 'javascript-typescript', 'python', 'ruby', 'swift'
+            # Use `c-cpp` to analyze code written in C, C++ or both
+            # Use 'java-kotlin' to analyze code written in Java, Kotlin or both
+            # Use 'javascript-typescript' to analyze code written in JavaScript, TypeScript or both
+            # To learn more about changing the languages that are analyzed or customizing the build mode for your analysis,
+            # see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning.
+            # If you are analyzing a compiled language, you can modify the 'build-mode' for that language to customize how
+            # your codebase is analyzed, see https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/codeql-code-scanning-for-compiled-languages
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Setup Golang Environment
+        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        with:
+          go-version: stable
+        if: matrix.language == 'go'
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
         with:
           languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
           # If you wish to specify custom queries, you can do so here or in a config file.
           # By default, queries listed here will override any specified in a config file.
           # Prefix the list here with "+" to use these queries and those in the config file.
 
           # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
           # queries: security-extended,security-and-quality
-
-      - name: Setup Golang Environment
-        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
-        with:
-          go-version: stable
-
-      # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
-      # If this step fails, then you should remove it and run the build manually (see below)
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
-
-      # ℹ️ Command-line programs to run using the OS shell.
-      # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-
-      #   If the Autobuild fails above, remove it and uncomment the following three lines.
-      #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
-
-      # - run: |
-      #     echo "Run, Build Application using script"
-      #     ./location_of_script_within_repo/buildscript.sh
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@b611370bb5703a7efb587f9d136a52ea24c5c38c # v3.25.11
