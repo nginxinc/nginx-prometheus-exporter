@@ -372,8 +372,8 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 			"ssl_session_reuses":    newStreamServerZoneMetric(namespace, "ssl_session_reuses", "Session reuses during SSL handshake", variableLabelNames.StreamServerZoneVariableLabelNames, constLabels),
 		},
 		upstreamMetrics: map[string]*prometheus.Desc{
-			"keepalives": newUpstreamMetric(namespace, "keepalives", "Idle keepalive connections", constLabels),
-			"zombies":    newUpstreamMetric(namespace, "zombies", "Servers removed from the group but still processing active client requests", constLabels),
+			"keepalive": newUpstreamMetric(namespace, "keepalive", "Idle keepalive connections", constLabels),
+			"zombies":   newUpstreamMetric(namespace, "zombies", "Servers removed from the group but still processing active client requests", constLabels),
 		},
 		streamUpstreamMetrics: map[string]*prometheus.Desc{
 			"zombies": newStreamUpstreamMetric(namespace, "zombies", "Servers removed from the group but still processing active client connections", constLabels),
@@ -980,8 +980,8 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 			ch <- prometheus.MustNewConstMetric(c.upstreamServerMetrics["ssl_session_reuses"],
 				prometheus.CounterValue, float64(peer.SSL.SessionReuses), labelValues...)
 		}
-		ch <- prometheus.MustNewConstMetric(c.upstreamMetrics["keepalives"],
-			prometheus.GaugeValue, float64(upstream.Keepalives), name)
+		ch <- prometheus.MustNewConstMetric(c.upstreamMetrics["keepalive"],
+			prometheus.GaugeValue, float64(upstream.Keepalive), name)
 		ch <- prometheus.MustNewConstMetric(c.upstreamMetrics["zombies"],
 			prometheus.GaugeValue, float64(upstream.Zombies), name)
 	}
