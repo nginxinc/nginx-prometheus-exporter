@@ -24,9 +24,9 @@ NGINX Prometheus exporter makes it possible to monitor NGINX or NGINX Plus using
 page](https://nginx.org/en/docs/http/ngx_http_stub_status_module.html#stub_status). [NGINX
 Plus](https://www.nginx.com/products/nginx/) provides a richer set of metrics via the
 [API](https://nginx.org/en/docs/http/ngx_http_api_module.html) and the [monitoring
-dashboard](https://www.nginx.com/products/nginx/live-activity-monitoring/). NGINX Prometheus exporter fetches the
-metrics from a single NGINX or NGINX Plus, converts the metrics into appropriate Prometheus metrics types and finally
-exposes them via an HTTP server to be collected by [Prometheus](https://prometheus.io/).
+dashboard](https://docs.nginx.com/nginx/admin-guide/monitoring/live-activity-monitoring/). NGINX Prometheus exporter
+fetches the metrics from a single NGINX or NGINX Plus, converts the metrics into appropriate Prometheus metrics types
+and finally exposes them via an HTTP server to be collected by [Prometheus](https://prometheus.io/).
 
 ## Getting Started
 
@@ -247,7 +247,7 @@ Flags:
 | `nginxplus_upstream_server_ssl_handshakes`          | Counter | Successful SSL handshakes                                                                                                                                      | `server`, `upstream`                                                                                                                              |
 | `nginxplus_upstream_server_ssl_handshakes_failed`   | Counter | Failed SSL handshakes                                                                                                                                          | `server`, `upstream`                                                                                                                              |
 | `nginxplus_upstream_server_ssl_session_reuses`      | Counter | Session reuses during SSL handshake                                                                                                                            | `server`, `upstream`                                                                                                                              |
-| `nginxplus_upstream_keepalives`                     | Gauge   | Idle keepalive connections                                                                                                                                     | `upstream`                                                                                                                                        |
+| `nginxplus_upstream_keepalive`                     | Gauge   | Idle keepalive connections                                                                                                                                     | `upstream`                                                                                                                                        |
 | `nginxplus_upstream_zombies`                        | Gauge   | Servers removed from the group but still processing active client requests                                                                                     | `upstream`                                                                                                                                        |
 
 #### [Stream Upstreams](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_upstream)

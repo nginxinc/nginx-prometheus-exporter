@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
       - name: Setup Golang Environment
-        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version: stable
 
@@ -58,7 +58,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Golang Environment
-        uses: actions/setup-go@cdcb36043654635271a94b9a6d1392de5bb323a7 # v5.0.1
+        uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
         with:
           go-version: stable
 
@@ -68,13 +68,13 @@ jobs:
           echo "go_path=$(go env GOPATH)" >> $GITHUB_OUTPUT
 
       - name: Setup QEMU
-        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3 # v3.0.0
+        uses: docker/setup-qemu-action@5927c834f5b4fdf503fca6f4c7eccda82949e1ee # v3.1.0
         with:
           platforms: arm,arm64,ppc64le,s390x,mips64le,386
         if: github.event_name != 'pull_request'
 
       - name: Docker Buildx
-        uses: docker/setup-buildx-action@d70bba72b1f3fd22344832f00baa16ece964efeb # v3.3.0
+        uses: docker/setup-buildx-action@4fd812986e6c8c2a69e18311145f9371337f27d4 # v3.4.0
         with:
           version: latest
 
@@ -155,7 +155,7 @@ jobs:
         if: github.event_name != 'pull_request'
 
       - name: Download Syft
-        uses: anchore/sbom-action/download-syft@e8d2a6937ecead383dfe75190d104edd1f9c5751 # v0.16.0
+        uses: anchore/sbom-action/download-syft@d94f46e13c6c62f59525ac9a1e147a99dc0b9bf5 # v0.17.0
         if: github.ref_type == 'tag'
 
       - name: Install Cosign
@@ -193,7 +193,7 @@ jobs:
         continue-on-error: true
 
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@15560696de535e4014efeff63c48f16952e52dd1 # v6.2.0
+        uses: docker/build-push-action@a254f8ca60a858f3136a2f1f23a60969f2c402dd # v6.4.0
         with:
           file: build/Dockerfile
           context: "."
@@ -210,7 +210,7 @@ jobs:
           sbom: ${{ github.event_name != 'pull_request' }}
 
       - name: Scan image
-        uses: anchore/scan-action@3343887d815d7b07465f6fdcd395bd66508d486a # v3.6.4
+        uses: anchore/scan-action@d43cc1dfea6a99ed123bf8f3133f1797c9b44492 # v4.1.0
         id: scan
         continue-on-error: true
         with:
@@ -219,7 +219,7 @@ jobs:
           add-cpes-if-none: true
 
       - name: Upload scan result to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@23acc5c183826b7a8a97bce3cecc52db901f8251 # v3.25.10
+        uses: github/codeql-action/upload-sarif@4fa2a7953630fd2f3fb380f21be14ede0169dd4f # v3.25.12
         continue-on-error: true
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
