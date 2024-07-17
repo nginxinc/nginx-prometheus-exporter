@@ -44,5 +44,12 @@ repos:
     rev: v1.35.1
     hooks:
       - id: yamllint
+
+  - repo: https://github.com/thlorenz/doctoc
+    rev: v2.2.0
+    hooks:
+      - id: doctoc
+        args: [--update-only, --title, "## Table of Contents"]
+
 ci:
   skip: [golangci-lint-full]

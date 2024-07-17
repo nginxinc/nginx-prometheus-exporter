@@ -18,6 +18,59 @@
 
 NGINX Prometheus exporter makes it possible to monitor NGINX or NGINX Plus using Prometheus.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents
+
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+  - [A Note about NGINX Ingress Controller](#a-note-about-nginx-ingress-controller)
+  - [Prerequisites](#prerequisites)
+  - [Running the Exporter in a Docker Container](#running-the-exporter-in-a-docker-container)
+  - [Running the Exporter Binary](#running-the-exporter-binary)
+- [Usage](#usage)
+  - [Command-line Arguments](#command-line-arguments)
+- [Exported Metrics](#exported-metrics)
+  - [Common metrics](#common-metrics)
+  - [Metrics for NGINX OSS](#metrics-for-nginx-oss)
+    - [Stub status metrics](#stub-status-metrics)
+  - [Metrics for NGINX Plus](#metrics-for-nginx-plus)
+    - [Connections](#connections)
+    - [HTTP](#http)
+    - [SSL](#ssl)
+    - [HTTP Server Zones](#http-server-zones)
+    - [Stream Server Zones](#stream-server-zones)
+    - [HTTP Upstreams](#http-upstreams)
+    - [Stream Upstreams](#stream-upstreams)
+    - [Stream Zone Sync](#stream-zone-sync)
+    - [Location Zones](#location-zones)
+    - [Resolver](#resolver)
+    - [HTTP Requests Rate Limiting](#http-requests-rate-limiting)
+    - [HTTP Connections Limiting](#http-connections-limiting)
+    - [Stream Connections Limiting](#stream-connections-limiting)
+    - [Cache](#cache)
+    - [Worker](#worker)
+- [Troubleshooting](#troubleshooting)
+- [Releases](#releases)
+  - [Docker images](#docker-images)
+  - [Binaries](#binaries)
+  - [Homebrew](#homebrew)
+  - [Snap](#snap)
+- [Building the Exporter](#building-the-exporter)
+  - [Building the Docker Image](#building-the-docker-image)
+  - [Building the Binary](#building-the-binary)
+- [Grafana Dashboard](#grafana-dashboard)
+- [SBOM (Software Bill of Materials)](#sbom-software-bill-of-materials)
+  - [Binaries](#binaries-1)
+  - [Docker Image](#docker-image)
+- [Provenance](#provenance)
+- [Contacts](#contacts)
+- [Contributing](#contributing)
+- [Support](#support)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Overview
 
 [NGINX](https://nginx.org) exposes a handful of metrics via the [stub_status
