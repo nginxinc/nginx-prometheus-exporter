@@ -5,18 +5,24 @@ are considering contributing!
 
 ## Table Of Contents
 
-[Ask a Question](#ask-a-question)
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents
 
-[Getting Started](#getting-started)
+- [Ask a Question](#ask-a-question)
+- [Getting Started](#getting-started)
+  - [Project Structure](#project-structure)
+- [Contributing](#contributing)
+  - [Report a Bug](#report-a-bug)
+  - [Suggest an Enhancement](#suggest-an-enhancement)
+  - [Open a Pull Request](#open-a-pull-request)
+  - [Issue lifecycle](#issue-lifecycle)
+  - [F5 Contributor License Agreement (CLA)](#f5-contributor-license-agreement-cla)
+- [Style Guides](#style-guides)
+  - [Git Style Guide](#git-style-guide)
+  - [Go Style Guide](#go-style-guide)
 
-[Contributing](#contributing)
-
-[Style Guides](#style-guides)
-
-- [Git Style Guide](#git-style-guide)
-- [Go Style Guide](#go-style-guide)
-
-[Code of Conduct](CODE_OF_CONDUCT.md)
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Ask a Question
 
