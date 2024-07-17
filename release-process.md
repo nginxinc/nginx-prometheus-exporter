@@ -14,7 +14,7 @@ This document outlines the steps involved in the release process for the NGINX P
 
 ## Versioning
 
-The project follows [Semantic Versioning](https://semver.org/) for versioning.
+The project follows [Semantic Versioning](https://semver.org/).
 
 ## Release Planning and Development
 
