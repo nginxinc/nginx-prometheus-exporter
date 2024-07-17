@@ -7,6 +7,16 @@ password `password`.
 The full documentation for the web configuration can be found
 [here](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Running NGINX Prometheus Exporter with Web Configuration in Basic Authentication mode](#running-nginx-prometheus-exporter-with-web-configuration-in-basic-authentication-mode)
+- [Verification](#verification)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Prerequisites
 
 - NGINX Prometheus Exporter binary. See the [main README](../../README.md) for installation instructions.

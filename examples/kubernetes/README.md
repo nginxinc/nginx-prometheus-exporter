@@ -2,6 +2,18 @@
 
 This example shows how to run NGINX Prometheus Exporter in a Kubernetes cluster.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Create a kind cluster](#create-a-kind-cluster)
+- [Deploy the NGINX Hello application and NGINX Prometheus Exporter](#deploy-the-nginx-hello-application-and-nginx-prometheus-exporter)
+- [Configure port forwarding](#configure-port-forwarding)
+- [Verification](#verification)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Prerequisites
 
 - [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) installed.
