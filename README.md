@@ -56,6 +56,8 @@ NGINX Prometheus exporter makes it possible to monitor NGINX or NGINX Plus using
   - [Binaries](#binaries)
   - [Homebrew](#homebrew)
   - [Snap](#snap)
+  - [Scoop](#scoop)
+  - [Nix](#nix)
 - [Building the Exporter](#building-the-exporter)
   - [Building the Docker Image](#building-the-docker-image)
   - [Building the Binary](#building-the-binary)
@@ -111,7 +113,7 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 - To export NGINX metrics, run:
 
   ```console
-  docker run -p 9113:9113 nginx/nginx-prometheus-exporter:1.1.0 --nginx.scrape-uri=http://<nginx>:8080/stub_status
+  docker run -p 9113:9113 nginx/nginx-prometheus-exporter:1.3.0 --nginx.scrape-uri=http://<nginx>:8080/stub_status
   ```
 
   where `<nginx>` is the IP address/DNS name, through which NGINX is available.
@@ -119,7 +121,7 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 - To export NGINX Plus metrics, run:
 
   ```console
-  docker run -p 9113:9113 nginx/nginx-prometheus-exporter:1.1.0 --nginx.plus --nginx.scrape-uri=http://<nginx-plus>:8080/api
+  docker run -p 9113:9113 nginx/nginx-prometheus-exporter:1.3.0 --nginx.plus --nginx.scrape-uri=http://<nginx-plus>:8080/api
   ```
 
   where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
@@ -478,6 +480,37 @@ You can install the NGINX Prometheus Exporter from the [Snap Store](https://snap
 
 ```console
 snap install nginx-prometheus-exporter
+```
+
+### Scoop
+
+You can add the NGINX Scoop bucket with
+
+```console
+scoop bucket add nginx https://github.com/nginxinc/scoop-bucket.git
+```
+
+and then install the package with
+
+```console
+scoop install nginx-prometheus-exporter
+```
+
+### Nix
+
+First include NUR in your packageOverrides as explained in the [NUR documentation](https://github.com/nix-community/NUR#installation).
+
+Then you can use the exporter with the following command:
+
+```console
+
+nix-shell --packages nur.repos.nginx.nginx-prometheus-exporter
+```
+
+or install it with:
+
+```console
+nix-env -f '<nixpkgs>' -iA nur.repos.nginx.nginx-prometheus-exporter
 ```
 
 ## Building the Exporter
