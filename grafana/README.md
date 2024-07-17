@@ -3,6 +3,16 @@
 We provide the official Grafana dashboard that visualizes the NGINX metrics exposed by the exporter. The dashboard
 allows you to filter metrics per instance or see the metrics from all instances.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Installing the Dashboard](#installing-the-dashboard)
+- [Graphs](#graphs)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Prerequisites
 
 The dashboard has been tested with the following software versions:

@@ -2,6 +2,17 @@
 
 This example shows how to run NGINX Prometheus Exporter with systemd-activated socket.
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents
+
+- [Prerequisites](#prerequisites)
+- [Customization](#customization)
+- [Installation](#installation)
+- [Verification](#verification)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## Prerequisites
 
 - Linux machine with [systemd](https://www.freedesktop.org/wiki/Software/systemd/).
