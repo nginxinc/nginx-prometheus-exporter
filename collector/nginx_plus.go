@@ -251,8 +251,11 @@ func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZone
 
 // NewNginxPlusCollector creates an NginxPlusCollector.
 func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string, variableLabelNames VariableLabelNames, constLabels map[string]string, logger log.Logger) *NginxPlusCollector {
-	upstreamServerVariableLabelNames := append(variableLabelNames.UpstreamServerVariableLabelNames, variableLabelNames.UpstreamServerPeerVariableLabelNames...)
-	streamUpstreamServerVariableLabelNames := append(variableLabelNames.StreamUpstreamServerVariableLabelNames, variableLabelNames.StreamUpstreamServerPeerVariableLabelNames...)
+	upstreamServerVariableLabelNames := variableLabelNames.UpstreamServerVariableLabelNames
+	streamUpstreamServerVariableLabelNames := variableLabelNames.StreamUpstreamServerVariableLabelNames
+
+	upstreamServerVariableLabelNames = append(upstreamServerVariableLabelNames, variableLabelNames.UpstreamServerPeerVariableLabelNames...)
+	streamUpstreamServerVariableLabelNames = append(streamUpstreamServerVariableLabelNames, variableLabelNames.StreamUpstreamServerPeerVariableLabelNames...)
 	return &NginxPlusCollector{
 		variableLabelNames:             variableLabelNames,
 		upstreamServerLabels:           make(map[string][]string),
