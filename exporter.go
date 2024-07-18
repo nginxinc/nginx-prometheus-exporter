@@ -253,7 +253,7 @@ func registerCollector(logger log.Logger, transport *http.Transport,
 			level.Error(logger).Log("msg", "Could not create Nginx Plus Client", "error", err.Error())
 			os.Exit(1)
 		}
-		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil, nil, nil)
+		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil, nil)
 		prometheus.MustRegister(collector.NewNginxPlusCollector(plusClient, "nginxplus", variableLabelNames, labels, logger))
 	} else {
 		ossClient := client.NewNginxClient(httpClient, addr)
