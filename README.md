@@ -302,7 +302,7 @@ Flags:
 | `nginxplus_upstream_server_ssl_handshakes`          | Counter | Successful SSL handshakes                                                                                                                                      | `server`, `upstream`                                                                                                                              |
 | `nginxplus_upstream_server_ssl_handshakes_failed`   | Counter | Failed SSL handshakes                                                                                                                                          | `server`, `upstream`                                                                                                                              |
 | `nginxplus_upstream_server_ssl_session_reuses`      | Counter | Session reuses during SSL handshake                                                                                                                            | `server`, `upstream`                                                                                                                              |
-| `nginxplus_upstream_keepalive`                     | Gauge   | Idle keepalive connections                                                                                                                                     | `upstream`                                                                                                                                        |
+| `nginxplus_upstream_keepalive`                      | Gauge   | Idle keepalive connections                                                                                                                                     | `upstream`                                                                                                                                        |
 | `nginxplus_upstream_zombies`                        | Gauge   | Servers removed from the group but still processing active client requests                                                                                     | `upstream`                                                                                                                                        |
 
 #### [Stream Upstreams](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_stream_upstream)
@@ -396,7 +396,7 @@ Flags:
 | `nginxplus_stream_limit_connection_rejected`         | Counter | Total number of connections that were rejected                                 | `zone` |
 | `nginxplus_stream_limit_connection_rejected_dry_run` | Counter | Total number of connections accounted as rejected in the dry run mode          | `zone` |
 
-#### [Cache](https://nginx.org/en/docs/http/ngx_http_api_module.html#http_caches_http_cache_zone_name)
+#### [Cache](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_http_cache)
 
 | Name                                        | Type    | Description                                                             | Labels  |
 | ------------------------------------------- | ------- | ----------------------------------------------------------------------- | ------- |
@@ -422,16 +422,16 @@ Flags:
 | `nginxplus_cache_bypass_responses_written`  | Counter | Total number of cache bypasses written to cache                         | `cache` |
 | `nginxplus_cache_bypass_bytes_written`      | Counter | Total number of bytes written to cache from cache bypasses              | `cache` |
 
-#### [Worker](hhttps://nginx.org/en/docs/http/ngx_http_api_module.html#workers)
+#### [Worker](https://nginx.org/en/docs/http/ngx_http_api_module.html#def_nginx_worker)
 
-| Name                                     | Type    | Description                                                                                    | Labels      |
-| ---------------------------------------- | ------- | ---------------------------------------------------------------------------------------------- | ----------- |
-| `nginxplus_worker_connection_accepted`   | Counter | The total number of accepted client connections                                                | `id`, `pid` |
-| `nginxplus_worker_connection_dropped`    | Counter | The total number of accepted client connections                                                | `id`, `pid` |
-| `nginxplus_worker_connection_active`     | Gauge   | The current number of active client connections                                                | `id`, `pid` |
-| `nginxplus_worker_connection_idle`       | Gauge   | The current number of idle client connection                                                   | `id`, `pid` |
-| `nginxplus_worker_http_requests_total`   | Counter | The total number of client requests received by the worker process                             | `id`, `pid` |
-| `nginxplus_worker_http_requests_current` | Gauge   | The current number of client requests that are currently being processed by the worker process | `id`, `pid` |
+| Name                                     | Type    | Description                                                              | Labels      |
+| ---------------------------------------- | ------- | ------------------------------------------------------------------------ | ----------- |
+| `nginxplus_worker_connection_accepted`   | Counter | The total number of accepted client connections                          | `id`, `pid` |
+| `nginxplus_worker_connection_dropped`    | Counter | The total number of dropped client connections                           | `id`, `pid` |
+| `nginxplus_worker_connection_active`     | Gauge   | The current number of active client connections                          | `id`, `pid` |
+| `nginxplus_worker_connection_idle`       | Gauge   | The current number of idle client connection                             | `id`, `pid` |
+| `nginxplus_worker_http_requests_total`   | Counter | The total number of client requests received                             | `id`, `pid` |
+| `nginxplus_worker_http_requests_current` | Gauge   | The current number of client requests that are currently being processed | `id`, `pid` |
 
 Connect to the `/metrics` page of the running exporter to see the complete list of metrics along with their
 descriptions. Note: to see server zones related metrics you must configure [status
