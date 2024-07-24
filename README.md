@@ -503,7 +503,6 @@ First include NUR in your packageOverrides as explained in the [NUR documentatio
 Then you can use the exporter with the following command:
 
 ```console
-
 nix-shell --packages nur.repos.nginx.nginx-prometheus-exporter
 ```
 
