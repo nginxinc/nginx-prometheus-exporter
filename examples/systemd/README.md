@@ -37,9 +37,10 @@ full list of supported formats, run `man systemd.socket`.
 ## Installation
 
 1. Copy `nginx_exporter.service` and `nginx_exporter.socket` to `/etc/systemd/system/`
-2. Run `systemctl daemon-reload`
-3. Run `systemctl start nginx_exporter`
-4. Run `systemctl status nginx_exporter` to check the status of the service
+2. Add a user named `nginx_exporter`
+3. Run `systemctl daemon-reload`
+4. Run `systemctl start nginx_exporter`
+5. Run `systemctl status nginx_exporter` to check the status of the service
 
 ## Verification
 
