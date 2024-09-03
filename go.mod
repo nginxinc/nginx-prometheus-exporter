@@ -1,8 +1,6 @@
 module github.com/nginxinc/nginx-prometheus-exporter
 
-go 1.22
-
-toolchain go1.23.0
+go 1.22.6
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
@@ -11,7 +9,6 @@ require (
 	github.com/prometheus/client_golang v1.20.1
 	github.com/prometheus/common v0.58.0
 	github.com/prometheus/exporter-toolkit v0.12.0
-
 )
 
 require (
