@@ -1,8 +1,4 @@
 ---
-yaml-files:
-  - "*.yaml"
-  - "*.yml"
-
 ignore-from-file: .gitignore
 
 extends: default
