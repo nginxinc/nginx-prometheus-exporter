@@ -53,3 +53,4 @@ repos:
 
 ci:
   skip: [golangci-lint-full]
+  autoupdate_schedule: quarterly # We use renovate for more frequent updates and there's no way to disable autoupdate
