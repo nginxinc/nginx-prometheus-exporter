@@ -38,7 +38,6 @@ func TestParsePositiveDuration(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			got, err := parsePositiveDuration(tt.testInput)
@@ -93,7 +92,6 @@ func TestParseUnixSocketAddress(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			socketPath, requestPath, err := parseUnixSocketAddress(tt.testInput)

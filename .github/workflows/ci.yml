@@ -62,11 +62,6 @@ jobs:
         with:
           go-version: stable
 
-      - name: Determine GOPATH
-        id: go
-        run: |
-          echo "go_path=$(go env GOPATH)" >> $GITHUB_OUTPUT
-
       - name: Setup QEMU
         uses: docker/setup-qemu-action@49b3bc8e6bdd4a60e6116a5414239cba5943d3cf # v3.2.0
         with:
@@ -183,7 +178,6 @@ jobs:
           args: ${{ github.ref_type == 'tag' && 'release' || 'build --snapshot' }} ${{ github.event_name == 'pull_request' && '--single-target' || '' }} --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOPATH: ${{ steps.go.outputs.go_path }}
           NGINX_GITHUB_TOKEN: ${{ secrets.NGINX_PAT }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_COMMUNITY }}
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_LOGIN }}

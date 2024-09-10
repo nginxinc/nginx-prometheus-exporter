@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"log/slog"
 	"maps"
 	"net"
 	"net/http"
@@ -20,13 +21,11 @@ import (
 	"github.com/nginxinc/nginx-prometheus-exporter/collector"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors/version"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/prometheus/common/promlog"
-	"github.com/prometheus/common/promlog/flag"
+	"github.com/prometheus/common/promslog"
+	"github.com/prometheus/common/promslog/flag"
 	common_version "github.com/prometheus/common/version"
 
 	"github.com/prometheus/exporter-toolkit/web"
@@ -110,24 +109,24 @@ func main() {
 		}
 	}
 
-	promlogConfig := &promlog.Config{}
+	config := &promslog.Config{}
 
-	flag.AddFlags(kingpin.CommandLine, promlogConfig)
+	flag.AddFlags(kingpin.CommandLine, config)
 	kingpin.Version(common_version.Print(exporterName))
 	kingpin.HelpFlag.Short('h')
 
 	addMissingEnvironmentFlags(kingpin.CommandLine)
 
 	kingpin.Parse()
-	logger := promlog.New(promlogConfig)
+	logger := promslog.New(config)
 
-	level.Info(logger).Log("msg", "Starting nginx-prometheus-exporter", "version", common_version.Info())
-	level.Info(logger).Log("msg", "Build context", "build_context", common_version.BuildContext())
+	logger.Info("nginx-prometheus-exporter", "version", common_version.Info())
+	logger.Info("build context", "build_context", common_version.BuildContext())
 
 	prometheus.MustRegister(version.NewCollector(exporterName))
 
 	if len(*scrapeURIs) == 0 {
-		level.Error(logger).Log("msg", "No scrape addresses provided")
+		logger.Error("no scrape addresses provided")
 		os.Exit(1)
 	}
 
@@ -136,13 +135,13 @@ func main() {
 	if *sslCaCert != "" {
 		caCert, err := os.ReadFile(*sslCaCert)
 		if err != nil {
-			level.Error(logger).Log("msg", "Loading CA cert failed", "err", err.Error())
+			logger.Error("loading CA cert failed", "err", err.Error())
 			os.Exit(1)
 		}
 		sslCaCertPool := x509.NewCertPool()
 		ok := sslCaCertPool.AppendCertsFromPEM(caCert)
 		if !ok {
-			level.Error(logger).Log("msg", "Parsing CA cert file failed.")
+			logger.Error("parsing CA cert file failed.")
 			os.Exit(1)
 		}
 		sslConfig.RootCAs = sslCaCertPool
@@ -151,7 +150,7 @@ func main() {
 	if *sslClientCert != "" && *sslClientKey != "" {
 		clientCert, err := tls.LoadX509KeyPair(*sslClientCert, *sslClientKey)
 		if err != nil {
-			level.Error(logger).Log("msg", "Loading client certificate failed", "error", err.Error())
+			logger.Error("loading client certificate failed", "error", err.Error())
 			os.Exit(1)
 		}
 		sslConfig.Certificates = []tls.Certificate{clientCert}
@@ -190,7 +189,7 @@ func main() {
 		}
 		landingPage, err := web.NewLandingPage(landingConfig)
 		if err != nil {
-			level.Error(logger).Log("err", err)
+			logger.Error("failed to create landing page", "error", err.Error())
 			os.Exit(1)
 		}
 		http.Handle("/", landingPage)
@@ -206,28 +205,28 @@ func main() {
 	go func() {
 		if err := web.ListenAndServe(srv, webConfig, logger); err != nil {
 			if errors.Is(err, http.ErrServerClosed) {
-				level.Info(logger).Log("msg", "HTTP server closed")
+				logger.Info("HTTP server closed", "error", err.Error())
 				os.Exit(0)
 			}
-			level.Error(logger).Log("err", err)
+			logger.Error("HTTP server failed", "error", err.Error())
 			os.Exit(1)
 		}
 	}()
 
 	<-ctx.Done()
-	level.Info(logger).Log("msg", "Shutting down")
+	logger.Info("shutting down")
 	srvCtx, srvCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer srvCancel()
 	_ = srv.Shutdown(srvCtx)
 }
 
-func registerCollector(logger log.Logger, transport *http.Transport,
+func registerCollector(logger *slog.Logger, transport *http.Transport,
 	addr string, labels map[string]string,
 ) {
 	if strings.HasPrefix(addr, "unix:") {
 		socketPath, requestPath, err := parseUnixSocketAddress(addr)
 		if err != nil {
-			level.Error(logger).Log("msg", "Parsing unix domain socket scrape address failed", "uri", addr, "error", err.Error())
+			logger.Error("parsing unix domain socket scrape address failed", "uri", addr, "error", err.Error())
 			os.Exit(1)
 		}
 
@@ -250,7 +249,7 @@ func registerCollector(logger log.Logger, transport *http.Transport,
 	if *nginxPlus {
 		plusClient, err := plusclient.NewNginxClient(addr, plusclient.WithHTTPClient(httpClient))
 		if err != nil {
-			level.Error(logger).Log("msg", "Could not create Nginx Plus Client", "error", err.Error())
+			logger.Error("could not create Nginx Plus Client", "error", err.Error())
 			os.Exit(1)
 		}
 		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil, nil)
