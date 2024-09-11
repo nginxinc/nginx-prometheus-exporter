@@ -1,10 +1,9 @@
 package collector
 
 import (
+	"log/slog"
 	"sync"
 
-	"github.com/go-kit/log"
-	"github.com/go-kit/log/level"
 	"github.com/nginxinc/nginx-prometheus-exporter/client"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -12,14 +11,14 @@ import (
 // NginxCollector collects NGINX metrics. It implements prometheus.Collector interface.
 type NginxCollector struct {
 	upMetric    prometheus.Gauge
-	logger      log.Logger
+	logger      *slog.Logger
 	nginxClient *client.NginxClient
 	metrics     map[string]*prometheus.Desc
 	mutex       sync.Mutex
 }
 
 // NewNginxCollector creates an NginxCollector.
-func NewNginxCollector(nginxClient *client.NginxClient, namespace string, constLabels map[string]string, logger log.Logger) *NginxCollector {
+func NewNginxCollector(nginxClient *client.NginxClient, namespace string, constLabels map[string]string, logger *slog.Logger) *NginxCollector {
 	return &NginxCollector{
 		nginxClient: nginxClient,
 		logger:      logger,
@@ -55,7 +54,7 @@ func (c *NginxCollector) Collect(ch chan<- prometheus.Metric) {
 	if err != nil {
 		c.upMetric.Set(nginxDown)
 		ch <- c.upMetric
-		level.Error(c.logger).Log("msg", "Error getting stats", "error", err.Error())
+		c.logger.Error("error getting stats", "error", err.Error())
 		return
 	}
 

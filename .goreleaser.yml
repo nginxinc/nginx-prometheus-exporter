@@ -30,10 +30,6 @@ builds:
         goarch: arm
     flags:
       - -trimpath
-    gcflags:
-      - all=-trimpath={{.Env.GOPATH}}
-    asmflags:
-      - all=-trimpath={{.Env.GOPATH}}
     ldflags:
       - "-s -w -X github.com/prometheus/common/version.Version={{.Version}} -X github.com/prometheus/common/version.BuildDate={{.Date}} -X github.com/prometheus/common/version.Branch={{.Branch}} -X github.com/prometheus/common/version.BuildUser=goreleaser"
 
