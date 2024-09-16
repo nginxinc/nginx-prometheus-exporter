@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.9
+# syntax=docker/dockerfile:1.10
 FROM golang:1.23 AS builder
 ARG VERSION
 ARG TARGETARCH
@@ -17,17 +17,17 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -trimpath -a -ldflags "
 
 FROM --platform=$BUILDPLATFORM alpine:3.20 AS certs
 
-FROM scratch AS intermediate
+FROM scratch AS base
 COPY --from=certs --link /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 USER 1001:1001
 ENTRYPOINT [ "/usr/bin/nginx-prometheus-exporter" ]
 
 
-FROM intermediate AS container
+FROM base AS container
 COPY --from=builder --link /go/src/github.com/nginxinc/nginx-prometheus-exporter/nginx-prometheus-exporter /usr/bin/
 
 
-FROM intermediate AS goreleaser
+FROM base AS goreleaser
 ARG TARGETARCH
 ARG TARGETVARIANT
 ARG TARGETPLATFORM
