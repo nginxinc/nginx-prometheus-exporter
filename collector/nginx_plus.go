@@ -1,6 +1,7 @@
 package collector
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -622,7 +623,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 	c.mutex.Lock() // To protect metrics from concurrent collects
 	defer c.mutex.Unlock()
 
-	stats, err := c.nginxClient.GetStats()
+	stats, err := c.nginxClient.GetStats(context.TODO())
 	if err != nil {
 		c.upMetric.Set(nginxDown)
 		ch <- c.upMetric
