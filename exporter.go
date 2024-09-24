@@ -16,7 +16,7 @@ import (
 	"syscall"
 	"time"
 
-	plusclient "github.com/nginxinc/nginx-plus-go-client/client"
+	plusclient "github.com/nginxinc/nginx-plus-go-client/v2/client"
 	"github.com/nginxinc/nginx-prometheus-exporter/client"
 	"github.com/nginxinc/nginx-prometheus-exporter/collector"
 

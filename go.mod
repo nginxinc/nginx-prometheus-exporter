@@ -4,7 +4,7 @@ go 1.22.6
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
-	github.com/nginxinc/nginx-plus-go-client v1.3.0
+	github.com/nginxinc/nginx-plus-go-client/v2 v2.0.1
 	github.com/prometheus/client_golang v1.20.3
 	github.com/prometheus/common v0.59.1
 	github.com/prometheus/exporter-toolkit v0.13.0
