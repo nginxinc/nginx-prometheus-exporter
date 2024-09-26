@@ -5,24 +5,33 @@ linters-settings:
     ignore-generated-header: true
     rules:
       - name: blank-imports
+      - name: constant-logical-expr
       - name: context-as-argument
       - name: context-keys-type
+      - name: defer
       - name: dot-imports
+      - name: duplicated-imports
       - name: empty-block
       - name: error-naming
       - name: error-return
       - name: error-strings
       - name: errorf
       - name: exported
+      - name: import-shadowing
       - name: increment-decrement
       - name: indent-error-flow
       - name: package-comments
       - name: range
+      - name: range-val-address
+      - name: range-val-in-closure
       - name: receiver-naming
       - name: redefines-builtin-id
+      - name: string-of-int
       - name: superfluous-else
       - name: time-naming
+      - name: unchecked-type-assertion
       - name: unexported-return
+      - name: unnecessary-stmt
       - name: unreachable-code
       - name: unused-parameter
       - name: var-declaration
@@ -37,6 +46,7 @@ linters:
     - asasalint
     - asciicheck
     - bidichk
+    - containedctx
     - contextcheck
     - copyloopvar
     - dupword
@@ -62,9 +72,11 @@ linters:
     - intrange
     - loggercheck
     - makezero
+    - mirror
     - misspell
     - musttag
     - nilerr
+    - nilnil
     - noctx
     - nolintlint
     - paralleltest
