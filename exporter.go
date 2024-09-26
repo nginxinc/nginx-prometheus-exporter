@@ -294,9 +294,9 @@ func cloneRequest(req *http.Request) *http.Request {
 func addMissingEnvironmentFlags(ka *kingpin.Application) {
 	for _, f := range ka.Model().FlagGroupModel.Flags {
 		if strings.HasPrefix(f.Name, "web.") && f.Envar == "" {
-			flag := ka.GetFlag(f.Name)
-			if flag != nil {
-				flag.Envar(convertFlagToEnvar(strings.TrimPrefix(f.Name, "web.")))
+			retrievedFlag := ka.GetFlag(f.Name)
+			if retrievedFlag != nil {
+				retrievedFlag.Envar(convertFlagToEnvar(strings.TrimPrefix(f.Name, "web.")))
 			}
 		}
 	}
