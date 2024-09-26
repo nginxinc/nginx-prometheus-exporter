@@ -159,8 +159,7 @@ jobs:
 
       - name: Setup Snapcraft
         run: |
-          sudo apt-get update
-          sudo apt-get -yq --no-install-suggests --no-install-recommends install snapcraft
+          sudo snap install snapcraft --classic
           mkdir -p $HOME/.cache/snapcraft/download
           mkdir -p $HOME/.cache/snapcraft/stage-packages
         if: github.ref_type == 'tag'
