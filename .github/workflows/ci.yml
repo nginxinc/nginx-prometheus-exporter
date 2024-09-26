@@ -23,7 +23,7 @@ permissions:
 jobs:
   unit-tests:
     name: Unit Tests
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -43,7 +43,7 @@ jobs:
 
   build-docker:
     name: Build Docker Image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # for lucacome/draft-release to create/update release draft
       security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
