@@ -1,7 +1,7 @@
 VERSION = 1.3.0
 TAG = $(VERSION)
 PREFIX = nginx/nginx-prometheus-exporter
-# renovate: datasource=docker depName=golangci/golangci-lint
+# renovate: datasource=github-tags depName=golangci/golangci-lint
 GOLANGCI_LINT_VERSION = v1.61.0
 
 .DEFAULT_GOAL:=nginx-prometheus-exporter
@@ -21,7 +21,7 @@ build-goreleaser: ## Build all binaries using GoReleaser
 
 .PHONY: lint
 lint: ## Run linter
-	docker run --pull always --rm -v $(shell pwd):/nginx-prometheus-exporter -w /nginx-prometheus-exporter -v $(shell go env GOCACHE):/cache/go -e GOCACHE=/cache/go -e GOLANGCI_LINT_CACHE=/cache/go -v $(shell go env GOPATH)/pkg:/go/pkg golangci/golangci-lint:$(GOLANGCI_LINT_VERSION) golangci-lint --color always run
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run --fix
 
 .PHONY: test
 test: ## Run tests
