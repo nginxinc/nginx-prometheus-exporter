@@ -47,10 +47,7 @@ func NewNginxClient(httpClient *http.Client, apiEndpoint string) *NginxClient {
 }
 
 // GetStubStats fetches the stub_status metrics.
-func (client *NginxClient) GetStubStats() (*StubStats, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+func (client *NginxClient) GetStubStats(ctx context.Context) (*StubStats, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, client.apiEndpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create a get request: %w", err)

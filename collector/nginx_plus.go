@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"strconv"
 	"sync"
+	"time"
 
 	plusclient "github.com/nginxinc/nginx-plus-go-client/v2/client"
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,11 +32,11 @@ type LabelUpdater interface {
 
 // NginxPlusCollector collects NGINX Plus metrics. It implements prometheus.Collector interface.
 type NginxPlusCollector struct {
-	upMetric                       prometheus.Gauge
+	nginxClient                    *plusclient.NginxClient
 	logger                         *slog.Logger
+	upMetric                       prometheus.Gauge
 	cacheZoneMetrics               map[string]*prometheus.Desc
 	workerMetrics                  map[string]*prometheus.Desc
-	nginxClient                    *plusclient.NginxClient
 	streamServerZoneMetrics        map[string]*prometheus.Desc
 	streamZoneSyncMetrics          map[string]*prometheus.Desc
 	streamUpstreamMetrics          map[string]*prometheus.Desc
@@ -47,16 +48,17 @@ type NginxPlusCollector struct {
 	streamLimitConnectionMetrics   map[string]*prometheus.Desc
 	upstreamServerMetrics          map[string]*prometheus.Desc
 	upstreamMetrics                map[string]*prometheus.Desc
-	streamUpstreamServerPeerLabels map[string][]string
 	serverZoneMetrics              map[string]*prometheus.Desc
+	totalMetrics                   map[string]*prometheus.Desc
+	streamUpstreamServerPeerLabels map[string][]string
 	upstreamServerLabels           map[string][]string
 	streamUpstreamServerLabels     map[string][]string
 	serverZoneLabels               map[string][]string
 	streamServerZoneLabels         map[string][]string
 	upstreamServerPeerLabels       map[string][]string
 	cacheZoneLabels                map[string][]string
-	totalMetrics                   map[string]*prometheus.Desc
 	variableLabelNames             VariableLabelNames
+	timeout                        time.Duration
 	variableLabelsMutex            sync.RWMutex
 	mutex                          sync.Mutex
 }
@@ -256,7 +258,7 @@ func NewVariableLabelNames(upstreamServerVariableLabelNames []string, serverZone
 }
 
 // NewNginxPlusCollector creates an NginxPlusCollector.
-func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string, variableLabelNames VariableLabelNames, constLabels map[string]string, logger *slog.Logger) *NginxPlusCollector {
+func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string, variableLabelNames VariableLabelNames, constLabels map[string]string, logger *slog.Logger, timeout time.Duration) *NginxPlusCollector {
 	upstreamServerVariableLabelNames := variableLabelNames.UpstreamServerVariableLabelNames
 	streamUpstreamServerVariableLabelNames := variableLabelNames.StreamUpstreamServerVariableLabelNames
 
@@ -273,6 +275,7 @@ func NewNginxPlusCollector(nginxClient *plusclient.NginxClient, namespace string
 		cacheZoneLabels:                make(map[string][]string),
 		nginxClient:                    nginxClient,
 		logger:                         logger,
+		timeout:                        timeout,
 		totalMetrics: map[string]*prometheus.Desc{
 			"connections_accepted":  newGlobalMetric(namespace, "connections_accepted", "Accepted client connections", constLabels),
 			"connections_dropped":   newGlobalMetric(namespace, "connections_dropped", "Dropped client connections", constLabels),
@@ -623,8 +626,10 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 	c.mutex.Lock() // To protect metrics from concurrent collects
 	defer c.mutex.Unlock()
 
-	// FIXME: https://github.com/nginxinc/nginx-prometheus-exporter/issues/858
-	stats, err := c.nginxClient.GetStats(context.TODO())
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	stats, err := c.nginxClient.GetStats(ctx)
 	if err != nil {
 		c.upMetric.Set(nginxDown)
 		ch <- c.upMetric

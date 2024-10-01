@@ -220,9 +220,7 @@ func main() {
 	_ = srv.Shutdown(srvCtx)
 }
 
-func registerCollector(logger *slog.Logger, transport *http.Transport,
-	addr string, labels map[string]string,
-) {
+func registerCollector(logger *slog.Logger, transport *http.Transport, addr string, labels map[string]string) {
 	if strings.HasPrefix(addr, "unix:") {
 		socketPath, requestPath, err := parseUnixSocketAddress(addr)
 		if err != nil {
@@ -239,7 +237,6 @@ func registerCollector(logger *slog.Logger, transport *http.Transport,
 	userAgent := fmt.Sprintf("NGINX-Prometheus-Exporter/v%v", common_version.Version)
 
 	httpClient := &http.Client{
-		Timeout: *timeout,
 		Transport: &userAgentRoundTripper{
 			agent: userAgent,
 			rt:    transport,
@@ -253,10 +250,10 @@ func registerCollector(logger *slog.Logger, transport *http.Transport,
 			os.Exit(1)
 		}
 		variableLabelNames := collector.NewVariableLabelNames(nil, nil, nil, nil, nil, nil, nil)
-		prometheus.MustRegister(collector.NewNginxPlusCollector(plusClient, "nginxplus", variableLabelNames, labels, logger))
+		prometheus.MustRegister(collector.NewNginxPlusCollector(plusClient, "nginxplus", variableLabelNames, labels, logger, *timeout))
 	} else {
 		ossClient := client.NewNginxClient(httpClient, addr)
-		prometheus.MustRegister(collector.NewNginxCollector(ossClient, "nginx", labels, logger))
+		prometheus.MustRegister(collector.NewNginxCollector(ossClient, "nginx", labels, logger, *timeout))
 	}
 }
 
