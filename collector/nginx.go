@@ -1,8 +1,10 @@
 package collector
 
 import (
+	"context"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/nginxinc/nginx-prometheus-exporter/client"
 	"github.com/prometheus/client_golang/prometheus"
@@ -14,14 +16,16 @@ type NginxCollector struct {
 	logger      *slog.Logger
 	nginxClient *client.NginxClient
 	metrics     map[string]*prometheus.Desc
+	timeout     time.Duration
 	mutex       sync.Mutex
 }
 
 // NewNginxCollector creates an NginxCollector.
-func NewNginxCollector(nginxClient *client.NginxClient, namespace string, constLabels map[string]string, logger *slog.Logger) *NginxCollector {
+func NewNginxCollector(nginxClient *client.NginxClient, namespace string, constLabels map[string]string, logger *slog.Logger, timeout time.Duration) *NginxCollector {
 	return &NginxCollector{
 		nginxClient: nginxClient,
 		logger:      logger,
+		timeout:     timeout,
 		metrics: map[string]*prometheus.Desc{
 			"connections_active":   newGlobalMetric(namespace, "connections_active", "Active client connections", constLabels),
 			"connections_accepted": newGlobalMetric(namespace, "connections_accepted", "Accepted client connections", constLabels),
@@ -50,7 +54,10 @@ func (c *NginxCollector) Collect(ch chan<- prometheus.Metric) {
 	c.mutex.Lock() // To protect metrics from concurrent collects
 	defer c.mutex.Unlock()
 
-	stats, err := c.nginxClient.GetStubStats()
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
+	defer cancel()
+
+	stats, err := c.nginxClient.GetStubStats(ctx)
 	if err != nil {
 		c.upMetric.Set(nginxDown)
 		ch <- c.upMetric
