@@ -208,7 +208,7 @@ jobs:
           sbom: true
 
       - name: Scan image
-        uses: anchore/scan-action@f2ba85e044c8f5e5014c9a539328a9c78d3bfa49 # v5.2.1
+        uses: anchore/scan-action@869c549e657a088dc0441b08ce4fc0ecdac2bb65 # v5.3.0
         id: scan
         continue-on-error: true
         with:
