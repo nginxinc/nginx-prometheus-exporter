@@ -113,7 +113,7 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 - To export NGINX metrics, run:
 
   ```console
-  docker run -p 9113:9113 nginx/nginx-prometheus-exporter:1.3.0 --nginx.scrape-uri=http://<nginx>:8080/stub_status
+  docker run -p 9113:9113 nginx/nginx-prometheus-exporter:1.4.0 --nginx.scrape-uri=http://<nginx>:8080/stub_status
   ```
 
   where `<nginx>` is the IP address/DNS name, through which NGINX is available.
@@ -121,7 +121,7 @@ To start the exporter we use the [docker run](https://docs.docker.com/engine/ref
 - To export NGINX Plus metrics, run:
 
   ```console
-  docker run -p 9113:9113 nginx/nginx-prometheus-exporter:1.3.0 --nginx.plus --nginx.scrape-uri=http://<nginx-plus>:8080/api
+  docker run -p 9113:9113 nginx/nginx-prometheus-exporter:1.4.0 --nginx.plus --nginx.scrape-uri=http://<nginx-plus>:8080/api
   ```
 
   where `<nginx-plus>` is the IP address/DNS name, through which NGINX Plus is available.
