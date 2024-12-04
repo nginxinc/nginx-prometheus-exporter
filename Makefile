@@ -1,4 +1,4 @@
-VERSION = 1.3.0
+VERSION = 1.4.0
 TAG = $(VERSION)
 PREFIX = nginx/nginx-prometheus-exporter
 # renovate: datasource=github-tags depName=golangci/golangci-lint
