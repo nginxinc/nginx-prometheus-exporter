@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Lint Actions
-        uses: reviewdog/action-actionlint@7eeec1dd160c2301eb28e1568721837d084558ad # v1.57.0
+        uses: reviewdog/action-actionlint@08ef4afa963243489a457cca426f705ce4e0d1a5 # v1.60.0
         with:
           actionlint_flags: -shellcheck ""
 
