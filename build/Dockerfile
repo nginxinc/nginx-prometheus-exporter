@@ -15,7 +15,7 @@ COPY --link client ./client
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH go build -trimpath -a -ldflags "-s -w -X main.version=${VERSION}" -o nginx-prometheus-exporter .
 
 
-FROM --platform=$BUILDPLATFORM alpine:3.20 AS certs
+FROM --platform=$BUILDPLATFORM alpine:3.21 AS certs
 
 FROM scratch AS base
 COPY --from=certs --link /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
