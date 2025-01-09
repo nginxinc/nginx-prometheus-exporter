@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"sync"
 
-	plusclient "github.com/nginxinc/nginx-plus-go-client/v2/client"
+	plusclient "github.com/nginx/nginx-plus-go-client/v2/client"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -623,7 +623,7 @@ func (c *NginxPlusCollector) Collect(ch chan<- prometheus.Metric) {
 	c.mutex.Lock() // To protect metrics from concurrent collects
 	defer c.mutex.Unlock()
 
-	// FIXME: https://github.com/nginxinc/nginx-prometheus-exporter/issues/858
+	// FIXME: https://github.com/nginx/nginx-prometheus-exporter/issues/858
 	stats, err := c.nginxClient.GetStats(context.TODO())
 	if err != nil {
 		c.upMetric.Set(nginxDown)

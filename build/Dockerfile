@@ -3,7 +3,7 @@ FROM golang:1.23 AS builder
 ARG VERSION
 ARG TARGETARCH
 
-WORKDIR /go/src/github.com/nginxinc/nginx-prometheus-exporter
+WORKDIR /go/src/github.com/nginx/nginx-prometheus-exporter
 
 COPY --link go.mod go.sum ./
 RUN go mod download
@@ -24,7 +24,7 @@ ENTRYPOINT [ "/usr/bin/nginx-prometheus-exporter" ]
 
 
 FROM base AS container
-COPY --from=builder --link /go/src/github.com/nginxinc/nginx-prometheus-exporter/nginx-prometheus-exporter /usr/bin/
+COPY --from=builder --link /go/src/github.com/nginx/nginx-prometheus-exporter/nginx-prometheus-exporter /usr/bin/
 
 
 FROM base AS goreleaser

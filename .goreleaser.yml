@@ -58,11 +58,11 @@ sboms:
 
 brews:
   - repository:
-      owner: nginxinc
+      owner: nginx
       name: homebrew-tap
       token: "{{ .Env.NGINX_GITHUB_TOKEN }}"
     directory: Formula
-    homepage: https://github.com/nginxinc/nginx-prometheus-exporter
+    homepage: https://github.com/nginx/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     license: Apache-2.0
     commit_author:
@@ -116,10 +116,10 @@ snapcrafts:
 nix:
   - name: nginx-prometheus-exporter
     repository:
-      owner: nginxinc
+      owner: nginx
       name: nur
       token: "{{ .Env.NGINX_GITHUB_TOKEN }}"
-    homepage: https://github.com/nginxinc/nginx-prometheus-exporter
+    homepage: https://github.com/nginx/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     license: asl20
     commit_author:
@@ -131,12 +131,12 @@ nix:
 
 winget:
   - name: nginx-prometheus-exporter
-    publisher: nginxinc
+    publisher: nginx
     license: Apache-2.0
-    homepage: https://github.com/nginxinc/nginx-prometheus-exporter
+    homepage: https://github.com/nginx/nginx-prometheus-exporter
     short_description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     repository:
-      owner: nginxinc
+      owner: nginx
       name: winget-pkgs
       token: "{{ .Env.NGINX_GITHUB_TOKEN }}"
       branch: "nginx-prometheus-exporter-{{.Version}}"
@@ -150,11 +150,11 @@ winget:
 
 scoops:
   - repository:
-      owner: nginxinc
+      owner: nginx
       name: scoop-bucket
       token: "{{ .Env.NGINX_GITHUB_TOKEN }}"
     directory: bucket
-    homepage: https://github.com/nginxinc/nginx-prometheus-exporter
+    homepage: https://github.com/nginx/nginx-prometheus-exporter
     description: NGINX Prometheus Exporter for NGINX and NGINX Plus
     license: Apache-2.0
     commit_author:

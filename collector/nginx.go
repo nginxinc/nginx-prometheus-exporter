@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/nginxinc/nginx-prometheus-exporter/client"
+	"github.com/nginx/nginx-prometheus-exporter/client"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

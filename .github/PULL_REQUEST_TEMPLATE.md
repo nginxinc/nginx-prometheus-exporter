@@ -7,7 +7,7 @@ that issue here in this description (not in the title of the PR).
 
 Before creating a PR, run through this checklist and mark each as complete.
 
-- [ ] I have read the [CONTRIBUTING](https://github.com/nginxinc/nginx-prometheus-exporter/blob/main/CONTRIBUTING.md) guide
+- [ ] I have read the [CONTRIBUTING](https://github.com/nginx/nginx-prometheus-exporter/blob/main/CONTRIBUTING.md) guide
 - [ ] I have proven my fix is effective or that my feature works
 - [ ] I have checked that all unit tests pass after adding my changes
 - [ ] I have ensured the README is up to date
