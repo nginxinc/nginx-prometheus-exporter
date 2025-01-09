@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: General inquiries
-    url: https://github.com/nginxinc/nginx-prometheus-exporter/discussions
+    url: https://github.com/nginx/nginx-prometheus-exporter/discussions
     about: Please use Discussions for all other questions.

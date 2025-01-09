@@ -24,7 +24,7 @@ jobs:
       - name: Modify readme for DockerHub
         run: |
           sed -i '1,2d' README.md
-          sed -i 's/(LICENSE)/(https:\/\/github.com\/nginxinc\/nginx-prometheus-exporter\/blob\/main\/LICENSE)/' README.md
+          sed -i 's/(LICENSE)/(https:\/\/github.com\/nginx\/nginx-prometheus-exporter\/blob\/main\/LICENSE)/' README.md
 
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@e98e4d1628a5f3be2be7c231e50981aee98723ae # v4.0.0

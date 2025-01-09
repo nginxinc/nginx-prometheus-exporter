@@ -1,14 +1,14 @@
 <!-- markdownlint-disable-next-line first-line-h1 -->
-[![OpenSSFScorecard](https://api.securityscorecards.dev/projects/github.com/nginxinc/nginx-prometheus-exporter/badge)](https://scorecard.dev/viewer/?uri=github.com/nginxinc/nginx-prometheus-exporter)
-[![CI](https://github.com/nginxinc/nginx-prometheus-exporter/actions/workflows/ci.yml/badge.svg)](https://github.com/nginxinc/nginx-prometheus-exporter/actions/workflows/ci.yml)
-[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B5618%2Fgithub.com%2Fnginxinc%2Fnginx-prometheus-exporter.svg?type=shield)](https://app.fossa.com/projects/custom%2B5618%2Fgithub.com%2Fnginxinc%2Fnginx-prometheus-exporter?ref=badge_shield)
-[![Go Report Card](https://goreportcard.com/badge/github.com/nginxinc/nginx-prometheus-exporter)](https://goreportcard.com/report/github.com/nginxinc/nginx-prometheus-exporter)
-[![codecov](https://codecov.io/gh/nginxinc/nginx-prometheus-exporter/graph/badge.svg?token=J6Oz10LWy3)](https://codecov.io/gh/nginxinc/nginx-prometheus-exporter)
-![GitHub all releases](https://img.shields.io/github/downloads/nginxinc/nginx-prometheus-exporter/total?logo=github)
-![GitHub release (latest by SemVer)](https://img.shields.io/github/downloads/nginxinc/nginx-prometheus-exporter/latest/total?sort=semver&logo=github)
-[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/nginxinc/nginx-prometheus-exporter?logo=github&sort=semver)](https://github.com/nginxinc/nginx-prometheus-exporter/releases/latest)
+[![OpenSSFScorecard](https://api.securityscorecards.dev/projects/github.com/nginx/nginx-prometheus-exporter/badge)](https://scorecard.dev/viewer/?uri=github.com/nginx/nginx-prometheus-exporter)
+[![CI](https://github.com/nginx/nginx-prometheus-exporter/actions/workflows/ci.yml/badge.svg)](https://github.com/nginx/nginx-prometheus-exporter/actions/workflows/ci.yml)
+[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B5618%2Fgithub.com%2Fnginx%2Fnginx-prometheus-exporter.svg?type=shield)](https://app.fossa.com/projects/custom%2B5618%2Fgithub.com%2Fnginx%2Fnginx-prometheus-exporter?ref=badge_shield)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nginx/nginx-prometheus-exporter)](https://goreportcard.com/report/github.com/nginx/nginx-prometheus-exporter)
+[![codecov](https://codecov.io/gh/nginx/nginx-prometheus-exporter/graph/badge.svg?token=J6Oz10LWy3)](https://codecov.io/gh/nginx/nginx-prometheus-exporter)
+![GitHub all releases](https://img.shields.io/github/downloads/nginx/nginx-prometheus-exporter/total?logo=github)
+![GitHub release (latest by SemVer)](https://img.shields.io/github/downloads/nginx/nginx-prometheus-exporter/latest/total?sort=semver&logo=github)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/nginx/nginx-prometheus-exporter?logo=github&sort=semver)](https://github.com/nginx/nginx-prometheus-exporter/releases/latest)
 [![nginx-prometheus-exporter](https://snapcraft.io/nginx-prometheus-exporter/badge.svg)](https://snapcraft.io/nginx-prometheus-exporter)
-![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/nginxinc/nginx-prometheus-exporter?logo=go)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/nginx/nginx-prometheus-exporter?logo=go)
 [![Docker Pulls](https://img.shields.io/docker/pulls/nginx/nginx-prometheus-exporter?logo=docker&logoColor=white)](https://hub.docker.com/r/nginx/nginx-prometheus-exporter)
 ![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/nginx/nginx-prometheus-exporter?logo=docker&logoColor=white&sort=semver)
 [![Slack](https://img.shields.io/badge/slack-%23nginx--prometheus--exporter-green?logo=slack)](https://nginxcommunity.slack.com/channels/nginx-prometheus-exporter)
@@ -90,7 +90,7 @@ In this section, we show how to quickly run NGINX Prometheus Exporter for NGINX 
 ### A Note about NGINX Ingress Controller
 
 If you’d like to use the NGINX Prometheus Exporter with [NGINX Ingress
-Controller](https://github.com/nginxinc/kubernetes-ingress/) for Kubernetes, see [this
+Controller](https://github.com/nginx/kubernetes-ingress/) for Kubernetes, see [this
 doc](https://docs.nginx.com/nginx-ingress-controller/logging-and-monitoring/prometheus/) for the installation
 instructions.
 
@@ -448,24 +448,24 @@ logs using [docker logs](https://docs.docker.com/engine/reference/commandline/lo
 ### Docker images
 
 We publish the Docker image on [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter/),
-[GitHub Container](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter),
+[GitHub Container](https://github.com/nginx/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter),
 [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) and
 [Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter).
 
-As an alternative, you can choose the _edge_ version built from the [latest commit](https://github.com/nginxinc/nginx-prometheus-exporter/commits/main)
+As an alternative, you can choose the _edge_ version built from the [latest commit](https://github.com/nginx/nginx-prometheus-exporter/commits/main)
 from the main branch. The edge version is useful for experimenting with new features that are not yet published in a
 stable release.
 
 ### Binaries
 
-We publish the binaries for multiple Operating Systems and architectures on the GitHub [releases page](https://github.com/nginxinc/nginx-prometheus-exporter/releases).
+We publish the binaries for multiple Operating Systems and architectures on the GitHub [releases page](https://github.com/nginx/nginx-prometheus-exporter/releases).
 
 ### Homebrew
 
 You can add the NGINX homebrew tap with
 
 ```console
-brew tap nginxinc/tap
+brew tap nginx/tap
 ```
 
 and then install the formula with
@@ -487,7 +487,7 @@ snap install nginx-prometheus-exporter
 You can add the NGINX Scoop bucket with
 
 ```console
-scoop bucket add nginx https://github.com/nginxinc/scoop-bucket.git
+scoop bucket add nginx https://github.com/nginx/scoop-bucket.git
 ```
 
 and then install the package with
@@ -563,7 +563,7 @@ The SBOMs for the binaries are available in the releases page. The SBOMs are gen
 
 The SBOM for the Docker image is available in the
 [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter),
-[GitHub Container registry](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter),
+[GitHub Container registry](https://github.com/nginx/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter),
 [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) and
 [Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter) repositories. The SBOMs are generated using
 [syft](https://github.com/anchore/syft) and stored as an attestation in the image manifest.
@@ -579,7 +579,7 @@ docker buildx imagetools inspect nginx/nginx-prometheus-exporter:edge --format '
 
 We generate provenance for the Docker image and it's available in the
 [DockerHub](https://hub.docker.com/r/nginx/nginx-prometheus-exporter),
-[GitHub Container registry](https://github.com/nginxinc/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter),
+[GitHub Container registry](https://github.com/nginx/nginx-prometheus-exporter/pkgs/container/nginx-prometheus-exporter),
 [Amazon ECR Public Gallery](https://gallery.ecr.aws/nginx/nginx-prometheus-exporter) and
 [Quay.io](https://quay.io/repository/nginx/nginx-prometheus-exporter) repositories, stored as an attestation in the
 image manifest.
