@@ -181,6 +181,8 @@ Flags:
       --nginx.ssl-client-cert=""
                                  Path to the PEM encoded client certificate file to use when connecting to the server. ($SSL_CLIENT_CERT)
       --nginx.ssl-client-key=""  Path to the PEM encoded client certificate key file to use when connecting to the server. ($SSL_CLIENT_KEY)
+      --[no-]nginx.proxy-protocol
+                                 Pass proxy protocol payload to nginx listeners. ($PROXY_PROTOCOL)
       --nginx.timeout=5s         A timeout for scraping metrics from NGINX or NGINX Plus. ($TIMEOUT)
       --prometheus.const-label=PROMETHEUS.CONST-LABEL ...
                                  Label that will be used in every metric. Format is label=value. It can be repeated multiple times. ($CONST_LABELS)
